@@ -202,3 +202,7 @@ cd ~/.claude/templates/sdd/files && python3 -m unittest discover -s .claude/hook
 A már telepített projektek **nem frissülnek maguktól**. Egy módosított
 `sdd_guard.py`-t kézzel másolj át. A projektben ez a fájl zárolt, ezért előtte
 oldd fel a `#spec-szerkesztes` kulcsszóval.
+
+## Licenc
+
+[MIT](LICENSE)

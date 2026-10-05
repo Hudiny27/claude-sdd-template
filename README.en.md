@@ -99,3 +99,7 @@ cd ~/.claude/templates/sdd/files && python3 -m unittest discover -s .claude/hook
 Existing projects do not update themselves. Copy a changed `sdd_guard.py` into
 a project by hand; it is locked there, so the owner unlocks it with
 `#spec-szerkesztes` first.
+
+## License
+
+[MIT](LICENSE)
