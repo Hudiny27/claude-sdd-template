@@ -1,36 +1,37 @@
-# specs/: the project constitution
+# specs/: a projekt constitutionje
 
-The constitution holds the decisions every feature builds on. It is written in
-an interview between the owner and the agent (`/constitution`), and it is
-owner-controlled: once all three files exist, the SDD guard blocks agent writes
-until the owner unlocks them with `#spec-szerkesztes` (see `CLAUDE.md`).
+A constitution azokat a döntéseket tartalmazza, amelyekre minden feature
+épül. Az owner és az agent közötti interjúban készül (`/constitution`), és az
+owner kezeli: amint mindhárom fájl létezik, az SDD őr blokkolja az agent
+írásait, amíg az owner fel nem oldja őket a `#spec-szerkesztes` kulcsszóval
+(lásd `CLAUDE.md`).
 
-| File | Answers | Changes |
+| Fájl | Mire válaszol | Mikor változik |
 |---|---|---|
-| `mission.md` | Why does this exist, for whom, what is in and out of scope? | Rarely |
-| `tech-stack.md` | Which technologies and constraints, and why? | On replanning |
-| `roadmap.md` | In which small, shippable phases do we get there? | Every replanning |
-| `backlog/` | Research and ideas not yet on the roadmap | Any time (not locked) |
+| `mission.md` | Miért létezik, kinek, mi van a hatókörben és mi nincs? | Ritkán |
+| `tech-stack.md` | Milyen technológiák és korlátok, és miért? | Újratervezéskor |
+| `roadmap.md` | Milyen kis, szállítható fázisokban jutunk el oda? | Minden újratervezéskor |
+| `backlog/` | Kutatás és ötletek, amelyek még nincsenek a roadmapen | Bármikor (nem zárolt) |
 
 ## mission.md
 
 ```markdown
 # Mission
 
-## Vision
-<one paragraph: the problem and the change this project makes>
+## Vízió
+<egy bekezdés: a probléma és a változás, amit a projekt hoz>
 
-## Target audience
-- <who> — <what they need from it>
+## Célközönség
+- <ki> — <mire van szüksége tőle>
 
-## Scope
-- <in scope>
+## Hatókör
+- <hatókörben>
 
-## Non-goals
-- <explicitly out of scope>
+## Nem célok
+- <kifejezetten hatókörön kívül>
 
-## Stakeholder input
-- <name / role> — <what they asked for>
+## Érintettek igényei
+- <név / szerep> — <mit kért>
 ```
 
 ## tech-stack.md
@@ -38,45 +39,45 @@ until the owner unlocks them with `#spec-szerkesztes` (see `CLAUDE.md`).
 ```markdown
 # Tech stack
 
-## Overview
-<two or three sentences>
+## Áttekintés
+<két-három mondat>
 
 ## Stack
-| Layer | Choice | Version | Rationale |
+| Réteg | Választás | Verzió | Indoklás |
 |---|---|---|---|
-| Language | ... | pinned | ... |
+| Nyelv | ... | rögzített | ... |
 
-## Constraints
-- <company standards, hosting, security, licences>
+## Korlátok
+- <céges szabványok, hosting, biztonság, licencek>
 
-## Testing and validation
-- <test framework, how checks are run: commands>
+## Tesztelés és validáció
+- <tesztkeretrendszer, hogyan futnak az ellenőrzések: parancsok>
 
-## Known gaps
-- <what is consciously missing for now>
+## Ismert hiányosságok
+- <ami tudatosan hiányzik egyelőre>
 ```
 
 ## roadmap.md
 
-Each phase is one top-level checkbox line. The SDD guard reads the first open
-one as the next phase, and ticking a box (`[ ]` → `[x]`) is the only roadmap
-edit the agent may make without an unlock.
+Minden fázis egy legfelső szintű checkbox sor. Az SDD őr az első nyitottat
+olvassa következő fázisként, és egy doboz kipipálása (`[ ]` → `[x]`) az
+egyetlen roadmap-módosítás, amelyet az agent feloldás nélkül elvégezhet.
 
 ```markdown
 # Roadmap
 
-Phases are intentionally small: each is a shippable slice, independently
-reviewable and testable.
+A fázisok szándékosan kicsik: mindegyik szállítható szelet, önállóan
+review-zható és tesztelhető.
 
-- [ ] Phase 1 — <title>
-  - <what is delivered>
-  - <how we know it works>
-- [ ] Phase 2 — <title>
+- [ ] Fázis 1 — <cím>
+  - <mi készül el>
+  - <honnan tudjuk, hogy működik>
+- [ ] Fázis 2 — <cím>
   - ...
 ```
 
 ## backlog/
 
-One file per topic: `backlog/YYYY-MM-DD-<topic>.md` with the question, the
-findings, the recommendation and what was decided. A backlog item reaches the
-roadmap only through replanning, with a link back to its file.
+Témánként egy fájl: `backlog/YYYY-MM-DD-<topic>.md`, benne a kérdés, a
+megállapítások, a javaslat és a döntés. Backlog-elem csak újratervezésen
+keresztül kerülhet a roadmapre, a fájljára mutató hivatkozással.

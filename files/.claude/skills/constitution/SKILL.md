@@ -39,7 +39,7 @@ decides.
 - Once all three exist they are locked. If a write is denied, stop: show the
   exact change you propose (file, section, old -> new, why) and ask the owner
   to send `#spec-szerkesztes`. Never work around the guard.
-- The roadmap uses one checkbox line per phase: `- [ ] Phase N — <title>`.
+- The roadmap uses one checkbox line per phase: `- [ ] Fázis N — <cím>`.
 
 ## 4. Review and commit
 

@@ -19,7 +19,7 @@ guard blocks code until the owner approves the spec with `#spec-ok`.
 
 ## 2. Pick the feature and branch
 
-- Default: the first open phase in `specs/roadmap.md` (`- [ ] Phase N — ...`).
+- Default: the first open phase in `specs/roadmap.md` (`- [ ] Fázis N — ...`).
   If the owner named something else, use that.
 - Branch: `feature/phase-<n>-<short-name>` (for replanning changes:
   `replanning/<topic>`). The spec directory is

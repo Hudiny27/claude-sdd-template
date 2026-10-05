@@ -1,86 +1,89 @@
-# Plans/: feature specs
+# Plans/: feature specek
 
-Every roadmap phase (and every replanning change that touches code) gets its
-own feature spec before any code is written:
+Minden roadmap-fázis (és minden kódot érintő újratervezési változtatás) saját
+feature specet kap, mielőtt bármilyen kód készülne:
 
 ```
 Plans/
-├── YYYY-MM-DD-<slug>/     # active feature, <slug> = last part of the branch name
-│   ├── plan.md            # numbered task groups
-│   ├── requirements.md    # scope, out of scope, decisions, context
-│   └── validation.md      # checks that prove it is done and can be merged
-└── done/                  # finished features, moved here before merge
+├── YYYY-MM-DD-<slug>/     # aktív feature, <slug> = a branchnév utolsó része
+│   ├── plan.md            # számozott feladatcsoportok
+│   ├── requirements.md    # hatókör, hatókörön kívül, döntések, kontextus
+│   └── validation.md      # ellenőrzések, amelyek igazolják, hogy kész és mergelhető
+└── done/                  # befejezett feature-ök, merge előtt ide kerülnek
 ```
 
-Branch `feature/phase-2-agents` ↔ directory `Plans/2026-10-05-phase-2-agents/`.
-The SDD guard, the git pre-commit hook and the CI check all find the spec by
-this naming rule.
+Branch `feature/phase-2-agents` ↔ könyvtár `Plans/2026-10-05-phase-2-agents/`.
+Az SDD őr, a git pre-commit hook és a CI ellenőrzés is e névszabály alapján
+találja meg a specet.
 
-## Lifecycle
+## Életciklus
 
-1. `/feature-spec`: branch + interview + the three files. No code yet.
-2. Owner review. Changes go through the agent so the three files stay consistent.
-3. Owner approves with `#spec-ok`. From then on code edits are allowed on this branch.
-4. Implementation, task group by task group.
-5. `/validate-feature`: every check in `validation.md`, roadmap tick, move this
-   directory to `done/`, merge.
+1. `/feature-spec`: branch + interjú + a három fájl. Még nincs kód.
+2. Owner review. A módosítások az agenten keresztül mennek, hogy a három fájl
+   konzisztens maradjon.
+3. Az owner a `#spec-ok` kulcsszóval jóváhagyja. Ettől kezdve ezen a branchen
+   engedélyezett a kódszerkesztés.
+4. Implementáció, feladatcsoportonként.
+5. `/validate-feature`: a `validation.md` minden ellenőrzése, roadmap
+   kipipálása, a könyvtár áthelyezése a `done/` alá, merge.
 
 ## plan.md
 
 ```markdown
-# Plan: <feature>
+# Terv: <feature>
 
-Roadmap: Phase <n> — <title>
+Roadmap: Fázis <n> — <cím>
 Branch: feature/<slug>
 
-## Group 1 — <name>
-1. <task>
-2. <task>
+## 1. csoport — <név>
+1. <feladat>
+2. <feladat>
 
-## Group 2 — <name>
-3. <task>
+## 2. csoport — <név>
+3. <feladat>
 
-## Group N — Verify
-- Run every check in validation.md
+## N. csoport — Ellenőrzés
+- A validation.md minden ellenőrzésének lefuttatása
 ```
 
 ## requirements.md
 
 ```markdown
-# Requirements: <feature>
+# Követelmények: <feature>
 
-## Scope
-- <what this feature delivers>
+## Hatókör
+- <mit szállít ez a feature>
 
-## Out of scope
-- <what it deliberately does not do>
+## Hatókörön kívül
+- <mit nem csinál szándékosan>
 
-## Decisions
-- <decision> — <why> (YYYY-MM-DD)
+## Döntések
+- <döntés> — <miért> (YYYY-MM-DD)
 
-## Context
-- <constraints, related code, stakeholder notes>
+## Kontextus
+- <korlátok, kapcsolódó kód, érintettek megjegyzései>
 ```
 
 ## validation.md
 
 ```markdown
-# Validation: <feature>
+# Validáció: <feature>
 
-## Automated checks (the agent runs these)
-- [ ] `<command>` — <expected result>
+## Automatikus ellenőrzések (az agent futtatja)
+- [ ] `<parancs>` — <várt eredmény>
 
-## Manual checks (the owner runs these)
-- [ ] <what to look at, where>
+## Kézi ellenőrzések (az owner futtatja)
+- [ ] <mit kell megnézni, hol>
 
-## Definition of done
-- All checks above pass.
-- Spec and code are in sync (no undocumented decisions).
-- The roadmap phase is ticked.
+## Kész definíciója
+- A fenti ellenőrzések mind sikeresek.
+- A spec és a kód szinkronban van (nincs dokumentálatlan döntés).
+- A roadmap-fázis ki van pipálva.
 ```
 
-## Level of detail
+## Részletesség
 
-Write goals, constraints, success criteria, user flows and key technical
-decisions (pinned versions, strictness, data model). Leave out variable names,
-CSS classes and file-internal structure: the agent decides those.
+Írd le a célokat, korlátokat, sikerkritériumokat, felhasználói folyamatokat és
+a fontos technikai döntéseket (rögzített verziók, szigorúság, adatmodell).
+Hagyd ki a változóneveket, CSS-osztályokat és a fájlok belső szerkezetét: ezekről
+az agent dönt.

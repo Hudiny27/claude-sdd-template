@@ -155,6 +155,11 @@ Elnevezési szabály: a `feature/phase-2-agents` branch spec-je a
 `Plans/ÉÉÉÉ-HH-NN-phase-2-agents/` mappa. A spec-et a guard, a pre-commit és a
 CI is a branchnév utolsó tagja alapján találja meg.
 
+Nyelv: a projekt Markdown-dokumentumai (`CLAUDE.md`, `specs/`, `Plans/`)
+magyarul készülnek. A skillek, a kód, a kódkommentek és a commit üzenetek
+angolul maradnak. A roadmap sorai `- [ ] Fázis N — <cím>` alakúak; a guard csak
+a `- [ ] ` előtagot olvassa, így a fázisok elnevezése nyelvfüggetlen.
+
 ## A repó tartalma
 
 | Útvonal | Szerep |

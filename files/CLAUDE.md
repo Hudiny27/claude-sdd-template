@@ -1,130 +1,152 @@
-# Project rules: spec-driven development (SDD)
+# Projektszabályok: spec-vezérelt fejlesztés (SDD)
 
-This project is spec-driven. The spec defines **what** and **why**; code is the
-**how**. The rules below extend the global `~/.claude/CLAUDE.md`. Where they
-are more specific, they win inside this project. Hooks enforce the core rules
-(see "Enforcement"), so treat a denial as a stop sign, not an obstacle.
+Ez a projekt spec-vezérelt. A spec határozza meg a **mit** és a **miért**
+kérdést, a kód a **hogyan**. Az alábbi szabályok a globális
+`~/.claude/CLAUDE.md`-t egészítik ki. Ahol konkrétabbak, a projekten belül
+ezek érvényesek. Az alapszabályokat hookok kényszerítik ki (lásd
+„Kikényszerítés”), ezért egy elutasítás stoptábla, nem akadály.
 
-## Source of truth
+## Nyelv
 
-Precedence: `specs/` (constitution) > the current feature spec in `Plans/` >
-chat history. Never rely on memory of earlier sessions; read the files.
+A projekt Markdown-fájljai (`specs/`, `Plans/`, README-k, `CLAUDE.md`)
+magyarul készülnek. Kivételek, amelyek angolul maradnak: kód, kódkommentek,
+commit üzenetek és a skillek (`.claude/skills/`).
+Fájlnevek, útvonalak, kulcsszavak, parancsok, env változók és modell-ID-k nem
+fordítandók.
+
+## Az igazság forrása
+
+Elsőbbség: `specs/` (constitution) > az aktuális feature spec a `Plans/`
+alatt > a chat előzményei. Soha ne támaszkodj korábbi sessionök emlékére;
+olvasd a fájlokat.
 
 ```
-CLAUDE.md                  # these rules
-specs/                     # constitution: owner-controlled, hook-locked
-├── mission.md             # why: vision, audience, scope, non-goals
-├── tech-stack.md          # stack, versions, constraints, testing
-├── roadmap.md             # small phases, one "- [ ] Phase N — title" line each
-└── backlog/               # research and ideas not yet on the roadmap (not locked)
-Plans/                     # feature specs: agent-written, owner-approved
+CLAUDE.md                  # ezek a szabályok
+specs/                     # constitution: az owner kezeli, hookkal zárolt
+├── mission.md             # miért: vízió, célközönség, hatókör, nem célok
+├── tech-stack.md          # stack, verziók, korlátok, tesztelés
+├── roadmap.md             # kis fázisok, fázisonként egy "- [ ] Fázis N — cím" sor
+└── backlog/               # kutatás és ötletek, amelyek még nincsenek a roadmapen (nem zárolt)
+Plans/                     # feature specek: az agent írja, az owner hagyja jóvá
 ├── YYYY-MM-DD-<slug>/     # plan.md, requirements.md, validation.md
-└── done/                  # finished features
-.claude/hooks/sdd_guard.py # the guard (Claude Code hooks, pre-commit, CI)
+└── done/                  # befejezett feature-ök
+.claude/hooks/sdd_guard.py # az őr (Claude Code hookok, pre-commit, CI)
 .claude/skills/            # constitution, feature-spec, validate-feature, replan
-.githooks/pre-commit       # agent-independent backstop
+.githooks/pre-commit       # agenttől független védővonal
 ```
 
-Formats: `specs/README.md` and `Plans/README.md`. Branch
-`feature/phase-2-agents` ↔ `Plans/YYYY-MM-DD-phase-2-agents/` (the slug is the
-last part of the branch name).
+Formátumok: `specs/README.md` és `Plans/README.md`. Branch
+`feature/phase-2-agents` ↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a
+branchnév utolsó része).
 
-## Workflow
+## Munkafolyamat
 
-| Step | Skill | Result |
+| Lépés | Skill | Eredmény |
 |---|---|---|
-| 1. Constitution (once, then living) | `/constitution` | `specs/` written in an interview |
-| 2. Feature spec | `/feature-spec` | branch + `Plans/<dir>/` with 3 files, **no code** |
-| 3. Owner approval | owner sends `#spec-ok` | code edits unlocked on this branch |
-| 4. Implementation | (prompt) | code, task group by task group |
-| 5. Validation | `/validate-feature` | checks run, drift fixed, roadmap ticked, merge |
-| 6. Replanning | `/replan` | roadmap, constitution and workflow updated |
+| 1. Constitution (egyszer, utána élő) | `/constitution` | `specs/` interjú alapján megírva |
+| 2. Feature spec | `/feature-spec` | branch + `Plans/<dir>/` 3 fájllal, **kód nélkül** |
+| 3. Owner jóváhagyás | az owner elküldi: `#spec-ok` | ezen a branchen feloldódik a kódszerkesztés |
+| 4. Implementáció | (prompt) | kód, feladatcsoportonként |
+| 5. Validáció | `/validate-feature` | ellenőrzések lefutnak, eltérések javítva, roadmap kipipálva, merge |
+| 6. Újratervezés | `/replan` | roadmap, constitution és munkafolyamat frissítve |
 
-At the start of every session, the guard prints the SDD status: branch,
-constitution state, current feature spec and approval, next roadmap phase.
-Act on it.
+Minden session elején az őr kiírja az SDD státuszt: branch, a constitution
+állapota, az aktuális feature spec és jóváhagyása, a következő roadmap-fázis.
+Ennek megfelelően járj el.
 
-## Enforcement (hooks)
+## Kikényszerítés (hookok)
 
-`.claude/hooks/sdd_guard.py`, wired in `.claude/settings.json`:
+`.claude/hooks/sdd_guard.py`, bekötve a `.claude/settings.json`-ben:
 
-| What | Rule | Unlock |
+| Mi | Szabály | Feloldás |
 |---|---|---|
-| `specs/mission.md`, `tech-stack.md`, `roadmap.md` | Locked once all three exist; writable while any is missing (bootstrap) | Owner: `#spec-szerkesztes`, until `#spec-zar` or 12 hours |
-| Roadmap checkbox `[ ]` → `[x]` (Edit tool) | Always allowed | none needed |
-| Guard files: `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/sdd_guard.py`, its test, `.githooks/`, `~/.claude/settings.json` | Locked | Owner: `#spec-szerkesztes` |
-| Code (everything except `specs/`, `Plans/`, `docs/`, `.claude/`, `.githooks/`, `*.md`, `.gitignore`, git-ignored files) | Only on a feature branch whose spec the owner approved | Owner: `#spec-ok` on that branch |
-| Lock and approval flag files (`.claude/.sdd-*`) | Never writable by the agent | none |
-| `git commit --no-verify`, changing `core.hooksPath` | Always denied | none |
+| `specs/mission.md`, `tech-stack.md`, `roadmap.md` | Zárolt, amint mindhárom létezik; írható, amíg bármelyik hiányzik (bootstrap) | Owner: `#spec-szerkesztes`, `#spec-zar`-ig vagy 12 óráig |
+| Roadmap checkbox `[ ]` → `[x]` (Edit eszköz) | Mindig engedélyezett | nem kell |
+| Őrfájlok: `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/sdd_guard.py`, a tesztje, `.githooks/`, `~/.claude/settings.json` | Zárolt | Owner: `#spec-szerkesztes` |
+| Kód (minden, kivéve `specs/`, `Plans/`, `docs/`, `.claude/`, `.githooks/`, `*.md`, `.gitignore`, git által ignorált fájlok) | Csak olyan feature branchen, amelynek a specjét az owner jóváhagyta | Owner: `#spec-ok` azon a branchen |
+| Zár- és jóváhagyás-flagfájlok (`.claude/.sdd-*`) | Az agent soha nem írhatja | nincs |
+| `git commit --no-verify`, a `core.hooksPath` módosítása | Mindig tiltott | nincs |
 
-- Keywords count only when a line of the **owner's** message starts with them.
-  Never write a keyword at the start of a line in a prompt you give a subagent,
-  and never ask a subagent to "unlock" anything.
-- When a write is denied: stop, tell the owner what you wanted to change and
-  why, and propose the exact change (file, section, old -> new). Never work
-  around the guard (other tools, scripts, different paths, flag files).
-- The git pre-commit hook enforces the same code rule for any agent or
-  editor: no code commits on `main` and none on a branch without a spec
-  (merge and squash-merge commits are allowed). The optional CI check
-  (`.github/workflows/sdd-check.yml`) fails a PR that changes code without
-  changing a spec, unless it has the label `no-spec-change`.
-- Known gaps: programs that write files themselves (package managers,
-  generators, formatters) and writes hidden behind variables are not seen by
-  the hook. The pre-commit hook catches them at commit time. Behave as if the
-  rules had no gaps.
+- A kulcsszavak csak akkor számítanak, ha az **owner** üzenetének egy sora
+  velük kezdődik. Subagentnek adott promptban soha ne írj kulcsszót sor
+  elejére, és soha ne kérj subagentet, hogy „oldjon fel” bármit.
+- Ha egy írást elutasít az őr: állj meg, mondd el az ownernek, mit akartál
+  módosítani és miért, és javasold a pontos változtatást (fájl, szakasz,
+  régi -> új). Soha ne kerüld meg az őrt (más eszközzel, scripttel, más
+  útvonallal, flagfájllal).
+- A git pre-commit hook ugyanezt a kódszabályt kényszeríti ki bármely agentre
+  vagy szerkesztőre: nincs kódcommit `main`-en, és nincs olyan branchen, ahol
+  nincs spec (merge és squash-merge commit engedélyezett). Az opcionális CI
+  ellenőrzés (`.github/workflows/sdd-check.yml`) elbuktat minden PR-t, amely
+  kódot módosít spec módosítása nélkül, kivéve ha `no-spec-change` címkéje
+  van.
+- Ismert rések: az önmaguk által fájlt író programokat (csomagkezelők,
+  generátorok, formázók) és a változók mögé rejtett írásokat a hook nem
+  látja. Ezeket a pre-commit hook commitkor elkapja. Viselkedj úgy, mintha a
+  szabályokban nem lennének rések.
 
-## Rules per step
+## Szabályok lépésenként
 
-**Constitution:** interview first (AskUserQuestion, grouped on mission / tech
-stack / roadmap), write after. Brownfield: derive from the existing code,
-README, TODO and commits first, then ask about gaps. Roadmap phases are small,
-shippable and independently reviewable.
+**Constitution:** előbb interjú (AskUserQuestion, mission / tech stack /
+roadmap szerint csoportosítva), utána írás. Brownfield: előbb a meglévő
+kódból, README-ből, TODO-ból és commitokból vezesd le, utána kérdezz a
+hiányokról. A roadmap-fázisok kicsik, szállíthatók és önállóan
+review-zhatók.
 
-**Feature spec:** start from a clean state (no uncommitted work, previous
-branch merged, on `main`) and preferably a fresh context (`/clear`). Interview
-(grouped on scope / decisions / context) before writing. `validation.md` must
-contain commands you can run yourself plus the owner's manual checks. No code
-in this step.
+**Feature spec:** tiszta állapotból indulj (nincs commitolatlan munka, az
+előző branch mergelve, `main`-en vagy), lehetőleg friss kontextussal
+(`/clear`). Írás előtt interjú (hatókör / döntések / kontextus szerint
+csoportosítva). A `validation.md` tartalmazzon olyan parancsokat, amelyeket
+magad is lefuttatsz, és az owner kézi ellenőrzéseit. Ebben a lépésben nincs
+kód.
 
-**Implementation:** only after `#spec-ok`. Follow `plan.md` task group by task
-group. For security, auth, data and migrations: one group at a time, then
-stop. Do not go beyond `requirements.md`. If something is missing or
-ambiguous, stop and ask. Never decide silently.
+**Implementáció:** csak `#spec-ok` után. Kövesd a `plan.md`-t
+feladatcsoportonként. Biztonság, auth, adat és migrációk esetén: egyszerre
+egy csoport, utána állj meg. Ne menj túl a `requirements.md`-n. Ha valami
+hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben.
 
-**Validation:** run every check in `validation.md` and report pass/fail with
-evidence. Review at the level of "does it work and match the spec". For
-non-trivial features, offer a deep review by parallel subagents. Done means:
-all checks pass, spec and code in sync, roadmap phase ticked, spec moved to
-`Plans/done/`.
+**Validáció:** futtasd le a `validation.md` minden ellenőrzését, és jelentsd
+az eredményt (sikeres/sikertelen) bizonyítékkal. A review szintje: „működik-e
+és megfelel-e a specnek”. Nem triviális feature-nél ajánlj fel mély review-t
+párhuzamos subagentekkel. Kész akkor van, ha minden ellenőrzés sikeres, a
+spec és a kód szinkronban van, a roadmap-fázis ki van pipálva, és a spec a
+`Plans/done/` alá került.
 
-**Replanning:** between features, on a `replanning/<topic>` branch. Small code
-corrections still need a spec and `#spec-ok`; larger new work becomes a new
-roadmap phase. Mid-feature ideas go to `specs/backlog/YYYY-MM-DD-<topic>.md`,
-not into the current branch or the roadmap.
+**Újratervezés:** feature-ök között, `replanning/<topic>` branchen. Kis
+kódjavításhoz is kell spec és `#spec-ok`; nagyobb új munka új roadmap-fázis
+lesz. A feature közben felmerülő ötletek a `specs/backlog/YYYY-MM-DD-<topic>.md`
+alá kerülnek, nem az aktuális branchre és nem a roadmapre.
 
-## Spec and code stay in sync
+## A spec és a kód szinkronban marad
 
-- Any change in behaviour or decisions updates the relevant spec file in the
-  same change. Fix spec and code together when a bug traces back to the spec.
-- Decisions discovered during review go to `requirements.md` under "Decisions",
-  with date and reason. An omission found in review is not a failure: record it.
-- Spec changes go through the agent so that related files (plan, requirements,
-  validation, README) stay consistent. After renames or moves, including IDE
-  refactors by the owner, update every mention in specs and docs.
+- Minden viselkedés- vagy döntésváltozás ugyanabban a változtatásban
+  frissíti a vonatkozó specfájlt. Ha egy hiba a specre vezethető vissza, a
+  specet és a kódot együtt javítsd.
+- A review során feltárt döntések a `requirements.md` „Döntések” szakaszába
+  kerülnek, dátummal és indoklással. A review-ban talált kihagyás nem kudarc:
+  rögzítsd.
+- A specmódosítások az agenten keresztül mennek, hogy a kapcsolódó fájlok
+  (plan, requirements, validation, README) konzisztensek maradjanak.
+  Átnevezés vagy áthelyezés után – az owner IDE-s refaktorálása után is –
+  frissíts minden említést a specekben és a dokumentációban.
 
-## Level of detail in specs
+## A specek részletessége
 
-Include goals, audience, constraints, success criteria, user flows and key
-technical decisions (pinned versions, strictness, data model). Leave out
-variable names, CSS classes and file-internal structure.
+Szerepeljenek: célok, célközönség, korlátok, sikerkritériumok, felhasználói
+folyamatok és a fontos technikai döntések (rögzített verziók, szigorúság,
+adatmodell). Maradjanak ki: változónevek, CSS-osztályok és a fájlok belső
+szerkezete.
 
-## Interplay with the global rules
+## Viszony a globális szabályokhoz
 
-- The global "plan first if bigger than ~3 files" rule is fulfilled by the
-  feature spec: `plan.md` is that plan, `#spec-ok` is the approval.
-- The global "ask one specific question" rule has one exception: constitution
-  and spec interviews use grouped questions.
-- Global git and safety rules still apply. Propose commits at the end of each
-  step and make them only after approval. Never push without asking.
-- Commit scopes: `docs(specs): ...` for the constitution, `docs(plans): ...`
-  for feature specs, Conventional Commits for code.
+- A globális „~3 fájl fölött előbb terv” szabályt a feature spec teljesíti: a
+  `plan.md` a terv, a `#spec-ok` a jóváhagyás.
+- A globális „egy konkrét kérdést tegyél fel” szabály alól egy kivétel van: a
+  constitution- és a spec-interjú csoportosított kérdéseket használ.
+- A globális „angol dokumentáció” szabály helyett itt a fenti „Nyelv” szakasz
+  érvényes.
+- A globális git- és biztonsági szabályok továbbra is érvényesek. Minden lépés
+  végén javasolj commitot, és csak jóváhagyás után commitolj. Soha ne pusholj
+  kérdezés nélkül.
+- Commit scope-ok: `docs(specs): ...` a constitutionhöz, `docs(plans): ...` a
+  feature specekhez, Conventional Commits a kódhoz.

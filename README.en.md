@@ -50,6 +50,11 @@ Restart Claude Code afterwards, because hooks load at session start.
 | `.githooks/pre-commit` | Agent-independent backstop for code commits |
 | `.github/workflows/sdd-check.yml` | Optional (`--with-ci`): PR check for spec–code sync |
 
+Language: the project's Markdown docs (`CLAUDE.md`, `specs/`, `Plans/`) are
+written in Hungarian. Skills, code, code comments and commit messages stay in
+English. Roadmap lines read `- [ ] Fázis N — <cím>`; the guard only parses the
+`- [ ] ` prefix, so phase naming is language-independent.
+
 ## Workflow and keywords
 
 ```
