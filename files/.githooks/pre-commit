@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""Git pre-commit hook: the SDD backstop that works with any agent or editor.
+
+Code (anything that is not specs/, Plans/, docs/, .claude/, .githooks/ or
+Markdown) may be committed only on a feature branch that has a feature spec:
+Plans[/done]/YYYY-MM-DD-<last part of the branch name>/ with plan.md,
+requirements.md and validation.md. Merge and squash-merge commits are allowed,
+because the merged branch already went through this check.
+
+Activated by `git config core.hooksPath .githooks` (install.sh does this).
+The path rules are imported from .claude/hooks/sdd_guard.py.
+"""
+
+import os
+import subprocess
+import sys
+
+
+def git(*args):
+    return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+
+
+def fail(message):
+    print("SDD pre-commit: " + message, file=sys.stderr)
+    sys.exit(1)
+
+
+def main():
+    root = git("rev-parse", "--show-toplevel")
+    sys.dont_write_bytecode = True  # no __pycache__ in the project
+    sys.path.insert(0, os.path.join(root, ".claude", "hooks"))
+    try:
+        import sdd_guard as sdd
+    except ImportError:
+        fail(".claude/hooks/sdd_guard.py is missing, so the SDD rules cannot be checked.")
+
+    staged = git("diff", "--cached", "--name-only", "-z", "--diff-filter=ACMRD").split("\0")
+    code = [f for f in staged if f and not sdd.is_free(f)]
+    if not code:
+        return
+
+    git_dir = git("rev-parse", "--absolute-git-dir")
+    if any(os.path.exists(os.path.join(git_dir, name)) for name in ("MERGE_HEAD", "SQUASH_MSG")):
+        return
+
+    branch = sdd.branch_of(root)
+    if not branch or branch in sdd.MAIN_BRANCHES:
+        fail(
+            "code changes cannot be committed on " + (branch or "a detached HEAD") + ".\n"
+            "  Create a feature branch with its spec under Plans/, or merge a finished feature branch.\n"
+            "  Code files: " + ", ".join(code[:10])
+        )
+    if not sdd.find_spec_dir(root, branch):
+        fail(
+            "branch " + branch + " has no feature spec.\n"
+            "  Expected Plans/YYYY-MM-DD-" + sdd.branch_slug(branch) + "/ with plan.md, requirements.md, validation.md."
+        )
+
+
+if __name__ == "__main__":
+    main()

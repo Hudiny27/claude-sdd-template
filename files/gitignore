@@ -1,0 +1,6 @@
+# SDD guard: lock and approval flags are local state
+.claude/.sdd-unlock-*
+.claude/.sdd-approved-*
+.claude/settings.local.json
+.claude/worktrees/
+__pycache__/
