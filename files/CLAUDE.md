@@ -123,7 +123,8 @@ alá kerülnek, nem az aktuális branchre és nem a roadmapre.
   frissíti a vonatkozó specfájlt. Ha egy hiba a specre vezethető vissza, a
   specet és a kódot együtt javítsd.
 - A review során feltárt döntések a `requirements.md` „Döntések” szakaszába
-  kerülnek, dátummal és indoklással. A review-ban talált kihagyás nem kudarc:
+  kerülnek, dátummal, indoklással és a döntéshozóval (`owner` vagy `agent`,
+  lásd `Plans/README.md`). A review-ban talált kihagyás nem kudarc:
   rögzítsd.
 - A specmódosítások az agenten keresztül mennek, hogy a kapcsolódó fájlok
   (plan, requirements, validation, README) konzisztensek maradjanak.

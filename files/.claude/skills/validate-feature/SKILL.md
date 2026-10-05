@@ -22,8 +22,9 @@ long logs. Never mark a check as passed without running it.
 - Diff the branch against `main`. For each requirement: met, partly met, or
   not met.
 - Anything the code does that the spec does not say is drift. For each case,
-  either fix the code or update `requirements.md` (under "Döntések", with date
-  and why). If it is a real decision, ask the owner first.
+  either fix the code or update `requirements.md` (under "Döntések", with date,
+  why, and who decided: `owner` or `agent`). If it is a real decision, ask the
+  owner first.
 - If a renamed or moved file is still mentioned in specs, docs or README,
   update the mentions.
 

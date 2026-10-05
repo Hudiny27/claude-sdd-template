@@ -46,14 +46,16 @@ Use the formats in `Plans/README.md`:
 
 - `plan.md`: numbered task groups, small enough to review one by one; the
   last group runs `validation.md`.
-- `requirements.md`: scope, out of scope, decisions (with date and why),
+- `requirements.md`: scope, out of scope, decisions (with date, why, and who
+  decided: `owner` or `agent`; one decider per line, split mixed decisions),
   context. No variable names or CSS-level detail.
 - `validation.md`: automated checks the agent runs (exact commands and
   expected results), manual checks for the owner, definition of done.
 
 ## 5. Hand over for review
 
-- Summarise the spec in a few lines and list the assumptions you made.
+- Summarise the spec in a few lines and list the assumptions you made. Each
+  assumption is also recorded under "Döntések" as an `agent` decision.
 - Apply review changes yourself and keep the three files consistent.
 - Propose the commit `docs(plans): add spec for <feature>` and make it after approval.
 - Tell the owner: when the spec is right, start a line of the message with

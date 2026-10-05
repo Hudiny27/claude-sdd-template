@@ -58,11 +58,18 @@ Branch: feature/<slug>
 - <mit nem csinál szándékosan>
 
 ## Döntések
-- <döntés> — <miért> (YYYY-MM-DD)
+- <döntés> — <miért> (YYYY-MM-DD, döntött: owner | agent)
 
 ## Kontextus
 - <korlátok, kapcsolódó kód, érintettek megjegyzései>
 ```
+
+Minden döntésnél jelölni kell, ki hozta. `owner`: a spec-interjúból, a
+constitutionből vagy az owner kifejezett kéréséből származik. `agent`: az
+agent döntötte el (feltételezés, alapérték, implementációs választás), és a
+`#spec-ok` hagyja jóvá; a review során később hozott agent-döntésekre az
+owner rákérdezhet. Soronként egy döntéshozó szerepel, a vegyes döntéseket
+szét kell bontani.
 
 ## validation.md
 
