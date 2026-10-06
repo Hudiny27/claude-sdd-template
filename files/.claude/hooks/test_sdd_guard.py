@@ -136,6 +136,22 @@ class ConstitutionLock(Repo):
         self.assertTrue(self.bash("bash -c 'cp /tmp/x specs/roadmap.md'"))
         self.assertTrue(self.bash("python3 - <<'EOF'\nopen('specs/mission.md', 'w').write('x')\nEOF"))
 
+    def test_sed_and_perl_scripts_are_not_targets(self):
+        # Regression: the sed/perl script used to be taken for a code file.
+        self.constitution()
+        self.feature("replanning/topic", spec=False)
+        self.write("specs/backlog/x.md")
+        self.write("src/app.py")
+        self.assertFalse(self.bash("sed -i 's/a/b/' specs/backlog/x.md"))
+        self.assertFalse(self.bash("sed -i -e 's/a/b/' -e 's/c/d/' specs/backlog/x.md"))
+        self.assertFalse(self.bash("sed --in-place=.bak --expression='s/a/b/' specs/backlog/x.md"))
+        self.assertFalse(self.bash("perl -pi -e 's/a/b/' specs/backlog/x.md"))
+        self.assertTrue(self.bash("sed -i 's/a/b/' src/app.py"))
+        self.assertTrue(self.bash("sed -i -e 's/a/b/' src/app.py"))
+        self.assertTrue(self.bash("sed -i -f fix.sed src/app.py"))
+        self.assertTrue(self.bash("perl -pi -e 's/a/b/' src/app.py"))
+        self.assertTrue(self.bash("sed -i 's/a/b/' specs/tech-stack.md"))
+
     def test_bash_reads_are_free(self):
         self.constitution()
         self.assertFalse(self.bash("cat specs/mission.md && grep -n x specs/roadmap.md"))

@@ -470,6 +470,46 @@ def git_bypass(words):
     return any(a == "--no-verify" or (re.match(r"^-[A-Za-z]+$", a) and "n" in a[1:]) for a in rest)
 
 
+SCRIPT_OPTS = ("-e", "-f", "--expression", "--file")
+
+
+def in_place_flag(arg):
+    """-i, -i.bak, --in-place, or -i inside a short flag group (perl -pi)."""
+    if arg.startswith("--"):
+        return arg.startswith("--in-place")
+    return arg.startswith("-") and (arg.startswith("-i") or "i" in arg[1:].split(".")[0])
+
+
+def script_files(cmd, args):
+    """The files an in-place sed/perl edits; its script is not one of them.
+
+    The script is the value of -e/-f (sed, perl) or, for sed without -e/-f,
+    the first non-option argument.
+    """
+    files = []
+    has_script_opt = False
+    skip_next = False
+    for a in args:
+        if skip_next:
+            skip_next = False
+            continue
+        if a in SCRIPT_OPTS:
+            has_script_opt = skip_next = True
+            continue
+        if a.startswith(tuple(o + "=" for o in SCRIPT_OPTS if o.startswith("--"))):
+            has_script_opt = True
+            continue
+        # perl bundles -e at the end of a flag group: -pi -e, -pie
+        if cmd == "perl" and a.startswith("-") and not a.startswith("--") and a.endswith("e"):
+            has_script_opt = skip_next = True
+            continue
+        if not a.startswith("-"):
+            files.append(a)
+    if cmd == "sed" and not has_script_opt and files:
+        files = files[1:]
+    return files
+
+
 def write_targets(words):
     """Yield (path, kind) for every file this simple command changes."""
     rest = []
@@ -505,9 +545,8 @@ def write_targets(words):
     elif cmd == "tee":
         for a in plain:
             yield a, "write"
-    elif cmd in ("sed", "perl") and any(a == "-i" or a.startswith("-i") or a.startswith("--in-place") for a in args):
-        for a in plain:
-            yield a, "write"
+    elif cmd in ("sed", "perl") and any(in_place_flag(a) for a in args):
+        yield from ((a, "write") for a in script_files(cmd, args))
     elif cmd == "dd":
         for a in args:
             if a.startswith("of="):
