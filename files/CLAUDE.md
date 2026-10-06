@@ -28,7 +28,7 @@ specs/                     # constitution: az owner kezeli, hookkal zárolt
 ├── roadmap.md             # kis fázisok, fázisonként egy "- [ ] Fázis N — cím" sor
 └── backlog/               # kutatás és ötletek, amelyek még nincsenek a roadmapen (nem zárolt)
 Plans/                     # feature specek: az agent írja, az owner hagyja jóvá
-├── YYYY-MM-DD-<slug>/     # plan.md, requirements.md, validation.md
+├── YYYY-MM-DD-<slug>/     # plan.md, requirements.md, validation.md, validate.sh
 └── done/                  # befejezett feature-ök
 .claude/hooks/sdd_guard.py # az őr (Claude Code hookok, pre-commit, CI)
 .claude/skills/            # constitution, feature-spec, validate-feature, replan
@@ -44,7 +44,7 @@ branchnév utolsó része).
 | Lépés | Skill | Eredmény |
 |---|---|---|
 | 1. Constitution (egyszer, utána élő) | `/constitution` | `specs/` interjú alapján megírva |
-| 2. Feature spec | `/feature-spec` | branch + `Plans/<dir>/` 3 fájllal, **kód nélkül** |
+| 2. Feature spec | `/feature-spec` | branch + `Plans/<dir>/` 3 fájllal és `validate.sh`-val, **kód nélkül** |
 | 3. Owner jóváhagyás | az owner elküldi: `#spec-ok` | ezen a branchen feloldódik a kódszerkesztés |
 | 4. Implementáció | (prompt) | kód, feladatcsoportonként |
 | 5. Validáció | `/validate-feature` | ellenőrzések lefutnak, eltérések javítva, roadmap kipipálva, merge |
@@ -116,6 +116,18 @@ spec és a kód szinkronban van, a roadmap-fázis ki van pipálva, és a spec a
 kódjavításhoz is kell spec és `#spec-ok`; nagyobb új munka új roadmap-fázis
 lesz. A feature közben felmerülő ötletek a `specs/backlog/YYYY-MM-DD-<topic>.md`
 alá kerülnek, nem az aktuális branchre és nem a roadmapre.
+
+**Prototípus:** az owner kérésére készülhet eldobható prototípus egy
+feltételezés gyors kipróbálására. Feltételei:
+- a session scratchpadjében fut, a repón kívül, és nem kerül commitba;
+- nem érinti a projektkódot és a projekt függőségeit (saját, ideiglenes
+  környezetet használ);
+- a kódja nem kerül át a repóba; a rendes megvalósítás spec és `#spec-ok`
+  után készül.
+
+A tanulságokat ugyanabban a sessionben a `specs/backlog/YYYY-MM-DD-<topic>.md`
+alá kell írni egy `replanning/<topic>` branchen; a roadmapre vételükről a
+következő `/replan` dönt.
 
 ## A spec és a kód szinkronban marad
 

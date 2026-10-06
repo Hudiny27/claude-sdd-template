@@ -13,9 +13,11 @@ description: Validate the current feature branch against its spec - run every ch
 
 ## 2. Run the automated checks
 
-Run every automated check in `validation.md`. Report each one as a row:
-check, pass/fail, short evidence (exit code, key output line). Do not paste
-long logs. Never mark a check as passed without running it.
+Run every automated check in `validation.md`: `bash Plans/<dir>/validate.sh`,
+plus by hand any check the script does not cover (and fix the script). Report
+each one as a row: check, pass/fail, short evidence (exit code, key output
+line). Do not paste long logs. Never mark a check as passed without running
+it.
 
 ## 3. Compare code with spec
 

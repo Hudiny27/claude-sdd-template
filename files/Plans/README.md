@@ -8,7 +8,8 @@ Plans/
 ├── YYYY-MM-DD-<slug>/     # aktív feature, <slug> = a branchnév utolsó része
 │   ├── plan.md            # számozott feladatcsoportok
 │   ├── requirements.md    # hatókör, hatókörön kívül, döntések, kontextus
-│   └── validation.md      # ellenőrzések, amelyek igazolják, hogy kész és mergelhető
+│   ├── validation.md      # ellenőrzések, amelyek igazolják, hogy kész és mergelhető
+│   └── validate.sh        # a validation.md automatikus ellenőrzései egy futtatható scriptben
 └── done/                  # befejezett feature-ök, merge előtt ide kerülnek
 ```
 
@@ -18,9 +19,10 @@ találja meg a specet.
 
 ## Életciklus
 
-1. `/feature-spec`: branch + interjú + a három fájl. Még nincs kód.
-2. Owner review. A módosítások az agenten keresztül mennek, hogy a három fájl
-   konzisztens maradjon.
+1. `/feature-spec`: branch + interjú + a három fájl és a `validate.sh`. Még
+   nincs kód.
+2. Owner review. A módosítások az agenten keresztül mennek, hogy a spec fájljai
+   konzisztensek maradjanak.
 3. Az owner a `#spec-ok` kulcsszóval jóváhagyja. Ettől kezdve ezen a branchen
    engedélyezett a kódszerkesztés.
 4. Implementáció, feladatcsoportonként.
@@ -76,7 +78,7 @@ szét kell bontani.
 ```markdown
 # Validáció: <feature>
 
-## Automatikus ellenőrzések (az agent futtatja)
+## Automatikus ellenőrzések (az agent futtatja: `bash Plans/<dir>/validate.sh`)
 - [ ] `<parancs>` — <várt eredmény>
 
 ## Kézi ellenőrzések (az owner futtatja)
@@ -87,6 +89,21 @@ szét kell bontani.
 - A spec és a kód szinkronban van (nincs dokumentálatlan döntés).
 - A roadmap-fázis ki van pipálva.
 ```
+
+## validate.sh
+
+A `validation.md` minden automatikus ellenőrzése egy bash scriptben, amelyet
+az agent a speccel együtt ír meg, és az owner bármikor újrafuttathat. A
+spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
+
+- A repó gyökeréből fut: `bash Plans/<dir>/validate.sh`.
+- Ellenőrzésenként egy sort ír: `PASS` vagy `FAIL`, az ellenőrzés neve és egy
+  rövid bizonyíték (kilépési kód, kulcssor).
+- Ha bármelyik ellenőrzés elbukik, nem nulla kóddal lép ki.
+- Az ideiglenes fájlokat egy saját ideiglenes könyvtárban tartja, és a végén
+  törli.
+- Élő, fizetős vagy hálózatot igénylő ellenőrzést csak kapcsolóval futtat
+  (például `VTW_LIVE_TESTS=1`).
 
 ## Részletesség
 

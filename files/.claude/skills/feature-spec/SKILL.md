@@ -1,6 +1,6 @@
 ---
 name: feature-spec
-description: Start the next roadmap feature the spec-driven way - check preconditions, create the feature branch, interview the owner, and write Plans/YYYY-MM-DD-<slug>/{plan,requirements,validation}.md. No code. Use when the owner wants to start a feature, the next roadmap phase, or a code-touching replanning change.
+description: Start the next roadmap feature the spec-driven way - check preconditions, create the feature branch, interview the owner, and write Plans/YYYY-MM-DD-<slug>/{plan,requirements,validation}.md plus validate.sh. No code. Use when the owner wants to start a feature, the next roadmap phase, or a code-touching replanning change.
 ---
 
 # Feature spec
@@ -40,7 +40,7 @@ in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
 
 Point out conflicts with the constitution. Do not resolve them silently.
 
-## 4. Write the three files
+## 4. Write the spec files
 
 Use the formats in `Plans/README.md`:
 
@@ -51,12 +51,18 @@ Use the formats in `Plans/README.md`:
   context. No variable names or CSS-level detail.
 - `validation.md`: automated checks the agent runs (exact commands and
   expected results), manual checks for the owner, definition of done.
+- `validate.sh`: every automated check from `validation.md` as one bash
+  script, run from the repo root. One `PASS`/`FAIL` line per check with short
+  evidence, non-zero exit if any check fails, its own temp dir cleaned up.
+  Live, paid or networked checks only behind an opt-in switch. It lives in the
+  spec folder, so it is written now, with the spec.
 
 ## 5. Hand over for review
 
 - Summarise the spec in a few lines and list the assumptions you made. Each
   assumption is also recorded under "Döntések" as an `agent` decision.
-- Apply review changes yourself and keep the three files consistent.
+- Apply review changes yourself and keep the spec files (including
+  `validate.sh`) consistent.
 - Propose the commit `docs(plans): add spec for <feature>` and make it after approval.
 - Tell the owner: when the spec is right, start a line of the message with
   `#spec-ok`. Then start a fresh context (`/clear`) and implement:
