@@ -122,8 +122,10 @@ feltételezés gyors kipróbálására. Feltételei:
 - a session scratchpadjében fut, a repón kívül, és nem kerül commitba;
 - nem érinti a projektkódot és a projekt függőségeit (saját, ideiglenes
   környezetet használ);
-- a kódja nem kerül át a repóba; a rendes megvalósítás spec és `#spec-ok`
-  után készül.
+- a kódja nem kerül át a projektkódba; a rendes megvalósítás spec és
+  `#spec-ok` után készül. Az owner kérésére a prototípus scriptjei
+  referenciaként a `specs/backlog/prototype/` alá menthetők (a lint alól
+  fájlszinten kivéve), hogy a scratchpad törlése után is meglegyenek.
 
 A tanulságokat ugyanabban a sessionben a `specs/backlog/YYYY-MM-DD-<topic>.md`
 alá kell írni egy `replanning/<topic>` branchen; a roadmapre vételükről a

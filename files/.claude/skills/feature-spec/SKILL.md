@@ -55,7 +55,11 @@ Use the formats in `Plans/README.md`:
   script, run from the repo root. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.
   Live, paid or networked checks only behind an opt-in switch. It lives in the
-  spec folder, so it is written now, with the spec.
+  spec folder, so it is written now, with the spec. It finds its own folder
+  with `$(dirname "$0")` and never hard-codes `Plans/<dir>`, so it still runs
+  after the spec moves to `Plans/done/`. Local, git-ignored settings it needs
+  (such as live sample paths, never secrets) come from a file the project
+  documents.
 
 ## 5. Hand over for review
 

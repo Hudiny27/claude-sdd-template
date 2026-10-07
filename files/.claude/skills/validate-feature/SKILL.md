@@ -49,7 +49,9 @@ This keeps the main context clean and catches what a single pass misses.
 
 1. Tick the phase in `specs/roadmap.md` (`[ ]` → `[x]`; this edit needs no unlock).
 2. Update `CHANGELOG.md` if the project keeps one.
-3. Move the spec directory to `Plans/done/`.
+3. Tick every check in `validation.md` that passed (`[ ]` → `[x]`), then move
+   the spec directory to `Plans/done/`. Fix any `Plans/<dir>` path the
+   archived files still mention, and rerun `validate.sh` from its new place.
 4. Propose the commit(s) and make them after approval. Then propose the
    merge into `main` (squash or merge, as the owner prefers) and do it after
    approval. Never push without asking.

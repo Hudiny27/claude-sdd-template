@@ -104,6 +104,10 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
   törli.
 - Élő, fizetős vagy hálózatot igénylő ellenőrzést csak kapcsolóval futtat
   (például `VTW_LIVE_TESTS=1`).
+- A saját mappáját `$(dirname "$0")`-val találja meg, és sehol nem írja be a
+  `Plans/<dir>` útvonalat, így a `Plans/done/` alá költözés után is fut.
+- A helyi, git által ignorált beállításokat (például az élő minták útvonalát,
+  titkot soha) a projekt által dokumentált fájlból olvassa.
 
 ## Részletesség
 
