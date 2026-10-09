@@ -14,7 +14,10 @@ description: Validate the current feature branch against its spec - run every ch
 ## 2. Run the automated checks
 
 Run every automated check in `validation.md`: `bash Plans/<dir>/validate.sh`,
-plus by hand any check the script does not cover (and fix the script). Report
+plus by hand any check the script does not cover (and fix the script). Run
+the fresh-subagent probe if `validation.md` has one; after fixing what it
+finds, repeat with a new fresh subagent until a round finds no new real gap
+(at most 3 rounds), and record the gaps under "Döntések". Report
 each one as a row: check, pass/fail, short evidence (exit code, key output
 line). Do not paste long logs. Never mark a check as passed without running
 it.
@@ -41,6 +44,8 @@ This keeps the main context clean and catches what a single pass misses.
 ## 5. Hand over to the owner
 
 - The result table, the drift you fixed, and the open findings.
+- For paid APIs: the actual usage (characters, minutes, calls) against the
+  estimate in `validation.md`.
 - The manual checks from `validation.md`, as a short list for the owner.
 - Remind the owner to read the key tests or step through them in the debugger
   if they want to own the change, not just accept it.

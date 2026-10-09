@@ -66,6 +66,11 @@ Branch: feature/<slug>
 - <korlátok, kapcsolódó kód, érintettek megjegyzései>
 ```
 
+Az agent által választott, valódi adattól függő számértékek (küszöbök,
+hangosság, sebesség) „kalibrálandó” jelölést kapnak a döntésükben; a
+`plan.md` abban a feladatcsoportban méri őket az élő mintákon, amelyik
+bevezeti őket.
+
 Minden döntésnél jelölni kell, ki hozta. `owner`: a spec-interjúból, a
 constitutionből vagy az owner kifejezett kéréséből származik. `agent`: az
 agent döntötte el (feltételezés, alapérték, implementációs választás), és a
@@ -83,6 +88,9 @@ szét kell bontani.
 
 ## Kézi ellenőrzések (az owner futtatja)
 - [ ] <mit kell megnézni, hol>
+
+## Költség (ha fizetős API-t hív)
+- <élő és kézi ellenőrzések becsült költsége: karakter, perc, hívás>
 
 ## Kész definíciója
 - A fenti ellenőrzések mind sikeresek.

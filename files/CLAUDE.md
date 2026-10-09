@@ -101,15 +101,23 @@ magad is lefuttatsz, és az owner kézi ellenőrzéseit. Ha a feature LLM által
 követett dokumentumot vagy skillt szállít (útmutató, prompt, skill), a
 `validation.md`-be kerüljön friss subagent-próba is: egy subagent csak a
 dokumentumot kapja meg, elvégzi vele a feladatot, és jelenti, hol akadt el.
-Ebben a lépésben nincs kód.
+A javítások után a próbát egy újabb friss subagenttel meg kell ismételni,
+amíg egy kör nem talál új valódi hiányt (legfeljebb 3 kör). Ha a feature
+fizetős API-t hív, a `validation.md` megbecsüli az élő és a kézi
+ellenőrzések költségét. Az agent által választott, valódi adattól függő
+számértékek (küszöbök, hangosság, sebesség) „kalibrálandó” jelölést
+kapnak. Ebben a lépésben nincs kód.
 
 **Implementáció:** csak `#spec-ok` után. Kövesd a `plan.md`-t
 feladatcsoportonként. Biztonság, auth, adat és migrációk esetén: egyszerre
 egy csoport, utána állj meg. Ne menj túl a `requirements.md`-n. Ha valami
-hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben.
+hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben. A
+„kalibrálandó” értékeket abban a csoportban kell az élő mintákon megmérni,
+amelyik bevezeti őket, nem csak a végső kézi ellenőrzésnél.
 
 **Validáció:** futtasd le a `validation.md` minden ellenőrzését, és jelentsd
-az eredményt (sikeres/sikertelen) bizonyítékkal. A review szintje: „működik-e
+az eredményt (sikeres/sikertelen) bizonyítékkal. Fizetős API-nál a
+tényleges felhasználást is, a becsléshez képest. A review szintje: „működik-e
 és megfelel-e a specnek”. Nem triviális feature-nél ajánlj fel mély review-t
 párhuzamos subagentekkel. Kész akkor van, ha minden ellenőrzés sikeres, a
 spec és a kód szinkronban van, a roadmap-fázis ki van pipálva, és a spec a
@@ -164,7 +172,10 @@ szerkezete.
 - A globális „angol dokumentáció” szabály helyett itt a fenti „Nyelv” szakasz
   érvényes.
 - A globális git- és biztonsági szabályok továbbra is érvényesek. Minden lépés
-  végén javasolj commitot, és csak jóváhagyás után commitolj. Soha ne pusholj
-  kérdezés nélkül.
+  végén javasolj commitot, és csak jóváhagyás után commitolj. Kivétel: a
+  `#spec-ok` egyben jóváhagyja, hogy az implementáció feladatcsoportonként
+  commitoljon (a csoport kódja, tesztjei és a hozzá tartozó specfrissítés
+  egy commitban), ha a csoport tesztjei, lintje és típusellenőrzése
+  sikeres. Soha ne pusholj és ne mergelj kérdezés nélkül.
 - Commit scope-ok: `docs(specs): ...` a constitutionhöz, `docs(plans): ...` a
   feature specekhez, Conventional Commits a kódhoz.
