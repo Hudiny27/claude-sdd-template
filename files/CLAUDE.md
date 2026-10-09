@@ -97,8 +97,11 @@ review-zhatók.
 előző branch mergelve, `main`-en vagy), lehetőleg friss kontextussal
 (`/clear`). Írás előtt interjú (hatókör / döntések / kontextus szerint
 csoportosítva). A `validation.md` tartalmazzon olyan parancsokat, amelyeket
-magad is lefuttatsz, és az owner kézi ellenőrzéseit. Ebben a lépésben nincs
-kód.
+magad is lefuttatsz, és az owner kézi ellenőrzéseit. Ha a feature LLM által
+követett dokumentumot vagy skillt szállít (útmutató, prompt, skill), a
+`validation.md`-be kerüljön friss subagent-próba is: egy subagent csak a
+dokumentumot kapja meg, elvégzi vele a feladatot, és jelenti, hol akadt el.
+Ebben a lépésben nincs kód.
 
 **Implementáció:** csak `#spec-ok` után. Kövesd a `plan.md`-t
 feladatcsoportonként. Biztonság, auth, adat és migrációk esetén: egyszerre

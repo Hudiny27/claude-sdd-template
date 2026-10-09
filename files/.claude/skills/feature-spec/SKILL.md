@@ -50,7 +50,11 @@ Use the formats in `Plans/README.md`:
   decided: `owner` or `agent`; one decider per line, split mixed decisions),
   context. No variable names or CSS-level detail.
 - `validation.md`: automated checks the agent runs (exact commands and
-  expected results), manual checks for the owner, definition of done.
+  expected results), manual checks for the owner, definition of done. If the
+  feature ships a document or skill that an LLM follows (a guide, a prompt, a
+  skill), add a fresh-subagent probe: a subagent that gets only that document
+  does the task with it and reports where it got stuck or had to guess. The
+  agent runs the probe during validation and fixes the gaps it finds.
 - `validate.sh`: every automated check from `validation.md` as one bash
   script, run from the repo root. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.
