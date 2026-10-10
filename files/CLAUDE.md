@@ -81,9 +81,11 @@ Ennek megfelelően járj el.
   kódot módosít spec módosítása nélkül, kivéve ha `no-spec-change` címkéje
   van.
 - Ismert rések: az önmaguk által fájlt író programokat (csomagkezelők,
-  generátorok, formázók) és a változók mögé rejtett írásokat a hook nem
-  látja. Ezeket a pre-commit hook commitkor elkapja. Viselkedj úgy, mintha a
-  szabályokban nem lennének rések.
+  generátorok, formázók) a hook nem látja. Az ugyanabban a parancsban
+  megadott változókat (`P=...; cat > "$P/x"`) behelyettesíti; a máshonnan
+  jövő változót a munkakönyvtárhoz viszonyított útvonalnak veszi, ezért egy
+  repón kívüli írást is megtagadhat. Ezeket a pre-commit hook commitkor
+  elkapja. Viselkedj úgy, mintha a szabályokban nem lennének rések.
 
 ## Szabályok lépésenként
 
@@ -110,7 +112,9 @@ kapnak. Ebben a lépésben nincs kód.
 
 **Implementáció:** csak `#spec-ok` után. Kövesd a `plan.md`-t
 feladatcsoportonként. Biztonság, auth, adat és migrációk esetén: egyszerre
-egy csoport, utána állj meg. Ne menj túl a `requirements.md`-n. Ha valami
+egy csoport, utána állj meg. Adatnál és migrációnál az owner a `#spec-ok`-kor
+vagy utána egy üzenetben előre engedélyezheti, hogy a többi csoport megállás
+nélkül készüljön; biztonságnál és authnál nem. Ne menj túl a `requirements.md`-n. Ha valami
 hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben. A
 „kalibrálandó” értékeket abban a csoportban kell az élő mintákon megmérni,
 amelyik bevezeti őket, nem csak a végső kézi ellenőrzésnél.
@@ -121,12 +125,22 @@ tényleges felhasználást is, a becsléshez képest. A review szintje: „műk�
 és megfelel-e a specnek”. Nem triviális feature-nél ajánlj fel mély review-t
 párhuzamos subagentekkel. Kész akkor van, ha minden ellenőrzés sikeres, a
 spec és a kód szinkronban van, a roadmap-fázis ki van pipálva, és a spec a
-`Plans/done/` alá került.
+`Plans/done/` alá került. Ha az owner kéri, a merge nyitott kézi
+ellenőrzéssel is megtörténhet: ezek a `validation.md`-ben nyitottak maradnak,
+a döntés a `requirements.md` „Döntések” szakaszába kerül (`döntött: owner`),
+és a következő `/replan` visszakérdez rájuk.
 
 **Újratervezés:** feature-ök között, `replanning/<topic>` branchen. Kis
 kódjavításhoz is kell spec és `#spec-ok`; nagyobb új munka új roadmap-fázis
 lesz. A feature közben felmerülő ötletek a `specs/backlog/YYYY-MM-DD-<topic>.md`
 alá kerülnek, nem az aktuális branchre és nem a roadmapre.
+
+**Párhuzamos munka:** egy munkafában egyszerre egy branch dolgozik. Ha egy
+feature közben más branchen kell dolgozni (például egy backlog-javaslat egy
+`replanning/` branchen), az külön git worktree-ben történik
+(`git worktree add ../<repó>-<topic> <branch>`); a futó feature munkafájában
+nincs branchváltás. Egy váltás a futó session és subagentjei alatt
+kicseréli a fájlokat, és az őr a másik branch szabályaival ítél.
 
 **Prototípus:** az owner kérésére készülhet eldobható prototípus egy
 feltételezés gyors kipróbálására. Feltételei:

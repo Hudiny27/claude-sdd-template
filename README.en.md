@@ -79,7 +79,8 @@ English. Roadmap lines read `- [ ] Fázis N — <cím>`; the guard only parses t
 | Interview quality, level of detail, review depth | `CLAUDE.md` + skills | Soft: the owner's review |
 
 Known gaps: programs that write files on their own (package managers,
-generators, formatters), writes hidden behind variables, and other agents
+generators, formatters), writes behind variables not set in the same
+command (judged relative to the working directory), and other agents
 before commit time. Server-side CI with branch protection is the only
 guarantee that cannot be bypassed locally.
 

@@ -12,6 +12,8 @@ validation, so make time between features to adjust the plan.
 
 - On an up-to-date `main`, clean working tree, last feature merged. Report
   and stop if not.
+- List the manual checks earlier features left open (`- [ ]` lines in
+  `Plans/done/*/validation.md`); ask the owner about them in step 2.
 - Read `specs/mission.md`, `specs/tech-stack.md`, `specs/roadmap.md`, recent
   entries in `Plans/done/` and `specs/backlog/`.
 

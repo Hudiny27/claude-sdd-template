@@ -174,8 +174,9 @@ a `- [ ] ` előtagot olvassa, így a fázisok elnevezése nyelvfüggetlen.
 ## Korlátok: mit nem tud garantálni?
 
 - **A hook nem látja**, ha egy program magától ír fájlt (npm, kódgenerátor,
-  formázó), és azt sem, ha az írás változók mögé van rejtve. Ezeket a git
-  pre-commit hook a commitnál fogja meg.
+  formázó). Az ugyanabban a parancsban megadott változókat behelyettesíti; a
+  máshonnan jövő változó mögötti írást a munkakönyvtárhoz viszonyítva
+  ítéli meg. Ezeket a git pre-commit hook a commitnál fogja meg.
 - A Claude Code-hookok csak Claude Code-ban működnek. Más agentnél a
   pre-commit és a CI véd.
 - **Helyben megkerülhetetlen garanciát** csak a szerveroldali CI ad, ha a

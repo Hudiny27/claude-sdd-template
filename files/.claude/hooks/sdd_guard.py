@@ -108,6 +108,8 @@ INTERPRETER_WRITE_RE = re.compile(
 )
 REDIRECT_RE = re.compile(r"^(?:\d*|&)(>>?|>\|)(.*)$")
 HEREDOC_RE = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+ASSIGN_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", re.S)
+VAR_RE = re.compile(r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))")
 
 REASON_LOCKED = (
     "SDD guard: the constitution (specs/mission.md, specs/tech-stack.md, "
@@ -570,6 +572,21 @@ def write_targets(words):
                 yield a, "git"
 
 
+def assignments(words):
+    """NAME=value pairs of a simple command that only sets variables (optionally exported)."""
+    if words and words[0] == "export":
+        words = words[1:]
+    matches = [ASSIGN_RE.match(w) for w in words]
+    if not words or not all(matches):
+        return []
+    return [(m.group(1), m.group(2)) for m in matches if m]
+
+
+def substitute(token, env):
+    """Replace $NAME and ${NAME} set earlier in the same command; unknown ones stay."""
+    return VAR_RE.sub(lambda m: env.get(m.group(1) or m.group(2), m.group(0)), token)
+
+
 def expand(token, cwd):
     """Expand a glob relative to cwd; keep the token if nothing matches."""
     if any(ch in token for ch in "*?["):
@@ -580,17 +597,25 @@ def expand(token, cwd):
     return [token]
 
 
-def bash_verdict(command, cwd, proj, payload, depth=0):
+def bash_verdict(command, cwd, proj, payload, depth=0, env=None):
+    # Variables set in this command are resolved; any other $VAR stays and is
+    # judged as a path relative to cwd, as before.
+    env = dict(env or {})
     text, bodies = split_heredocs(command)
     for words in segments(text):
         if git_bypass(words):
             return REASON_BYPASS
+        pairs = assignments(words)
+        if pairs:
+            for name, value in pairs:
+                env[name] = substitute(value, env)
+            continue
         stripped = strip_wrappers([w for w in words if not REDIRECT_RE.match(w)])
         if stripped and stripped[0] == "cd":
-            cwd = normalise(stripped[1] if len(stripped) > 1 else "~", cwd)
+            cwd = normalise(substitute(stripped[1], env) if len(stripped) > 1 else "~", cwd)
             continue
         for raw, kind in write_targets(words):
-            for path in expand(raw, cwd):
+            for path in expand(substitute(raw, env), cwd):
                 reason = verdict(path, cwd, proj, payload, kind)
                 if reason:
                     return reason
@@ -598,7 +623,7 @@ def bash_verdict(command, cwd, proj, payload, depth=0):
         if cmd in SHELLS and "-c" in stripped:
             idx = stripped.index("-c")
             if idx + 1 < len(stripped) and depth < 3:
-                reason = bash_verdict(stripped[idx + 1], cwd, proj, payload, depth + 1)
+                reason = bash_verdict(stripped[idx + 1], cwd, proj, payload, depth + 1, env)
                 if reason:
                     return reason
         if (cmd in INTERPRETERS or cmd == "eval") and not unlocked(payload, proj):

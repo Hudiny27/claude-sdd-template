@@ -190,6 +190,17 @@ class CodeGate(Repo):
         self.feature(spec=False)
         self.assertTrue(self.edit("src/app.ts"))
 
+    def test_variables_set_in_the_command_are_resolved(self):
+        # Regression: "$P/x" was resolved against the repo, so a write outside it was refused.
+        self.feature("replanning/topic", spec=False)
+        outside = os.path.realpath(tempfile.mkdtemp(prefix="sdd-out-"))
+        self.addCleanup(shutil.rmtree, outside)
+        self.assertFalse(self.bash("P=" + outside + "; mkdir -p \"$P/s\" && cat > \"$P/s/a.json\" <<'EOF'\n{}\nEOF"))
+        self.assertFalse(self.bash("export P=" + outside + " && echo x > \"${P}/a.json\""))
+        self.assertFalse(self.bash("D=" + outside + "; F=$D/a.json; echo x > $F"))
+        self.assertTrue(self.bash("P=src; echo x > \"$P/app.py\""))
+        self.assertTrue(self.bash("echo x > \"$UNSET_IN_THIS_COMMAND/app.py\""))
+
     def test_unapproved_spec_denied(self):
         self.feature()
         self.assertTrue(self.edit("src/app.ts"))

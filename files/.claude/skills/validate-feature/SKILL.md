@@ -52,6 +52,11 @@ This keeps the main context clean and catches what a single pass misses.
 
 ## 6. Finish (only after the owner confirms that everything passes)
 
+If the owner asks to merge before the manual checks are done, leave those
+checks open (`[ ]`) in `validation.md`, record the decision under
+"Döntések" (`döntött: owner`), and tell the owner that the next `/replan`
+will ask about them.
+
 1. Tick the phase in `specs/roadmap.md` (`[ ]` → `[x]`; this edit needs no unlock).
 2. Update `CHANGELOG.md` if the project keeps one.
 3. Tick every check in `validation.md` that passed (`[ ]` → `[x]`), then move
