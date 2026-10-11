@@ -60,7 +60,10 @@ Use the formats in `Plans/README.md`:
   agent runs the probe during validation and fixes the gaps it finds, then
   repeats it with a new fresh subagent until a round finds no new real gap
   (at most 3 rounds). If checks call a paid API, state the expected cost of
-  the live and the manual checks (characters, minutes, calls).
+  the live and the manual checks (characters, minutes, calls). A test that
+  checks a time upper bound (a wait, a delay, a duration) measures again a
+  few times before it fails: a loaded or virtualized machine stalls now and
+  then, while a real timing bug fails every try.
 - `validate.sh`: every automated check from `validation.md` as one bash
   script, run from the repo root. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.

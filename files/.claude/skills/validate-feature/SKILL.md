@@ -20,7 +20,9 @@ finds, repeat with a new fresh subagent until a round finds no new real gap
 (at most 3 rounds), and record the gaps under "Döntések". Report
 each one as a row: check, pass/fail, short evidence (exit code, key output
 line). Do not paste long logs. Never mark a check as passed without running
-it.
+it. Run the full test suite a second time: a test that fails in only one
+run is flaky; find its cause (often a time upper bound) before calling the
+checks passed.
 
 ## 3. Compare code with spec
 
@@ -62,6 +64,9 @@ will ask about them.
 3. Tick every check in `validation.md` that passed (`[ ]` → `[x]`), then move
    the spec directory to `Plans/done/`. Fix any `Plans/<dir>` path the
    archived files still mention, and rerun `validate.sh` from its new place.
+   Start the move from an empty index (`git status` clean) and commit it on
+   its own: a move staged early (`git mv`) lands in whatever commit comes
+   next.
 4. Propose the commit(s) and make them after approval. Then propose the
    merge into `main` (squash or merge, as the owner prefers) and do it after
    approval. Never push without asking.
