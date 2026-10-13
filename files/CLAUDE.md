@@ -117,7 +117,10 @@ vagy utána egy üzenetben előre engedélyezheti, hogy a többi csoport megáll
 nélkül készüljön; biztonságnál és authnál nem. Ne menj túl a `requirements.md`-n. Ha valami
 hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben. A
 „kalibrálandó” értékeket abban a csoportban kell az élő mintákon megmérni,
-amelyik bevezeti őket, nem csak a végső kézi ellenőrzésnél.
+amelyik bevezeti őket, nem csak a végső kézi ellenőrzésnél. A következő
+csoport kódjához csak az előző csoport commitja után nyúlj; amíg a
+tesztkör a háttérben fut, legfeljebb olvass és tervezz. Így minden commit
+pontosan egy csoportot tartalmaz, utólagos szétválogatás nélkül.
 
 **Validáció:** futtasd le a `validation.md` minden ellenőrzését, és jelentsd
 az eredményt (sikeres/sikertelen) bizonyítékkal. Fizetős API-nál a

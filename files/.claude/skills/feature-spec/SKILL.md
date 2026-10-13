@@ -40,6 +40,12 @@ in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
 
 Point out conflicts with the constitution. Do not resolve them silently.
 
+When the feature calls an external API or SDK, read the installed SDK's
+signature and docstrings for every parameter the spec will use, before the
+interview: mutually exclusive parameters, ranges, defaults and plan limits.
+Note them in the `requirements.md` context; a constraint that rules out an
+option the owner wants goes into the interview, not into the code later.
+
 ## 4. Write the spec files
 
 Use the formats in `Plans/README.md`:
