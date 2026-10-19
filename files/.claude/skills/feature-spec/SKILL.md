@@ -1,6 +1,15 @@
 ---
 name: feature-spec
-description: Start the next roadmap feature the spec-driven way - check preconditions, create the feature branch, interview the owner, and write Plans/YYYY-MM-DD-<slug>/{plan,requirements,validation}.md plus validate.sh. No code. Use when the owner wants to start a feature, the next roadmap phase, or a code-touching replanning change.
+description: >-
+  Új feature vagy javítás indítása spec-vezérelten. Indítsd, ha az owner ezt
+  mondja: „kezdjük a következő fázist”, „új feature”, „javítsuk ki …”, „írd
+  meg a specet”, vagy „/feature-spec”. Original: start the next roadmap
+  feature the spec-driven way - check preconditions, pick the level (S/M/L),
+  create the feature branch, interview the owner, and write the spec under
+  Plans/YYYY-MM-DD-<slug>/ (spec.md for S and M; plan.md, requirements.md,
+  validation.md and validate.sh for L). No code. Use when the owner wants to
+  start a feature, the next roadmap phase, a small fix, or a code-touching
+  replanning change.
 ---
 
 # Feature spec
@@ -26,7 +35,30 @@ guard blocks code until the owner approves the spec with `#spec-ok`.
   `Plans/<today, YYYY-MM-DD>-<last part of the branch name>/`. The guard,
   the pre-commit hook and CI find the spec by this rule.
 
+## 2b. Pick the level
+
+Pick how much spec the work needs (the `size-up` skill has the full rules;
+use them when it is installed):
+
+- **S:** one session, low risk, clear goal (a fix, a small tweak).
+- **M:** 1-3 sessions, or it touches one risky area.
+- **L:** many sessions, several risky areas, or hard to reverse.
+- Risk (schema or data migration, auth, payments or paid APIs, deploy,
+  legal or privacy, mail to real users, deleting data, formats existing
+  users depend on) makes it at least M. A big foggy idea is not a spec yet:
+  map it first (`wayfinder`), with no feature branch.
+
+Propose the level with one AskUserQuestion popup, the recommended one first,
+marked "(Javasolt)", each with what the owner gets and how long the review
+takes. For an obvious S, state it in one line instead. Record it as `szint:`
+at the top of `spec.md` (S, M); L uses the three files.
+
 ## 3. Interview before writing
+
+**S:** no interview. Restate the goal, "kész, ha" and how the owner checks
+it in `spec.md`, and go to step 5. **M and L:** run the `grill` skill when it
+is installed (popup rounds, the recommended answer first, facts looked up by
+you, never asked); otherwise follow the rules below.
 
 Read `specs/mission.md`, `specs/tech-stack.md` and, if relevant, earlier specs
 in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
@@ -48,7 +80,9 @@ option the owner wants goes into the interview, not into the code later.
 
 ## 4. Write the spec files
 
-Use the formats in `Plans/README.md`:
+Use the formats in `Plans/README.md`. **S and M:** one `spec.md` in the spec
+directory (format "spec.md (S és M fokozat)"); a `validate.sh` only for an M
+with automated checks worth scripting. **L:** the files below.
 
 - `plan.md`: numbered task groups, small enough to review one by one; the
   last group runs `validation.md`.

@@ -57,6 +57,9 @@ UNLOCK_PREFIX = ".sdd-unlock-"
 APPROVED_PREFIX = ".sdd-approved-"
 MAIN_BRANCHES = ("main", "master")
 SPEC_FILES = ("plan.md", "requirements.md", "validation.md")
+# Levels S and M (see the size-up skill) keep the whole spec in one file.
+LIGHT_SPEC = "spec.md"
+SPEC_HINT = "{plan,requirements,validation}.md (level L) or spec.md (levels S and M)"
 
 # Owner-controlled project documents (relative to a checkout root).
 CONSTITUTION = ("specs/mission.md", "specs/tech-stack.md", "specs/roadmap.md")
@@ -179,7 +182,7 @@ def branch_slug(branch):
 
 
 def find_spec_dir(root, branch):
-    """Plans[/done]/YYYY-MM-DD-<slug>/ holding all three spec files, newest first."""
+    """Plans[/done]/YYYY-MM-DD-<slug>/ holding a spec (all three L files, or spec.md), newest first."""
     if not branch or branch in MAIN_BRANCHES:
         return None
     pattern = re.compile(r"^\d{4}-\d{2}-\d{2}-" + re.escape(branch_slug(branch)) + "$")
@@ -191,9 +194,26 @@ def find_spec_dir(root, branch):
             continue
         for name in names:
             d = os.path.join(root, base, name)
-            if pattern.match(name) and all(os.path.isfile(os.path.join(d, f)) for f in SPEC_FILES):
+            full = all(os.path.isfile(os.path.join(d, f)) for f in SPEC_FILES)
+            if pattern.match(name) and (full or os.path.isfile(os.path.join(d, LIGHT_SPEC))):
                 found.append(base + "/" + name)
     return max(found, key=os.path.basename) if found else None
+
+
+def spec_level(root, spec):
+    """The spec's level: the `szint:` line of spec.md, or L for the three-file spec."""
+    path = os.path.join(root, spec, LIGHT_SPEC)
+    if not os.path.isfile(os.path.join(root, spec, SPEC_FILES[0])) and os.path.isfile(path):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                for line in fh.read(2000).splitlines():
+                    m = re.match(r"\s*szint:\s*([A-Za-z])\b", line)
+                    if m:
+                        return m.group(1).upper()
+        except OSError:
+            pass
+        return "M"
+    return "L"
 
 
 def is_free(rel):
@@ -310,7 +330,7 @@ def code_reason(proj, root):
     if not spec:
         return (
             "SDD guard: branch " + branch + " has no feature spec. Write "
-            "Plans/YYYY-MM-DD-" + branch_slug(branch) + "/{plan,requirements,validation}.md "
+            "Plans/YYYY-MM-DD-" + branch_slug(branch) + "/" + SPEC_HINT + " "
             "first (/feature-spec), then ask the owner to review it."
         )
     return (
@@ -693,7 +713,7 @@ def approve(payload, proj):
     if not spec:
         print(
             "SDD: " + APPROVE_KEYWORD + " ignored: branch " + branch + " has no "
-            "Plans/YYYY-MM-DD-" + branch_slug(branch) + "/ with plan.md, requirements.md and validation.md."
+            "Plans/YYYY-MM-DD-" + branch_slug(branch) + "/ with " + SPEC_HINT + "."
         )
         return
     write_flag(
@@ -702,7 +722,9 @@ def approve(payload, proj):
     )
     print(
         "SDD: the owner approved " + spec + " for branch " + branch + ". Code edits "
-        "are allowed on this branch now. Implement plan.md task group by task group."
+        "are allowed on this branch now. "
+        + ("Implement plan.md task group by task group." if spec_level(root, spec) == "L"
+           else "Implement it as spec.md describes, then run its Ellenőrzés checks.")
     )
 
 
@@ -740,9 +762,9 @@ def session(payload):
         if not spec:
             lines.append("- Feature spec: none for this branch yet. Write it with /feature-spec.")
         elif approved(proj, root):
-            lines.append("- Feature spec: " + spec + " (approved; code edits allowed).")
+            lines.append("- Feature spec: " + spec + ", level " + spec_level(root, spec) + " (approved; code edits allowed).")
         else:
-            lines.append("- Feature spec: " + spec + " (NOT approved; code edits blocked until the owner sends " + APPROVE_KEYWORD + ").")
+            lines.append("- Feature spec: " + spec + ", level " + spec_level(root, spec) + " (NOT approved; code edits blocked until the owner sends " + APPROVE_KEYWORD + ").")
     else:
         lines.append("- On " + (branch or "no branch") + ": no code changes here. Start the next feature with /feature-spec.")
     phase = first_open_phase(root)
@@ -776,7 +798,7 @@ def ci(argv):
     if not find_spec_dir(root, branch):
         errors.append(
             "branch " + branch + " has no Plans/YYYY-MM-DD-" + branch_slug(branch)
-            + "/ (or Plans/done/...) with plan.md, requirements.md and validation.md."
+            + "/ (or Plans/done/...) with " + SPEC_HINT + "."
         )
     for e in errors:
         print("sdd-check: " + e)

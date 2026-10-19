@@ -36,7 +36,7 @@ Három előnye van:
 | Lépés | Mi történik | Eredmény |
 |---|---|---|
 | 1. **Constitution** (`/constitution`) | Interjú az agenttel a misszióról, a tech stackről és a roadmapről. Meglévő kódbázisnál az agent először a kódból fejti vissza. | `specs/mission.md`, `tech-stack.md`, `roadmap.md` |
-| 2. **Feature spec** (`/feature-spec`) | A következő roadmap-fázishoz branch és interjú készül, majd 3 fájl. **Kód még nem.** | `Plans/ÉÉÉÉ-HH-NN-<slug>/plan.md, requirements.md, validation.md` |
+| 2. **Feature spec** (`/feature-spec`) | Fokozat a munka méretéhez: **S** (gyors javítás, 3 soros spec), **M** (egy fájl), **L** (teljes, 3 fájl). Branch, interjú felugró kérdésekkel, majd a spec. **Kód még nem.** | S/M: `Plans/ÉÉÉÉ-HH-NN-<slug>/spec.md`; L: `plan.md, requirements.md, validation.md` |
 | 3. **Jóváhagyás** | Átnézed a spec-et. Ha rendben van, egy sor elejére írod: `#spec-ok` | Ezen a branchen írható kód |
 | 4. **Implementáció** | Az agent task groupról task groupra halad a `plan.md` alapján | Kód + commitok |
 | 5. **Validáció** (`/validate-feature`) | Lefut a `validation.md` minden ellenőrzése, a spec és a kód eltérései javulnak, szükség esetén mély review indul subagentekkel | Roadmap-pipa, a spec a `Plans/done/` mappába kerül, merge |

@@ -10,8 +10,15 @@ Plans/
 │   ├── requirements.md    # hatókör, hatókörön kívül, döntések, kontextus
 │   ├── validation.md      # ellenőrzések, amelyek igazolják, hogy kész és mergelhető
 │   └── validate.sh        # a validation.md automatikus ellenőrzései egy futtatható scriptben
+├── YYYY-MM-DD-<slug>/     # S vagy M fokozatú munka: egyetlen fájl
+│   └── spec.md
 └── done/                  # befejezett feature-ök, merge előtt ide kerülnek
 ```
+
+A fokozat a munka méretéhez igazodik: **S** (egy session, kis kockázat), **M**
+(1–3 session vagy egy kockázatos terület) egyetlen `spec.md`-t kap, **L**
+(nagy vagy nehezen visszafordítható) a három fájlt és a `validate.sh`-t. A
+jóváhagyás mindháromnál `#spec-ok`.
 
 Branch `feature/phase-2-agents` ↔ könyvtár `Plans/2026-10-05-phase-2-agents/`.
 Az SDD őr, a git pre-commit hook és a CI ellenőrzés is e névszabály alapján
@@ -28,6 +35,41 @@ találja meg a specet.
 4. Implementáció, feladatcsoportonként.
 5. `/validate-feature`: a `validation.md` minden ellenőrzése, roadmap
    kipipálása, a könyvtár áthelyezése a `done/` alá, merge.
+
+## spec.md (S és M fokozat)
+
+```markdown
+---
+szint: S | M
+---
+# <cím>
+
+## Cél
+<1–3 mondat: mit akar elérni az owner, és miért.>
+
+## Bele tartozik
+- …
+
+## Nem tartozik bele
+- …
+
+## Döntések
+- <döntés> — <miért> (döntött: owner | agent, ÉÉÉÉ-HH-NN)
+
+## Kész, ha
+- <ellenőrizhető állítás>
+
+## Ellenőrzés
+- Agent: <parancsok, tesztek, várt eredmény>
+- Owner: <1–3 lépés, amit ő maga megnéz>
+
+## Kockázat és visszaút
+- <mi romolhat el, és hogyan vonjuk vissza>
+```
+
+S fokozatnál elég a „Cél”, a „Kész, ha” és az „Ellenőrzés”; a többi szakasz
+elhagyható. Ha a munka menet közben nagyobb lesz, az agent szól, és a
+`spec.md` M-re vagy a három fájlos L-re bővül.
 
 ## plan.md
 

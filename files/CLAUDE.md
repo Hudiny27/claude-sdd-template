@@ -44,7 +44,7 @@ branchnév utolsó része).
 | Lépés | Skill | Eredmény |
 |---|---|---|
 | 1. Constitution (egyszer, utána élő) | `/constitution` | `specs/` interjú alapján megírva |
-| 2. Feature spec | `/feature-spec` | branch + `Plans/<dir>/` 3 fájllal és `validate.sh`-val, **kód nélkül** |
+| 2. Feature spec | `/feature-spec` | fokozat (S/M/L), branch + `Plans/<dir>/`: S/M-nél egy `spec.md`, L-nél 3 fájl és `validate.sh`, **kód nélkül** |
 | 3. Owner jóváhagyás | az owner elküldi: `#spec-ok` | ezen a branchen feloldódik a kódszerkesztés |
 | 4. Implementáció | (prompt) | kód, feladatcsoportonként |
 | 5. Validáció | `/validate-feature` | ellenőrzések lefutnak, eltérések javítva, roadmap kipipálva, merge |
@@ -97,8 +97,13 @@ review-zhatók.
 
 **Feature spec:** tiszta állapotból indulj (nincs commitolatlan munka, az
 előző branch mergelve, `main`-en vagy), lehetőleg friss kontextussal
-(`/clear`). Írás előtt interjú (hatókör / döntések / kontextus szerint
-csoportosítva). A `validation.md` tartalmazzon olyan parancsokat, amelyeket
+(`/clear`). Először fokozat: **S** (egy session, kis kockázat), **M** (1–3
+session vagy egy kockázatos terület), **L** (nagy vagy nehezen
+visszafordítható); kockázatos terület (migráció, auth, fizetés, deploy, jogi
+szöveg, éles levél, adattörlés) legalább M. S és M egyetlen `spec.md`-t kap
+(formátum: `Plans/README.md`), L a három fájlt. S-nél nincs interjú; M-nél és
+L-nél írás előtt interjú felugró kérdésekkel (`grill` skill, ha telepítve van),
+a javasolt válasz az első. A `validation.md` tartalmazzon olyan parancsokat, amelyeket
 magad is lefuttatsz, és az owner kézi ellenőrzéseit. Ha a feature LLM által
 követett dokumentumot vagy skillt szállít (útmutató, prompt, skill), a
 `validation.md`-be kerüljön friss subagent-próba is: egy subagent csak a
@@ -134,7 +139,8 @@ a döntés a `requirements.md` „Döntések” szakaszába kerül (`döntött: 
 és a következő `/replan` visszakérdez rájuk.
 
 **Újratervezés:** feature-ök között, `replanning/<topic>` branchen. Kis
-kódjavításhoz is kell spec és `#spec-ok`; nagyobb új munka új roadmap-fázis
+kódjavításhoz is kell spec és `#spec-ok`, de elég egy S fokozatú, három
+soros `spec.md`; nagyobb új munka új roadmap-fázis
 lesz. A feature közben felmerülő ötletek a `specs/backlog/YYYY-MM-DD-<topic>.md`
 alá kerülnek, nem az aktuális branchre és nem a roadmapre.
 

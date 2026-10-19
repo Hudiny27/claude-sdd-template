@@ -73,10 +73,12 @@ class Repo(unittest.TestCase):
             self.write(rel)
         self.write("specs/roadmap.md", "# Roadmap\n\n- [ ] Phase 1 — Hello\n- [ ] Phase 2 — More\n")
 
-    def feature(self, branch="feature/phase-1-hello", spec=True):
+    def feature(self, branch="feature/phase-1-hello", spec=True, level=None):
         self.git("checkout", "-q", "-b", branch)
-        if spec:
-            slug = branch.rsplit("/", 1)[-1]
+        slug = branch.rsplit("/", 1)[-1]
+        if level:
+            self.write("Plans/2026-10-05-" + slug + "/spec.md", "---\nszint: " + level + "\n---\n# " + slug + "\n")
+        elif spec:
             for name in ("plan.md", "requirements.md", "validation.md"):
                 self.write("Plans/2026-10-05-" + slug + "/" + name)
 
@@ -226,6 +228,27 @@ class CodeGate(Repo):
         self.assertIn("ignored", self.say("#spec-ok"))
         self.assertTrue(self.edit("src/app.ts"))
 
+    def test_light_spec_needs_approval_then_allows_code(self):
+        for level in ("S", "M"):
+            self.git("checkout", "-q", "main")
+            self.feature("feature/" + level.lower() + "-task", level=level)
+            self.assertTrue(self.edit("src/app.ts"), level)
+            self.assertIn("approved", self.say("#spec-ok"))
+            self.assertFalse(self.edit("src/app.ts"), level)
+
+    def test_map_alone_is_not_a_spec(self):
+        self.feature(spec=False)
+        self.write("Plans/2026-10-05-phase-1-hello/terkep.md", "---\nszint: F\n---\n# map\n")
+        self.assertIn("ignored", self.say("#spec-ok"))
+        self.assertTrue(self.edit("src/app.ts"))
+
+    def test_session_status_names_the_level(self):
+        self.feature(level="S")
+        self.assertIn("level S", self.hook("session", {}))
+        self.git("checkout", "-q", "main")
+        self.feature("feature/phase-2-more")
+        self.assertIn("level L", self.hook("session", {}))
+
     def test_outside_project_is_not_gated(self):
         self.assertFalse(self.denied("Write", {"file_path": os.path.join(tempfile.gettempdir(), "sdd-elsewhere.txt")}))
 
@@ -275,6 +298,10 @@ class PreCommit(Repo):
         self.feature(spec=False)
         self.assertNotEqual(self.commit("src/app.ts").returncode, 0)
         self.feature("feature/phase-2-more")
+        self.assertEqual(self.commit("src/app.ts").returncode, 0)
+
+    def test_light_spec_is_enough(self):
+        self.feature("feature/quick-fix", level="S")
         self.assertEqual(self.commit("src/app.ts").returncode, 0)
 
     def test_squash_merge_to_main_ok(self):

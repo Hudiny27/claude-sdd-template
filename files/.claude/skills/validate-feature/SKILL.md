@@ -8,8 +8,12 @@ description: Validate the current feature branch against its spec - run every ch
 ## 1. Load the spec
 
 - Find `Plans/YYYY-MM-DD-<slug>/` for the current branch (`<slug>` = last part
-  of the branch name). Read `plan.md`, `requirements.md`, `validation.md`.
-- Check that every task group in `plan.md` is done. List any that are not.
+  of the branch name). Level L: read `plan.md`, `requirements.md`,
+  `validation.md`. Levels S and M: read `spec.md`; its "Ellenőrzés" section
+  plays the role of `validation.md`, its "Bele tartozik" and "Döntések" the
+  role of `requirements.md`.
+- Check that every task group in `plan.md` (L) or every "Kész, ha" line (S,
+  M) is done. List any that are not.
 
 ## 2. Run the automated checks
 
@@ -40,7 +44,7 @@ checks passed.
 
 ## 4. Deep review (non-trivial features)
 
-Offer it; run it if the owner agrees. Spawn 2–3 parallel subagents over the
+Offer it for M and L (not for S); run it if the owner agrees. Spawn 2–3 parallel subagents over the
 whole change, each with one focus: correctness and edge cases; conformance to
 `requirements.md` and `specs/tech-stack.md`; tests, security and error
 handling. They report findings only. Verify each finding before acting on it.

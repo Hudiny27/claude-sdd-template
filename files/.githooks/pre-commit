@@ -53,7 +53,7 @@ def main():
     if not sdd.find_spec_dir(root, branch):
         fail(
             "branch " + branch + " has no feature spec.\n"
-            "  Expected Plans/YYYY-MM-DD-" + sdd.branch_slug(branch) + "/ with plan.md, requirements.md, validation.md."
+            "  Expected Plans/YYYY-MM-DD-" + sdd.branch_slug(branch) + "/ with " + sdd.SPEC_HINT + "."
         )
 
 

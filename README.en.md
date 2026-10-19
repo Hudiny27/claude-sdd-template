@@ -61,6 +61,11 @@ English. Roadmap lines read `- [ ] Fázis N — <cím>`; the guard only parses t
 /constitution → /feature-spec → #spec-ok → implement → /validate-feature → /replan → /feature-spec ...
 ```
 
+`/feature-spec` first picks a level that fits the work: **S** (a quick fix,
+a three-line `spec.md`), **M** (one `spec.md`), or **L** (the full
+`plan.md`, `requirements.md`, `validation.md` and `validate.sh`). The guard,
+the pre-commit hook and CI accept either form; `#spec-ok` approves all three.
+
 | Keyword (at the start of a line) | Effect |
 |---|---|
 | `#spec-szerkesztes` | Unlock the constitution and the guard files for this session |
