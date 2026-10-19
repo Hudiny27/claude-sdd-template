@@ -64,12 +64,25 @@ Branch: feature/<slug>
 
 ## Kontextus
 - <korlátok, kapcsolódó kód, érintettek megjegyzései>
+
+## Kalibrálás
+<!-- a kalibrálandó értékek mért eredménye, abban a csoportban, amelyik bevezeti őket -->
 ```
 
 Az agent által választott, valódi adattól függő számértékek (küszöbök,
 hangosság, sebesség) „kalibrálandó” jelölést kapnak a döntésükben; a
 `plan.md` abban a feladatcsoportban méri őket az élő mintákon, amelyik
-bevezeti őket.
+bevezeti őket. Az eredmény a `requirements.md` „Kalibrálás” szakaszába
+kerül, értékenként (vagy összetartozó értékcsoportonként) egy alszakaszban,
+mindig ugyanebben a rendben:
+
+```markdown
+### <érték(ek)> (<n>. csoport)
+- Minta: <min mért, milyen adaton, milyen beállítással>
+- Söprés: | <paraméter> | <eredmény 1> | <eredmény 2> | (a kipróbált értékek és amit mértek)
+- Választás: <érték> — <miért ez; mekkora a tartalék a határig>
+- Ellenőrzés: <melyik teszt vagy élő teszt őrzi>
+```
 
 Minden döntésnél jelölni kell, ki hozta. `owner`: a spec-interjúból, a
 constitutionből vagy az owner kifejezett kéréséből származik. `agent`: az
@@ -116,6 +129,63 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
   `Plans/<dir>` útvonalat, így a `Plans/done/` alá költözés után is fut.
 - A helyi, git által ignorált beállításokat (például az élő minták útvonalát,
   titkot soha) a projekt által dokumentált fájlból olvassa.
+- Az élő ellenőrzéseket egy kapcsolóval indítja: `bash Plans/<dir>/validate.sh
+  --live` maga tölti be a dokumentált beállításfájlt és állítja be az élő
+  kapcsolót, így nem kell kézzel exportálni semmit. Ha a projekt
+  tech-stackje memóriakorlátot ír elő a nehéz lépésekre, a script azokat a
+  korláttal futtatja.
+
+## Friss subagent-próba
+
+Ha a feature LLM által követett dokumentumot szállít (útmutató, prompt,
+skill), a `validation.md` friss subagent-próbát is tartalmaz. Az agent a
+validációkor futtatja, módonként (például interaktív, autonóm) egy-egy
+próbával, párhuzamosan:
+
+1. **Előkészítés körönként:** friss, eldobható projektmásolat a session
+   scratchpadjében. A generált dokumentumokat (például az írási útmutatót)
+   a másolaton újra kell generálni, hogy a legutóbbi javítások benne
+   legyenek. Minden körnek és próbának saját másolat jár. Ha a próba a
+   másolat szándékos rontására épül (például egy kivett lépés vagy egy
+   rossz téglalap), a rontást és a várható mellékhatásait (például hogy a
+   javítás visszaállítja a jóváhagyott tartalmat) a futtatás előtt le kell
+   írni, hogy a próba erről szóló jelzése ne számítson hiánynak.
+2. **Prompt:** az alábbi váz, a próba feladatával kitöltve.
+3. **Értékelés:** a próba sikeres, ha teljesíti a `validation.md`
+   sikerkritériumát. A „talált hiányok” közül csak a valódiak számítanak:
+   a próba felállításából adódó félreértés (például egy másolt projekt
+   útvonala) nem az.
+4. **Javítás és ismétlés:** a valódi hiányok javítása után új, friss
+   subagent és új másolat jön, amíg egy kör nem talál új valódi hiányt
+   (legfeljebb 3 kör).
+5. **Rögzítés:** a körök eredménye (siker, a javított hiányok, a nyitva
+   maradt kérdések) a `requirements.md` „Döntések” szakaszába kerül, a
+   hatókörön kívüli ötletek a backlogba.
+
+```text
+You are testing written instructions for an AI writer. Work only from the
+documents named here; do not read the source code or tests.
+
+Documents you may read:
+- <the document(s) under test, with absolute paths>
+- <the inputs the task needs, e.g. a project's generated files>
+
+The project is a scratch copy: <absolute path>. <what is already there and
+must not change>.
+
+Situation: <mode, e.g. interactive at the review gate>. Do only this part:
+1. <the task, step by step>
+2. Then assume the owner answered: "<the owner's answer>". <what to do next>.
+
+Rules: run commands from <repo> with <command prefix>. Never run <paid or
+irreversible commands>. Write nothing outside <allowed folders>.
+
+Report back (plain text), briefly:
+- <the result items the success criterion needs>;
+- every place where the documents were unclear, missing something,
+  contradicting each other, or where you had to guess, quoting the passage.
+  This list is the most important part; leave out what you found clear.
+```
 
 ## Részletesség
 

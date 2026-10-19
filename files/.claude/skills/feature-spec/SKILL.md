@@ -57,15 +57,19 @@ Use the formats in `Plans/README.md`:
   context. No variable names or CSS-level detail. A number you pick that
   depends on real data (a threshold, a loudness, a rate) is marked
   „kalibrálandó” in its decision, and `plan.md` measures it on live samples
-  in the task group that introduces it, not only in the final manual check.
+  in the task group that introduces it, not only in the final manual check;
+  the results go to a "Kalibrálás" section in the format of
+  `Plans/README.md`.
 - `validation.md`: automated checks the agent runs (exact commands and
   expected results), manual checks for the owner, definition of done. If the
   feature ships a document or skill that an LLM follows (a guide, a prompt, a
   skill), add a fresh-subagent probe: a subagent that gets only that document
-  does the task with it and reports where it got stuck or had to guess. The
-  agent runs the probe during validation and fixes the gaps it finds, then
-  repeats it with a new fresh subagent until a round finds no new real gap
-  (at most 3 rounds). If checks call a paid API, state the expected cost of
+  does the task with it and reports where it got stuck or had to guess. Name
+  the probes (one per mode), what each gets, and its success criterion; the
+  setup, the prompt skeleton and the rounds are in `Plans/README.md` ("Friss
+  subagent-próba"). The agent runs the probe during validation and fixes the
+  gaps it finds, then repeats it with a new fresh subagent until a round
+  finds no new real gap (at most 3 rounds). If checks call a paid API, state the expected cost of
   the live and the manual checks (characters, minutes, calls). A test that
   checks a time upper bound (a wait, a delay, a duration) measures again a
   few times before it fails: a loaded or virtualized machine stalls now and
@@ -73,8 +77,10 @@ Use the formats in `Plans/README.md`:
 - `validate.sh`: every automated check from `validation.md` as one bash
   script, run from the repo root. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.
-  Live, paid or networked checks only behind an opt-in switch. It lives in the
-  spec folder, so it is written now, with the spec. It finds its own folder
+  Live, paid or networked checks only behind an opt-in switch: `--live`
+  loads the project's documented local settings itself (and runs the heavy
+  steps under the memory limit when the tech stack asks for one). It lives
+  in the spec folder, so it is written now, with the spec. It finds its own folder
   with `$(dirname "$0")` and never hard-codes `Plans/<dir>`, so it still runs
   after the spec moves to `Plans/done/`. Local, git-ignored settings it needs
   (such as live sample paths, never secrets) come from a file the project

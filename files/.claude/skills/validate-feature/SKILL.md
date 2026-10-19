@@ -13,11 +13,14 @@ description: Validate the current feature branch against its spec - run every ch
 
 ## 2. Run the automated checks
 
-Run every automated check in `validation.md`: `bash Plans/<dir>/validate.sh`,
-plus by hand any check the script does not cover (and fix the script). Run
-the fresh-subagent probe if `validation.md` has one; after fixing what it
-finds, repeat with a new fresh subagent until a round finds no new real gap
-(at most 3 rounds), and record the gaps under "Döntések". Report
+Run every automated check in `validation.md`: `bash Plans/<dir>/validate.sh`
+(with `--live` for the live part), plus by hand any check the script does
+not cover (and fix the script). Run the fresh-subagent probe if
+`validation.md` has one, as `Plans/README.md` ("Friss subagent-próba")
+describes: a fresh scratch copy per round and probe, the prompt skeleton,
+the probes of one round in parallel. After fixing what it finds, repeat with
+a new fresh subagent until a round finds no new real gap (at most 3 rounds),
+and record the rounds under "Döntések". Report
 each one as a row: check, pass/fail, short evidence (exit code, key output
 line). Do not paste long logs. Never mark a check as passed without running
 it. Run the full test suite a second time: a test that fails in only one
