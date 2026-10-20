@@ -171,6 +171,10 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
 - Ellenőrzésenként egy sort ír: `PASS` vagy `FAIL`, az ellenőrzés neve és egy
   rövid bizonyíték (kilépési kód, kulcssor).
 - Ha bármelyik ellenőrzés elbukik, nem nulla kóddal lép ki.
+- Ha egy tesztkör elbukik, a bizonyíték az elbukott tesztek nevét is
+  tartalmazza (pytestnél a `-rf` kapcsoló `FAILED` sorai), hogy ne kelljen
+  a teljes kört újrafuttatni a hiba megkereséséhez. Egy csak az egyik
+  futásban elbukó teszt instabil; az okát meg kell keresni.
 - Az ideiglenes fájlokat egy saját ideiglenes könyvtárban tartja, és a végén
   törli.
 - Élő, fizetős vagy hálózatot igénylő ellenőrzést csak kapcsolóval futtat
@@ -196,8 +200,10 @@ próbával, párhuzamosan:
 1. **Előkészítés körönként:** friss, eldobható projektmásolat a session
    scratchpadjében. A generált dokumentumokat (például az írási útmutatót)
    a másolaton újra kell generálni, hogy a legutóbbi javítások benne
-   legyenek. Minden körnek és próbának saját másolat jár. Ha a próba a
-   másolat szándékos rontására épül (például egy kivett lépés vagy egy
+   legyenek. Minden körnek és próbának saját másolat jár. A másolat a
+   teljes projekt, mappa kihagyása nélkül (például a render kimenete is),
+   különben a próba hamis állapotot lát (például `render missing`). Ha a
+   próba a másolat szándékos rontására épül (például egy kivett lépés vagy egy
    rossz téglalap), a rontást és a várható mellékhatásait (például hogy a
    javítás visszaállítja a jóváhagyott tartalmat) a futtatás előtt le kell
    írni, hogy a próba erről szóló jelzése ne számítson hiánynak.

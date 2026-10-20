@@ -116,6 +116,8 @@ with automated checks worth scripting. **L:** the files below.
 - `validate.sh`: every automated check from `validation.md` as one bash
   script, run from the repo root. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.
+  A failed test run's evidence names the failed tests (pytest: the `FAILED`
+  lines of `-rf`), so finding them needs no second full run.
   Live, paid or networked checks only behind an opt-in switch: `--live`
   loads the project's documented local settings itself (and runs the heavy
   steps under the memory limit when the tech stack asks for one). It lives
