@@ -236,6 +236,18 @@ class CodeGate(Repo):
             self.assertIn("approved", self.say("#spec-ok"))
             self.assertFalse(self.edit("src/app.ts"), level)
 
+    def test_rising_level_needs_a_new_approval(self):
+        self.feature(level="S")
+        self.say("#spec-ok")
+        self.assertFalse(self.edit("src/app.ts"))
+        self.write("Plans/2026-10-05-phase-1-hello/spec.md", "---\nszint: M\n---\n# grown\n")
+        self.assertTrue(self.edit("src/app.ts"))
+        self.assertIn("NOT approved", self.hook("session", {}))
+        self.say("#spec-ok")
+        self.assertFalse(self.edit("src/app.ts"))
+        self.write("Plans/2026-10-05-phase-1-hello/spec.md", "---\nszint: S\n---\n# smaller\n")
+        self.assertFalse(self.edit("src/app.ts"))
+
     def test_map_alone_is_not_a_spec(self):
         self.feature(spec=False)
         self.write("Plans/2026-10-05-phase-1-hello/terkep.md", "---\nszint: F\n---\n# map\n")

@@ -29,9 +29,11 @@ guard blocks code until the owner approves the spec with `#spec-ok`.
 ## 2. Pick the feature and branch
 
 - Default: the first open phase in `specs/roadmap.md` (`- [ ] Fázis N — ...`).
-  If the owner named something else, use that.
+  If the owner named something else: an S-level fix goes ahead without a
+  phase; anything bigger that is not on the roadmap goes through `/replan`
+  first.
 - Branch: `feature/phase-<n>-<short-name>` (for replanning changes:
-  `replanning/<topic>`). The spec directory is
+  `replanning/<topic>`; for an off-roadmap S fix: `fix/<slug>`). The spec directory is
   `Plans/<today, YYYY-MM-DD>-<last part of the branch name>/`. The guard,
   the pre-commit hook and CI find the spec by this rule.
 
@@ -47,6 +49,9 @@ use them when it is installed):
   legal or privacy, mail to real users, deleting data, formats existing
   users depend on) makes it at least M. A big foggy idea is not a spec yet:
   map it first (`wayfinder`), with no feature branch.
+- **The level rises mid-work** (a new risk, more sessions): stop coding,
+  say so, write the larger spec (with its interview) and ask for a new
+  `#spec-ok`. The guard blocks code edits until then.
 
 Propose the level with one AskUserQuestion popup, the recommended one first,
 marked "(Javasolt)", each with what the owner gets and how long the review

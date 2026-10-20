@@ -60,16 +60,24 @@ szint: S | M
 - <ellenőrizhető állítás>
 
 ## Ellenőrzés
-- Agent: <parancsok, tesztek, várt eredmény>
-- Owner: <1–3 lépés, amit ő maga megnéz>
+- [ ] Agent: <parancs vagy teszt> → <várt eredmény>
+- [ ] Owner: <1–3 lépés, amit ő maga megnéz>
 
 ## Kockázat és visszaút
 - <mi romolhat el, és hogyan vonjuk vissza>
+
+## Költség (ha fizetős API-t hív)
+- <becslés: karakter, perc, hívás; élő és kézi ellenőrzésre külön>
+
+## Kalibrálás (ha van kalibrálandó érték)
+- <érték, mért eredmény, minta>
 ```
 
 S fokozatnál elég a „Cél”, a „Kész, ha” és az „Ellenőrzés”; a többi szakasz
 elhagyható. Ha a munka menet közben nagyobb lesz, az agent szól, és a
-`spec.md` M-re vagy a három fájlos L-re bővül.
+`spec.md` M-re vagy a három fájlos L-re bővül, és új `#spec-ok` kell: az őr
+a magasabb fokozatú specre nem fogadja el a régi jóváhagyást. Roadmapen
+kívüli S javítás branchneve `fix/<slug>`; ennek nincs kipipálandó fázisa.
 
 ## plan.md
 
@@ -170,7 +178,8 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
 - A saját mappáját `$(dirname "$0")`-val találja meg, és sehol nem írja be a
   `Plans/<dir>` útvonalat, így a `Plans/done/` alá költözés után is fut.
 - A helyi, git által ignorált beállításokat (például az élő minták útvonalát,
-  titkot soha) a projekt által dokumentált fájlból olvassa.
+  titkot soha) a projekt által dokumentált fájlból olvassa. Az API-kulcsok a
+  környezetből vagy a `tech-stack.md`-ben megnevezett kulcstárból jönnek.
 - Az élő ellenőrzéseket egy kapcsolóval indítja: `bash Plans/<dir>/validate.sh
   --live` maga tölti be a dokumentált beállításfájlt és állítja be az élő
   kapcsolót, így nem kell kézzel exportálni semmit. Ha a projekt

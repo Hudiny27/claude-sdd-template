@@ -17,7 +17,8 @@ description: Validate the current feature branch against its spec - run every ch
 
 ## 2. Run the automated checks
 
-Run every automated check in `validation.md`: `bash Plans/<dir>/validate.sh`
+Run every automated check in `validation.md` (S/M: the "Ellenőrzés" lines
+of `spec.md`): `bash Plans/<dir>/validate.sh` if it exists
 (with `--live` for the live part), plus by hand any check the script does
 not cover (and fix the script). Run the fresh-subagent probe if
 `validation.md` has one, as `Plans/README.md` ("Friss subagent-próba")
@@ -66,9 +67,11 @@ checks open (`[ ]`) in `validation.md`, record the decision under
 "Döntések" (`döntött: owner`), and tell the owner that the next `/replan`
 will ask about them.
 
-1. Tick the phase in `specs/roadmap.md` (`[ ]` → `[x]`; this edit needs no unlock).
+1. Tick the phase in `specs/roadmap.md` (`[ ]` → `[x]`; this edit needs no
+   unlock). Skip this when the work has no roadmap phase (a `fix/` branch).
 2. Update `CHANGELOG.md` if the project keeps one.
-3. Tick every check in `validation.md` that passed (`[ ]` → `[x]`), then move
+3. Tick every check in `validation.md` (S/M: in the "Ellenőrzés" section of
+   `spec.md`) that passed (`[ ]` → `[x]`), then move
    the spec directory to `Plans/done/`. Fix any `Plans/<dir>` path the
    archived files still mention, and rerun `validate.sh` from its new place.
    Start the move from an empty index (`git status` clean) and commit it on

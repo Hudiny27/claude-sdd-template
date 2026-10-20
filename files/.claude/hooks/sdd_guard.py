@@ -289,11 +289,35 @@ def unlocked(payload, proj):
     return True
 
 
+LEVEL_RANK = {"S": 1, "M": 2, "L": 3}
+
+
+def approved_level(proj, branch):
+    """The level recorded with the approval, None if not approved, "" for old flags."""
+    try:
+        with open(approved_flag(proj, branch), encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("level:"):
+                    return line.split(":", 1)[1].strip()
+    except OSError:
+        return None
+    return ""
+
+
+def level_rose(proj, root, branch):
+    """True when the spec grew past the level the owner approved (S -> M, M -> L)."""
+    was = approved_level(proj, branch)
+    spec = find_spec_dir(root, branch)
+    if not was or not spec:
+        return False
+    return LEVEL_RANK.get(spec_level(root, spec), 3) > LEVEL_RANK.get(was, 3)
+
+
 def approved(proj, root):
     branch = branch_of(root)
     if not branch or branch in MAIN_BRANCHES:
         return False
-    return os.path.isfile(approved_flag(proj, branch))
+    return approved_level(proj, branch) is not None and not level_rose(proj, root, branch)
 
 
 def prune_flags(proj):
@@ -332,6 +356,12 @@ def code_reason(proj, root):
             "SDD guard: branch " + branch + " has no feature spec. Write "
             "Plans/YYYY-MM-DD-" + branch_slug(branch) + "/" + SPEC_HINT + " "
             "first (/feature-spec), then ask the owner to review it."
+        )
+    if level_rose(proj, root, branch):
+        return (
+            "SDD guard: the spec " + spec + " grew from level " + approved_level(proj, branch)
+            + " to " + spec_level(root, spec) + " after the owner approved it. Stop, finish "
+            "the larger spec (interview included) and ask the owner for a new " + APPROVE_KEYWORD + "."
         )
     return (
         "SDD guard: the feature spec " + spec + " for branch " + branch + " is not "
@@ -718,7 +748,8 @@ def approve(payload, proj):
         return
     write_flag(
         approved_flag(proj, branch),
-        "branch: " + branch + "\nspec: " + spec + "\napproved: " + datetime.now().isoformat(timespec="seconds") + "\n",
+        "branch: " + branch + "\nspec: " + spec + "\nlevel: " + spec_level(root, spec)
+        + "\napproved: " + datetime.now().isoformat(timespec="seconds") + "\n",
     )
     print(
         "SDD: the owner approved " + spec + " for branch " + branch + ". Code edits "

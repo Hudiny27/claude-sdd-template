@@ -99,8 +99,10 @@ review-zhatók.
 előző branch mergelve, `main`-en vagy), lehetőleg friss kontextussal
 (`/clear`). Először fokozat: **S** (egy session, kis kockázat), **M** (1–3
 session vagy egy kockázatos terület), **L** (nagy vagy nehezen
-visszafordítható); kockázatos terület (migráció, auth, fizetés, deploy, jogi
-szöveg, éles levél, adattörlés) legalább M. S és M egyetlen `spec.md`-t kap
+visszafordítható); kockázatos terület (migráció, auth, fizetés vagy fizetős
+API, deploy, jogi szöveg, éles levél, adattörlés, a felhasználók meglévő
+fájljaitól függő formátum) legalább M. Ha a fokozat menet közben nő, állj
+meg, bővítsd a specet, és kérj új `#spec-ok`-ot; az őr addig tilt. S és M egyetlen `spec.md`-t kap
 (formátum: `Plans/README.md`), L a három fájlt. S-nél nincs interjú; M-nél és
 L-nél írás előtt interjú felugró kérdésekkel (`grill` skill, ha telepítve van),
 a javasolt válasz az első. A `validation.md` tartalmazzon olyan parancsokat, amelyeket
@@ -132,7 +134,7 @@ az eredményt (sikeres/sikertelen) bizonyítékkal. Fizetős API-nál a
 tényleges felhasználást is, a becsléshez képest. A review szintje: „működik-e
 és megfelel-e a specnek”. Nem triviális feature-nél ajánlj fel mély review-t
 párhuzamos subagentekkel. Kész akkor van, ha minden ellenőrzés sikeres, a
-spec és a kód szinkronban van, a roadmap-fázis ki van pipálva, és a spec a
+spec és a kód szinkronban van, a roadmap-fázis ki van pipálva (ha van), és a spec a
 `Plans/done/` alá került. Ha az owner kéri, a merge nyitott kézi
 ellenőrzéssel is megtörténhet: ezek a `validation.md`-ben nyitottak maradnak,
 a döntés a `requirements.md` „Döntések” szakaszába kerül (`döntött: owner`),
@@ -199,6 +201,7 @@ szerkezete.
   `#spec-ok` egyben jóváhagyja, hogy az implementáció feladatcsoportonként
   commitoljon (a csoport kódja, tesztjei és a hozzá tartozó specfrissítés
   egy commitban), ha a csoport tesztjei, lintje és típusellenőrzése
-  sikeres. Soha ne pusholj és ne mergelj kérdezés nélkül.
+  sikeres. S és M fokozatnál nincs feladatcsoport: a teljes változás egy
+  commit, miután az ellenőrzései sikeresek. Soha ne pusholj és ne mergelj kérdezés nélkül.
 - Commit scope-ok: `docs(specs): ...` a constitutionhöz, `docs(plans): ...` a
   feature specekhez, Conventional Commits a kódhoz.
