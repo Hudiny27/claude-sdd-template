@@ -212,7 +212,16 @@ próbával, párhuzamosan:
    naprakészre egy alapmásolatban a scratchpadben, fizetős lépés nélkül,
    és minden kör ebből másoljon; így a próba nem a régi állapotba akad
    bele.
-2. **Prompt:** az alábbi váz, a próba feladatával kitöltve.
+   Az előkészítést egy script végzi, amelyet az agent a speccel együtt ír
+   meg a spec-mappába (`prepare-probe.sh`, a `validate.sh` mellé): az
+   alapmásolat naprakészre hozását egyszer, a körönkénti másolást és a
+   generált dokumentumok újragenerálását minden kör előtt, a másolat saját
+   útvonalával. Így egy kör sem indul régi útvonalú vagy elavult
+   útmutatóval.
+2. **Prompt:** az alábbi váz, a próba feladatával kitöltve. A próba
+   feladata a mintaprojekt valódi tartalmából készül (a spec írásakor egy
+   pillantás a mintára: mi van benne, milyen szegmensek, jelenetek): egy
+   olyan kérés, amely a mintán értelmes, és amelynek a sikere ellenőrizhető.
 3. **Értékelés:** a próba sikeres, ha teljesíti a `validation.md`
    sikerkritériumát. A „talált hiányok” közül csak a valódiak számítanak:
    a próba felállításából adódó félreértés (például egy másolt projekt

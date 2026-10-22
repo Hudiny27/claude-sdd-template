@@ -106,7 +106,12 @@ with automated checks worth scripting. **L:** the files below.
   does the task with it and reports where it got stuck or had to guess. Name
   the probes (one per mode), what each gets, and its success criterion; the
   setup, the prompt skeleton and the rounds are in `Plans/README.md` ("Friss
-  subagent-próba"). The agent runs the probe during validation and fixes the
+  subagent-próba"). Write each probe's task from the sample project's real
+  content (look at the sample while writing: its segments, scenes, what it
+  shows), so the request makes sense on it and its success can be checked;
+  write the probe setup as `prepare-probe.sh` in the spec folder (base copy
+  brought up to date once, a fresh copy per round with its generated
+  documents regenerated). The agent runs the probe during validation and fixes the
   gaps it finds, then repeats it with a new fresh subagent until a round
   finds no new real gap (at most 3 rounds). If checks call a paid API, state the expected cost of
   the live and the manual checks (characters, minutes, calls). A test that
