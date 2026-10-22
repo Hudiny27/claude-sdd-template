@@ -128,10 +128,17 @@ amelyik bevezeti őket, nem csak a végső kézi ellenőrzésnél. A következő
 csoport kódjához csak az előző csoport commitja után nyúlj; amíg a
 tesztkör a háttérben fut, legfeljebb olvass és tervezz. Így minden commit
 pontosan egy csoportot tartalmaz, utólagos szétválogatás nélkül.
+Ha a feature látható vagy hallható kimenetet ad (stílus, elrendezés,
+hangszint), az owner egy élő mintát már abban a csoportban megnéz,
+amelyik bevezeti (S/M-nél az implementáció közben), nem csak a végső kézi
+ellenőrzésnél. A subagent-próba csak ezután fut, hogy a végleges
+útmutatót próbálja.
 
 **Validáció:** futtasd le a `validation.md` minden ellenőrzését, és jelentsd
 az eredményt (sikeres/sikertelen) bizonyítékkal. Fizetős API-nál a
-tényleges felhasználást is, a becsléshez képest. A review szintje: „működik-e
+tényleges felhasználást is, a becsléshez képest. A `validate.sh` és a teljes
+tesztkör alatt ne fusson párhuzamosan render, élő teszt vagy
+subagent-próba: a terhelés az időfüggő teszteket elbuktathatja. A review szintje: „működik-e
 és megfelel-e a specnek”. Nem triviális feature-nél ajánlj fel mély review-t
 párhuzamos subagentekkel. Kész akkor van, ha minden ellenőrzés sikeres, a
 spec és a kód szinkronban van, a roadmap-fázis ki van pipálva (ha van), és a spec a

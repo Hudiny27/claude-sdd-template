@@ -207,6 +207,11 @@ próbával, párhuzamosan:
    rossz téglalap), a rontást és a várható mellékhatásait (például hogy a
    javítás visszaállítja a jóváhagyott tartalmat) a futtatás előtt le kell
    írni, hogy a próba erről szóló jelzése ne számítson hiánynak.
+   Ha a mintaprojekt egy régebbi verzió állapotában van (például régi
+   jóváhagyás vagy régi formátumú kimenet), a próbák előtt egyszer hozd
+   naprakészre egy alapmásolatban a scratchpadben, fizetős lépés nélkül,
+   és minden kör ebből másoljon; így a próba nem a régi állapotba akad
+   bele.
 2. **Prompt:** az alábbi váz, a próba feladatával kitöltve.
 3. **Értékelés:** a próba sikeres, ha teljesíti a `validation.md`
    sikerkritériumát. A „talált hiányok” közül csak a valódiak számítanak:
