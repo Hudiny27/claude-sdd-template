@@ -80,4 +80,10 @@ will ask about them.
 4. Propose the commit(s) and make them after approval. Then propose the
    merge into `main` (squash or merge, as the owner prefers) and do it after
    approval. Never push without asking.
-5. Suggest `/replan` before the next feature.
+5. After the merge, always ask about the push in a popup (AskUserQuestion),
+   never as a question in the chat, so the owner only has to click. Name the
+   branch and the remote, and the commits it would send
+   (`git log --oneline origin/main..main`). Options: "Push (Javasolt)" —
+   push `main` now; "Most ne" — leave it for later. Push only on the
+   owner's click; a denied push is a stop sign.
+6. Suggest `/replan` before the next feature.
