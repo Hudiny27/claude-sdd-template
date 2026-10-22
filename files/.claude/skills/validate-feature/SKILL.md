@@ -75,7 +75,10 @@ checks open (`[ ]`) in `validation.md`, record the decision under
 will ask about them.
 
 1. Tick the phase in `specs/roadmap.md` (`[ ]` → `[x]`; this edit needs no
-   unlock). Skip this when the work has no roadmap phase (a `fix/` branch).
+   unlock, but only with the Edit tool: the guard blocks any shell command
+   that writes the file, and a blocked command runs none of its other
+   steps either). Skip this when the work has no roadmap phase (a `fix/`
+   branch).
 2. Update `CHANGELOG.md` if the project keeps one.
 3. Tick every check in `validation.md` (S/M: in the "Ellenőrzés" section of
    `spec.md`) that passed (`[ ]` → `[x]`), then move

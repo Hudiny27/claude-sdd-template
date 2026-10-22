@@ -83,6 +83,18 @@ interview: mutually exclusive parameters, ranges, defaults and plan limits.
 Note them in the `requirements.md` context; a constraint that rules out an
 option the owner wants goes into the interview, not into the code later.
 
+When the feature depends on metered CI or cloud usage (GitHub Actions
+minutes, a cloud bill), check before the interview that the quota or budget
+allows the planned runs (for GitHub: the account's Actions usage and budget),
+and note the result in the context. A used-up quota blocks every run
+without any error in the code.
+
+When the feature adds a GitHub workflow that is started by hand
+(`workflow_dispatch`), plan for GitHub's rule that such a workflow can only be
+dispatched once its file is on the default branch, or after it has run once:
+either an early merge of the workflow files, or a first run triggered by a
+push. Put the chosen way into the plan.
+
 ## 4. Write the spec files
 
 Use the formats in `Plans/README.md`. **S and M:** one `spec.md` in the spec
@@ -130,7 +142,11 @@ with automated checks worth scripting. **L:** the files below.
   with `$(dirname "$0")` and never hard-codes `Plans/<dir>`, so it still runs
   after the spec moves to `Plans/done/`. Local, git-ignored settings it needs
   (such as live sample paths, never secrets) come from a file the project
-  documents.
+  documents. Before handing over, run `bash -n` and `shellcheck` on it (via
+  `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable` when
+  shellcheck is not installed) and fix what they report: an error such as an
+  unset variable under `set -u` otherwise stays hidden until the first check
+  that reaches it.
 
 ## 5. Hand over for review
 
