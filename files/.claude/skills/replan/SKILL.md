@@ -25,7 +25,10 @@ Use the AskUserQuestion tool, grouped:
    merged, split or reordered? Should backlog items be scheduled?
 2. **Constitution:** New stakeholder input, testing preferences, stack changes?
 3. **Workflow:** What repeated manually in the last feature and could become a
-   skill or a check (validation steps, changelog, release notes)?
+   skill or a check (validation steps, changelog, release notes)? If the
+   session's SDD status has a `Template:` line, offer to bring those files
+   over from the template (diff them first: keep anything project-specific;
+   the guard's files need `#spec-szerkesztes`).
 
 Bring your own observations from the last feature as options.
 

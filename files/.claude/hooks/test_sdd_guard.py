@@ -30,7 +30,13 @@ class Repo(unittest.TestCase):
     def setUp(self):
         self.dir = os.path.realpath(tempfile.mkdtemp(prefix="sdd-test-"))
         self.addCleanup(shutil.rmtree, self.dir)
-        self.env = {**os.environ, **GIT_ENV, "CLAUDE_PROJECT_DIR": self.dir}
+        self.env = {
+            **os.environ,
+            **GIT_ENV,
+            "CLAUDE_PROJECT_DIR": self.dir,
+            # Keep the real ~/.claude/templates out of the status under test.
+            "SDD_TEMPLATE_DIR": os.path.join(self.dir, "no-template"),
+        }
         self.git("init", "-q", "-b", "main")
         self.write(".gitignore", ".claude/.sdd-*\n*.log\n")
         self.write("README.md", "# test\n")
@@ -260,6 +266,55 @@ class CodeGate(Repo):
         self.git("checkout", "-q", "main")
         self.feature("feature/phase-2-more")
         self.assertIn("level L", self.hook("session", {}))
+
+    def template(self):
+        tpl = os.path.realpath(tempfile.mkdtemp(prefix="sdd-tpl-"))
+        self.addCleanup(shutil.rmtree, tpl)
+        for rel, text in (
+            ("CLAUDE.md", "# rules v2\n"),
+            ("Plans/README.md", "plans\n"),
+            (".claude/skills/replan/SKILL.md", "replan v2\n"),
+            (".github/workflows/sdd-check.yml", "ci\n"),
+        ):
+            os.makedirs(os.path.dirname(os.path.join(tpl, rel)), exist_ok=True)
+            with open(os.path.join(tpl, rel), "w", encoding="utf-8") as fh:
+                fh.write(text)
+        self.env["SDD_TEMPLATE_DIR"] = tpl
+        return tpl
+
+    def test_session_status_names_template_drift(self):
+        self.template()
+        self.write("CLAUDE.md", "# rules v1\n")
+        self.write("Plans/README.md", "plans\n")
+        out = self.hook("session", {})
+        self.assertIn("Template:", out)
+        self.assertIn("CLAUDE.md", out)
+        self.assertIn(".claude/skills/replan/SKILL.md", out)
+        self.assertNotIn("Plans/README.md", out)
+        # The CI workflow is optional: a project without it is not drift.
+        self.assertNotIn("sdd-check.yml", out)
+
+    def test_no_template_line_when_in_sync(self):
+        tpl = self.template()
+        for rel in ("CLAUDE.md", "Plans/README.md", ".claude/skills/replan/SKILL.md"):
+            os.makedirs(os.path.dirname(os.path.join(self.dir, rel)) or self.dir, exist_ok=True)
+            shutil.copy(os.path.join(tpl, rel), os.path.join(self.dir, rel))
+        for rel in ("specs/README.md", ".claude/hooks/sdd_guard.py", ".githooks/pre-commit"):
+            os.makedirs(os.path.dirname(os.path.join(tpl, rel)), exist_ok=True)
+            self.write(rel, "same\n")
+            shutil.copy(os.path.join(self.dir, rel), os.path.join(tpl, rel))
+        self.assertNotIn("Template:", self.hook("session", {}))
+
+    def test_rules_beside_a_foreign_claude_md_are_compared(self):
+        self.template()
+        self.write("CLAUDE.md", "# the project's own notes\n@CLAUDE.sdd.md\n")
+        self.write("CLAUDE.sdd.md", "# rules v2\n")
+        out = self.hook("session", {})
+        self.assertNotIn("CLAUDE.md,", out)
+        self.assertNotIn("CLAUDE.sdd.md", out)
+
+    def test_no_template_dir_no_template_line(self):
+        self.assertNotIn("Template:", self.hook("session", {}))
 
     def test_outside_project_is_not_gated(self):
         self.assertFalse(self.denied("Write", {"file_path": os.path.join(tempfile.gettempdir(), "sdd-elsewhere.txt")}))

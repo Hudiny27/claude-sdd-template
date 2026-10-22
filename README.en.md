@@ -107,9 +107,13 @@ Edit the files under `files/`, then run the tests:
 cd ~/.claude/templates/sdd/files && python3 -m unittest discover -s .claude/hooks -p 'test_*.py'
 ```
 
-Existing projects do not update themselves. Copy a changed `sdd_guard.py` into
-a project by hand; it is locked there, so the owner unlocks it with
-`#spec-szerkesztes` first.
+Existing projects do not update themselves. The session's "SDD status" lists,
+in a `Template:` line, the workflow files (`CLAUDE.md`, the skills, the
+`Plans/` and `specs/` READMEs, the guard, the pre-commit hook) that differ from
+`~/.claude/templates/sdd/files`; `settings.json` is left out because projects
+merge it. Bringing them over is a `/replan` task. A changed `sdd_guard.py` is
+locked in the project, so the owner unlocks it with `#spec-szerkesztes` first.
+`SDD_TEMPLATE_DIR` points to another template location.
 
 ## License
 

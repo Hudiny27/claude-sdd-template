@@ -205,9 +205,14 @@ A `files/` alatti fájlokat szerkeszd, utána futtasd a teszteket:
 cd ~/.claude/templates/sdd/files && python3 -m unittest discover -s .claude/hooks -p 'test_*.py'
 ```
 
-A már telepített projektek **nem frissülnek maguktól**. Egy módosított
-`sdd_guard.py`-t kézzel másolj át. A projektben ez a fájl zárolt, ezért előtte
-oldd fel a `#spec-szerkesztes` kulcsszóval.
+A már telepített projektek **nem frissülnek maguktól**. A session eleji
+*„SDD status”* egy `Template:` sorban felsorolja, mely munkafolyamat-fájlok
+(`CLAUDE.md`, skillek, a `Plans/` és `specs/` README-je, az őr, a pre-commit
+hook) térnek el a `~/.claude/templates/sdd/files` változatától; a
+`settings.json` kimarad, mert projektenként összefésült. Az áthozatal a
+`/replan` dolga. Egy módosított `sdd_guard.py` a projektben zárolt, ezért
+előtte oldd fel a `#spec-szerkesztes` kulcsszóval. Más sablonhelyet a
+`SDD_TEMPLATE_DIR` környezeti változó ad meg.
 
 ## Licenc
 

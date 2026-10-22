@@ -79,6 +79,20 @@ SELF_DIRS = (".githooks",)
 # Outside the project, but able to disable this project's hooks.
 USER_SETTINGS = (os.path.expanduser("~/.claude/settings.json"),)
 
+# Installed projects do not update themselves; the session status names the
+# workflow files that drifted from the template so /replan can bring them over.
+TEMPLATE_FILES_DIR = os.environ.get("SDD_TEMPLATE_DIR") or os.path.expanduser("~/.claude/templates/sdd/files")
+# settings.json is left out: projects merge their own hooks and permissions in.
+TEMPLATE_SYNCED = (
+    "CLAUDE.md",
+    "Plans/README.md",
+    "specs/README.md",
+    ".claude/hooks/sdd_guard.py",
+    ".githooks/pre-commit",
+)
+# Compared only when the project has it (the CI check is optional).
+TEMPLATE_OPTIONAL = (".github/workflows/sdd-check.yml",)
+
 # Not code: writable on any branch without an approved spec.
 FREE_DIRS = ("specs", "Plans", "docs", ".claude", ".githooks")
 FREE_FILES = (".gitignore", ".github/workflows/sdd-check.yml")
@@ -775,6 +789,36 @@ def prompt(payload):
         approve(payload, proj)
 
 
+def same_bytes(a, b):
+    try:
+        with open(a, "rb") as fa, open(b, "rb") as fb:
+            return fa.read() == fb.read()
+    except OSError:
+        return False
+
+
+def template_drift(root):
+    """Workflow files in `root` that differ from the template, or are missing."""
+    if not os.path.isdir(TEMPLATE_FILES_DIR):
+        return []
+    skills = sorted(
+        os.path.relpath(p, TEMPLATE_FILES_DIR)
+        for p in glob.glob(os.path.join(TEMPLATE_FILES_DIR, ".claude", "skills", "*", "SKILL.md"))
+    )
+    drift = []
+    for rel in (*TEMPLATE_SYNCED, *skills, *TEMPLATE_OPTIONAL):
+        ours = rel
+        # The installer puts the rules next to a foreign CLAUDE.md.
+        if rel == "CLAUDE.md" and os.path.exists(os.path.join(root, "CLAUDE.sdd.md")):
+            ours = "CLAUDE.sdd.md"
+        path = os.path.join(root, ours)
+        if rel in TEMPLATE_OPTIONAL and not os.path.exists(path):
+            continue
+        if not same_bytes(os.path.join(TEMPLATE_FILES_DIR, rel), path):
+            drift.append(ours)
+    return drift
+
+
 def session(payload):
     proj = project_dir(payload)
     prune_flags(proj)
@@ -801,6 +845,14 @@ def session(payload):
     phase = first_open_phase(root)
     if phase:
         lines.append("- Next open roadmap phase: " + phase)
+    drift = template_drift(root)
+    if drift:
+        shown = ", ".join(drift[:6]) + (" ..." if len(drift) > 6 else "")
+        lines.append(
+            "- Template: " + str(len(drift)) + " workflow file(s) differ from " + TEMPLATE_FILES_DIR
+            + " (" + shown + "). Offer to bring them over in /replan; the guard's files need "
+            + UNLOCK_KEYWORD + "."
+        )
     print("\n".join(lines))
 
 
