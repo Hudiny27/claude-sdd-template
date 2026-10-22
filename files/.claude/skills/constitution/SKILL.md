@@ -47,5 +47,9 @@ decides.
   you made to fill a gap.
 - The owner reviews. Apply requested changes yourself, keeping the three files
   consistent with each other.
-- Propose the commit `docs(specs): <summary>` and make it after approval.
-- Next step: `/feature-spec` for the first open roadmap phase.
+- Ask in one popup (CLAUDE.md, "Döntések és következő lépések felugró
+  ablakban"), a multi-select of the next steps: the commit
+  `docs(specs): <summary>`, then `/feature-spec` for the first open roadmap
+  phase. Do only what the owner ticks.
+- If the owner still has to send `#spec-zar`, say so at the end of the
+  message: keywords are typed, never clicked.

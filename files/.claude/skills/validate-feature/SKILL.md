@@ -59,6 +59,13 @@ This keeps the main context clean and catches what a single pass misses.
 - The manual checks from `validation.md`, as a short list for the owner.
 - Remind the owner to read the key tests or step through them in the debugger
   if they want to own the change, not just accept it.
+- End with a popup (CLAUDE.md, "Döntések és következő lépések felugró
+  ablakban"): a multi-select of the finishing steps in step 6 (commit the
+  spec updates, tick the roadmap and archive, merge into `main`) plus every
+  cleanup this feature left behind (a scratch worktree, a probe folder on
+  another machine, temporary files), each named with its path. If manual
+  checks are still open, one more question: wait for them, or merge with
+  them left open. Do only what the owner ticks, in order.
 
 ## 6. Finish (only after the owner confirms that everything passes)
 
@@ -77,13 +84,14 @@ will ask about them.
    Start the move from an empty index (`git status` clean) and commit it on
    its own: a move staged early (`git mv`) lands in whatever commit comes
    next.
-4. Propose the commit(s) and make them after approval. Then propose the
-   merge into `main` (squash or merge, as the owner prefers) and do it after
-   approval. Never push without asking.
+4. Make the commit(s) and the merge into `main` (squash or merge, as the
+   owner prefers) that the owner ticked in the step 5 popup; if the popup
+   was skipped, ask in one now. Never push without asking.
 5. After the merge, always ask about the push in a popup (AskUserQuestion),
    never as a question in the chat, so the owner only has to click. Name the
    branch and the remote, and the commits it would send
    (`git log --oneline origin/main..main`). Options: "Push (Javasolt)" —
    push `main` now; "Most ne" — leave it for later. Push only on the
    owner's click; a denied push is a stop sign.
-6. Suggest `/replan` before the next feature.
+6. Offer `/replan` (before the next feature) as an option in the push
+   popup, so one click covers both.

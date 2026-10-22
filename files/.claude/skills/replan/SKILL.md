@@ -44,5 +44,7 @@ Bring your own observations from the last feature as options.
 
 ## 4. Close
 
-Propose the commits and the merge, and make them after approval. Then the
-next feature starts with `/feature-spec`.
+Ask in one popup (CLAUDE.md, "Döntések és következő lépések felugró
+ablakban"), a multi-select: the commits, the merge, any cleanup (worktree,
+temporary files) and `/feature-spec` for the next feature. Do only what the
+owner ticks, in order; the push gets its own question.

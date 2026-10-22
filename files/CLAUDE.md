@@ -195,6 +195,36 @@ folyamatok és a fontos technikai döntések (rögzített verziók, szigorúság
 adatmodell). Maradjanak ki: változónevek, CSS-osztályok és a fájlok belső
 szerkezete.
 
+## Döntések és következő lépések felugró ablakban
+
+Ha az ownernek kell döntenie vagy jóváhagynia valamit, az agent felugró
+ablakot ad (AskUserQuestion), nem a chatben kérdez. Ide tartozik a commit, a
+push, a merge, a takarítás (munkafa, próbamappa, ideiglenes fájl), a
+következő skill vagy lépés és minden nyitott kérdés, amit az agent nem
+dönthet el maga.
+
+- Az ablak előtt a chatben röviden ott van, amire a döntéshez szükség van:
+  eredmény, bizonyíték, feltételezések, kockázat. Az ablak csak a döntést
+  kéri, az átadást nem helyettesíti. A hosszabb magyarázat a chatbe kerül.
+- A javasolt opció az első, „(Javasolt)” jelöléssel. A leírása egyszerű
+  magyarsággal megmondja, mi történik, ha ezt választják, és mi függ tőle.
+- Az egymástól független döntések egy ablakba kerülnek (legfeljebb négy
+  kérdés). Ha egy lépés végén több, egymást nem kizáró teendő van (például
+  commit, merge, egy próbamappa törlése, a következő skill), ezek egy
+  többválasztós kérdésbe (`multiSelect`) kerülnek, hogy az owner egyszerre
+  jelölhesse be őket. Az agent csak a bejelölt teendőket hajtja végre,
+  a felsorolt sorrendben.
+- A „Más” mezőbe írt válasz az owner utasítása, nem egy opció: el kell
+  olvasni, és aszerint kell eljárni.
+- Kivételek:
+  - A kulcsszavak (`#spec-ok`, `#spec-szerkesztes`, `#spec-zar`) nem
+    kattinthatók. A hook csak az owner begépelt üzenetét fogadja el, az
+    ablakban adott válasz nem jóváhagyás. Ilyenkor az agent a chat végén
+    pontosan megmondja, mit kell begépelni.
+  - Amit az agent maga eldönthet vagy kinézhet (globális szabály), arról
+    nem kérdez, ablakban sem.
+  - Overnight módban nincs ablak: az agent dönt, és naplózza a döntést.
+
 ## Viszony a globális szabályokhoz
 
 - A globális „~3 fájl fölött előbb terv” szabályt a feature spec teljesíti: a

@@ -133,9 +133,13 @@ with automated checks worth scripting. **L:** the files below.
   assumption is also recorded under "Döntések" as an `agent` decision.
 - Apply review changes yourself and keep the spec files (including
   `validate.sh`) consistent.
-- Propose the commit `docs(plans): add spec for <feature>` and make it after approval.
-- Tell the owner: when the spec is right, start a line of the message with
-  `#spec-ok`. Then start a fresh context (`/clear`) and implement:
+- Ask about the commit `docs(plans): add spec for <feature>` in a popup
+  (CLAUDE.md, "Döntések és következő lépések felugró ablakban"), together
+  with any other open choice of this step (for example cleaning up a
+  scratch worktree), and make only what the owner ticks.
+- Tell the owner at the end of the message, in the chat, not in the popup:
+  when the spec is right, start a line of the message with `#spec-ok`
+  (keywords are typed, never clicked). Then start a fresh context (`/clear`) and implement:
   "Implement the task groups in Plans/<dir>/plan.md." For security, auth, data
   or migrations: one task group at a time. `#spec-ok` also approves one
   commit per task group once its tests, lint and type checks pass; pushing
