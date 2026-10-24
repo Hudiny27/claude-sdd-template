@@ -120,7 +120,7 @@ Branch: feature/<slug>
 ```
 
 Az agent által választott, valódi adattól függő számértékek (küszöbök,
-hangosság, sebesség) „kalibrálandó” jelölést kapnak a döntésükben; a
+időkorlátok, sebesség) „kalibrálandó” jelölést kapnak a döntésükben; a
 `plan.md` abban a feladatcsoportban méri őket az élő mintákon, amelyik
 bevezeti őket. Az eredmény a `requirements.md` „Kalibrálás” szakaszába
 kerül, értékenként (vagy összetartozó értékcsoportonként) egy alszakaszban,
@@ -177,8 +177,13 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
   futásban elbukó teszt instabil; az okát meg kell keresni.
 - Az ideiglenes fájlokat egy saját ideiglenes könyvtárban tartja, és a végén
   törli.
+- Az általa indított háttérfolyamatokat (szerver, kamu API) a végén leállítja,
+  hibás futás után is. A háttérfolyamatot a fő shellben indítja, soha nem
+  `$(...)`-ben: az alhéjban kapott folyamatazonosító elvész, és a folyamat
+  a script után is fut (eredet: 2026-10-23, egy épített felület
+  validate.sh-ja).
 - Élő, fizetős vagy hálózatot igénylő ellenőrzést csak kapcsolóval futtat
-  (például `VTW_LIVE_TESTS=1`).
+  (például `LIVE_TESTS=1`).
 - A saját mappáját `$(dirname "$0")`-val találja meg, és sehol nem írja be a
   `Plans/<dir>` útvonalat, így a `Plans/done/` alá költözés után is fut.
 - A helyi, git által ignorált beállításokat (például az élő minták útvonalát,
@@ -201,10 +206,10 @@ próbával, párhuzamosan:
    scratchpadjében. A generált dokumentumokat (például az írási útmutatót)
    a másolaton újra kell generálni, hogy a legutóbbi javítások benne
    legyenek. Minden körnek és próbának saját másolat jár. A másolat a
-   teljes projekt, mappa kihagyása nélkül (például a render kimenete is),
-   különben a próba hamis állapotot lát (például `render missing`). Ha a
+   teljes projekt, mappa kihagyása nélkül (például a build kimenete is),
+   különben a próba hamis állapotot lát (például „hiányzó build”). Ha a
    próba a másolat szándékos rontására épül (például egy kivett lépés vagy egy
-   rossz téglalap), a rontást és a várható mellékhatásait (például hogy a
+   rossz beállítás), a rontást és a várható mellékhatásait (például hogy a
    javítás visszaállítja a jóváhagyott tartalmat) a futtatás előtt le kell
    írni, hogy a próba erről szóló jelzése ne számítson hiánynak.
    Ha a mintaprojekt egy régebbi verzió állapotában van (például régi
