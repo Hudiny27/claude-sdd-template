@@ -334,6 +334,29 @@ class CodeGate(Repo):
         self.feature()
         self.assertIn("NOT approved", self.hook("session", {}))
 
+    def workflow_log(self, entries, reviewed_before=0):
+        lines = ["# Workflow log", "", "Format: `- YYYY-MM-DD | file | rule | origin`", ""]
+        lines += ["- 2026-01-%02d | CLAUDE.md | old rule | f" % (i + 1) for i in range(reviewed_before)]
+        if reviewed_before:
+            lines.append("review: 2026-02-01")
+        lines += ["- 2026-03-%02d | CLAUDE.md | rule %d | f" % (i + 1, i) for i in range(entries)]
+        self.write(".claude/workflow-log.md", "\n".join(lines) + "\n")
+
+    def test_workflow_log_counts_entries_since_the_last_review(self):
+        self.workflow_log(3, reviewed_before=12)
+        out = self.hook("session", {})
+        self.assertIn("Workflow log: 3/10", out)
+        self.assertNotIn("time to review", out)
+
+    def test_workflow_log_asks_for_a_review_at_ten(self):
+        self.workflow_log(10)
+        self.assertIn("time to review", self.hook("session", {}))
+
+    def test_no_workflow_line_without_entries(self):
+        self.assertNotIn("Workflow log", self.hook("session", {}))
+        self.workflow_log(0, reviewed_before=4)
+        self.assertNotIn("Workflow log", self.hook("session", {}))
+
 
 class PreCommit(Repo):
     def setUp(self):

@@ -214,6 +214,12 @@ hook) térnek el a `~/.claude/templates/sdd/files` változatától; a
 előtte oldd fel a `#spec-szerkesztes` kulcsszóval. Más sablonhelyet a
 `SDD_TEMPLATE_DIR` környezeti változó ad meg.
 
+A másik irány: a munkafolyamat-javítások először a projektben készülnek, és
+soronként a projekt `.claude/workflow-log.md` naplójába kerülnek. A
+session-státusz számolja az utolsó `review:` sor óta felvett tételeket, és
+10-nél review-t kér a `/replan`-ben: minden tétel a sablonba kerül, helyi
+marad, vagy törlődik. A sablon változása itt, külön commitban történik.
+
 ## Licenc
 
 [MIT](LICENSE)

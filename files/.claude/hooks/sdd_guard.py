@@ -93,6 +93,12 @@ TEMPLATE_SYNCED = (
 # Compared only when the project has it (the CI check is optional).
 TEMPLATE_OPTIONAL = (".github/workflows/sdd-check.yml",)
 
+# Local workflow improvements are logged one per line; after this many since
+# the last "review:" line the session status asks for a review in /replan.
+WORKFLOW_LOG = ".claude/workflow-log.md"
+WORKFLOW_REVIEW_AT = 10
+WORKFLOW_ENTRY = re.compile(r"^- \d{4}-\d{2}-\d{2} ")
+
 # Not code: writable on any branch without an approved spec.
 FREE_DIRS = ("specs", "Plans", "docs", ".claude", ".githooks")
 FREE_FILES = (".gitignore", ".github/workflows/sdd-check.yml")
@@ -819,6 +825,22 @@ def template_drift(root):
     return drift
 
 
+def workflow_log_count(root):
+    """Entries in the workflow log since its last review line (0 without a log)."""
+    try:
+        with open(os.path.join(root, WORKFLOW_LOG), encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return 0
+    count = 0
+    for line in lines:
+        if line.startswith("review:"):
+            count = 0
+        elif WORKFLOW_ENTRY.match(line):
+            count += 1
+    return count
+
+
 def session(payload):
     proj = project_dir(payload)
     prune_flags(proj)
@@ -852,6 +874,17 @@ def session(payload):
             "- Template: " + str(len(drift)) + " workflow file(s) differ from " + TEMPLATE_FILES_DIR
             + " (" + shown + "). Offer to bring them over in /replan; the guard's files need "
             + UNLOCK_KEYWORD + "."
+        )
+    logged = workflow_log_count(root)
+    if logged >= WORKFLOW_REVIEW_AT:
+        lines.append(
+            "- Workflow log: " + str(logged) + " local workflow improvements since the last review ("
+            + WORKFLOW_LOG + "): time to review them in /replan (template, keep local, or drop)."
+        )
+    elif logged:
+        lines.append(
+            "- Workflow log: " + str(logged) + "/" + str(WORKFLOW_REVIEW_AT)
+            + " local workflow improvement(s) since the last review (" + WORKFLOW_LOG + ")."
         )
     print("\n".join(lines))
 

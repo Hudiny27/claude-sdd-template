@@ -32,6 +32,7 @@ Plans/                     # feature specek: az agent írja, az owner hagyja jó
 └── done/                  # befejezett feature-ök
 .claude/hooks/sdd_guard.py # az őr (Claude Code hookok, pre-commit, CI)
 .claude/skills/            # constitution, feature-spec, validate-feature, replan
+.claude/workflow-log.md    # helyi munkafolyamat-javítások naplója (10 tételenként review)
 .githooks/pre-commit       # agenttől független védővonal
 ```
 
@@ -114,7 +115,7 @@ A javítások után a próbát egy újabb friss subagenttel meg kell ismételni,
 amíg egy kör nem talál új valódi hiányt (legfeljebb 3 kör). Ha a feature
 fizetős API-t hív, a `validation.md` megbecsüli az élő és a kézi
 ellenőrzések költségét. Az agent által választott, valódi adattól függő
-számértékek (küszöbök, hangosság, sebesség) „kalibrálandó” jelölést
+számértékek (küszöbök, időkorlátok, sebesség) „kalibrálandó” jelölést
 kapnak. Ebben a lépésben nincs kód.
 
 **Implementáció:** csak `#spec-ok` után. Kövesd a `plan.md`-t
@@ -137,7 +138,7 @@ ellenőrzésnél. A subagent-próba csak ezután fut, hogy a végleges
 **Validáció:** futtasd le a `validation.md` minden ellenőrzését, és jelentsd
 az eredményt (sikeres/sikertelen) bizonyítékkal. Fizetős API-nál a
 tényleges felhasználást is, a becsléshez képest. A `validate.sh` és a teljes
-tesztkör alatt ne fusson párhuzamosan render, élő teszt vagy
+tesztkör alatt ne fusson párhuzamosan nehéz build, élő teszt vagy
 subagent-próba: a terhelés az időfüggő teszteket elbuktathatja. A review szintje: „működik-e
 és megfelel-e a specnek”. Nem triviális feature-nél ajánlj fel mély review-t
 párhuzamos subagentekkel. Kész akkor van, ha minden ellenőrzés sikeres, a

@@ -115,6 +115,12 @@ merge it. Bringing them over is a `/replan` task. A changed `sdd_guard.py` is
 locked in the project, so the owner unlocks it with `#spec-szerkesztes` first.
 `SDD_TEMPLATE_DIR` points to another template location.
 
+The other direction: workflow improvements are made in the project first and
+logged one per line in its `.claude/workflow-log.md`. The session status
+counts the entries since the last `review:` line and, at 10, asks for a
+review in `/replan`: each entry goes to the template, stays local, or is
+dropped. A template change is its own commit here.
+
 ## License
 
 [MIT](LICENSE)

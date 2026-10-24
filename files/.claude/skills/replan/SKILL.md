@@ -29,6 +29,23 @@ Use the AskUserQuestion tool, grouped:
    session's SDD status has a `Template:` line, offer to bring those files
    over from the template (diff them first: keep anything project-specific;
    the guard's files need `#spec-szerkesztes`).
+   Record every workflow improvement locally first:
+   - It goes into the project's own file, and gets one line in
+     `.claude/workflow-log.md` (format there). Any change to a workflow file
+     (`CLAUDE.md`, the `Plans/` and `specs/` READMEs, the skills, the guard)
+     counts; code, specs and the roadmap do not.
+   - **Place by cost:** `CLAUDE.md` loads in every session, so only rules
+     that matter in every session go there; keep it under about 2000 words,
+     and a new rule there replaces or condenses an old one. A rule tied to
+     one step goes into that step's skill or `Plans/README.md`.
+   - **Review:** when the SDD status says the log reached 10 entries since
+     the last review, go through them with the owner, one decision each:
+     *template* (only if it holds for any project: no project name, path,
+     machine or tool in it; it answered a real failure; it is a checkable
+     rule; no existing rule covers it), *keep local*, or *drop* (remove the
+     rule from its file). A template change is its own commit in the
+     template repo, only with the owner's approval. Then append
+     `review: YYYY-MM-DD` to the log; the count starts again from there.
 
 Bring your own observations from the last feature as options.
 
