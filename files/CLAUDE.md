@@ -112,7 +112,8 @@ követett dokumentumot vagy skillt szállít (útmutató, prompt, skill), a
 `validation.md`-be kerüljön friss subagent-próba is: egy subagent csak a
 dokumentumot kapja meg, elvégzi vele a feladatot, és jelenti, hol akadt el.
 A javítások után a próbát egy újabb friss subagenttel meg kell ismételni,
-amíg egy kör nem talál új valódi hiányt (legfeljebb 3 kör). Ha a feature
+amíg egy kör nem talál új lényeges hiányt (legfeljebb 3 kör; a mércét lásd
+`Plans/README.md`). Ha a feature
 fizetős API-t hív, a `validation.md` megbecsüli az élő és a kézi
 ellenőrzések költségét. Az agent által választott, valódi adattól függő
 számértékek (küszöbök, időkorlátok, sebesség) „kalibrálandó” jelölést

@@ -125,7 +125,8 @@ with automated checks worth scripting. **L:** the files below.
   brought up to date once, a fresh copy per round with its generated
   documents regenerated). The agent runs the probe during validation and fixes the
   gaps it finds, then repeats it with a new fresh subagent until a round
-  finds no new real gap (at most 3 rounds). If checks call a paid API, state the expected cost of
+  finds no new significant gap (at most 3 rounds; the measure is in
+  `Plans/README.md`, minor gaps start no new round). If checks call a paid API, state the expected cost of
   the live and the manual checks (characters, minutes, calls). A test that
   checks a time upper bound (a wait, a delay, a duration) measures again a
   few times before it fails: a loaded or virtualized machine stalls now and

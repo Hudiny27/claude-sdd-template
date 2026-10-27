@@ -231,9 +231,15 @@ próbával, párhuzamosan:
    sikerkritériumát. A „talált hiányok” közül csak a valódiak számítanak:
    a próba felállításából adódó félreértés (például egy másolt projekt
    útvonala) nem az.
+   Egy valódi hiány **lényeges**, ha miatta a próba elbukott, csak
+   kerülőúton (például szándékosan elrontott lépéssel) jutott tovább, vagy
+   olyat tippelt, ami rossz eredményt adott volna (hibás kimenet, kihagyott
+   szabály, adatvédelmi kockázat). A pontosítás, a tipp és a mérlegelési
+   kérdés („hány zoom elég?”) **apró**: javítható, de nem indít új kört.
 4. **Javítás és ismétlés:** a valódi hiányok javítása után új, friss
-   subagent és új másolat jön, amíg egy kör nem talál új valódi hiányt
-   (legfeljebb 3 kör).
+   subagent és új másolat jön, amíg egy kör nem talál új lényeges hiányt
+   (legfeljebb 3 kör). Az utolsó kör apró hiányai ugyanabban a körben
+   javíthatók.
 5. **Rögzítés:** a körök eredménye (siker, a javított hiányok, a nyitva
    maradt kérdések) a `requirements.md` „Döntések” szakaszába kerül, a
    hatókörön kívüli ötletek a backlogba.

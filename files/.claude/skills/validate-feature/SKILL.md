@@ -24,8 +24,11 @@ not cover (and fix the script). Run the fresh-subagent probe if
 `validation.md` has one, as `Plans/README.md` ("Friss subagent-próba")
 describes: a fresh scratch copy per round and probe, the prompt skeleton,
 the probes of one round in parallel. After fixing what it finds, repeat with
-a new fresh subagent until a round finds no new real gap (at most 3 rounds),
-and record the rounds under "Döntések". Report
+a new fresh subagent until a round finds no new significant gap (one that
+made the probe fail, need a workaround, or guess its way to a wrong result;
+`Plans/README.md` has the measure) (at most 3 rounds); minor gaps (a tip, a
+judgement call) are fixed but start no new round. Record the rounds under
+"Döntések". Report
 each one as a row: check, pass/fail, short evidence (exit code, key output
 line). Do not paste long logs. Never mark a check as passed without running
 it. Run the full test suite a second time: a test that fails in only one
