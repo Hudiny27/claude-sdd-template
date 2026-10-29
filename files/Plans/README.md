@@ -171,6 +171,9 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
 - Ellenőrzésenként egy sort ír: `PASS` vagy `FAIL`, az ellenőrzés neve és egy
   rövid bizonyíték (kilépési kód, kulcssor).
 - Ha bármelyik ellenőrzés elbukik, nem nulla kóddal lép ki.
+- Egy „nincs X” állítás (nincs hibaüzenet, nincs kapcsolat, nincs kulcs a
+  naplóban) csak akkor bizonyít, ha egyszer egy valódi X-en elbukott: a
+  keresett mintának egyeznie kell azzal, amit a rendszer ténylegesen kiír.
 - Ha egy tesztkör elbukik, a bizonyíték az elbukott tesztek nevét is
   tartalmazza (pytestnél a `-rf` kapcsoló `FAILED` sorai), hogy ne kelljen
   a teljes kört újrafuttatni a hiba megkereséséhez. Egy csak az egyik
@@ -222,7 +225,10 @@ próbával, párhuzamosan:
    alapmásolat naprakészre hozását egyszer, a körönkénti másolást és a
    generált dokumentumok újragenerálását minden kör előtt, a másolat saját
    útvonalával. Így egy kör sem indul régi útvonalú vagy elavult
-   útmutatóval.
+   útmutatóval. Ha a script csak a gitben követett fájlokat másolja (mert a
+   követetlenek valódi adatot tartalmazhatnak), az új fájlokat a próba előtt
+   indexbe kell tenni (`git add`, commit nélkül); különben a másolatból
+   hiányzik az útmutató és az eszköz.
 2. **Prompt:** az alábbi váz, a próba feladatával kitöltve. A próba
    feladata a mintaprojekt valódi tartalmából készül (a spec írásakor egy
    pillantás a mintára: mi van benne, milyen szegmensek, jelenetek): egy

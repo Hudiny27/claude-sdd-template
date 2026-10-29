@@ -17,6 +17,10 @@ description: Validate the current feature branch against its spec - run every ch
 
 ## 2. Run the automated checks
 
+The `validate.sh` committed with the spec is part of the approved spec:
+read it before changing it, extend it rather than replace it, and record
+under "Döntések" what was added or dropped.
+
 Run every automated check in `validation.md` (S/M: the "Ellenőrzés" lines
 of `spec.md`): `bash Plans/<dir>/validate.sh` if it exists
 (with `--live` for the live part), plus by hand any check the script does

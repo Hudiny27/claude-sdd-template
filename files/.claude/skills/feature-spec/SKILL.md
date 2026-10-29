@@ -36,6 +36,9 @@ guard blocks code until the owner approves the spec with `#spec-ok`.
   `replanning/<topic>`; for an off-roadmap S fix: `fix/<slug>`). The spec directory is
   `Plans/<today, YYYY-MM-DD>-<last part of the branch name>/`. The guard,
   the pre-commit hook and CI find the spec by this rule.
+- Before the spec, check read-only whether the goal is already met (the
+  live setting, the current code, the deployed instance). If it is, the
+  phase shrinks to an S-level check that records the evidence.
 
 ## 2b. Pick the level
 
@@ -130,7 +133,13 @@ with automated checks worth scripting. **L:** the files below.
   the live and the manual checks (characters, minutes, calls). A test that
   checks a time upper bound (a wait, a delay, a duration) measures again a
   few times before it fails: a loaded or virtualized machine stalls now and
-  then, while a real timing bug fails every try.
+  then, while a real timing bug fails every try. A promise that something
+  does not happen (no plaintext on disk, no network call, no file outside a
+  folder) gets a check that watches the operating system (a system-call
+  trace of the real function), not only a test of the code path: a library
+  may do it behind the code's back. The same run also triggers one allowed
+  event and checks that the trace shows it: "0 events" alone may mean a
+  broken trace.
 - `validate.sh`: every automated check from `validation.md` as one bash
   script, run from the repo root. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.
@@ -139,6 +148,8 @@ with automated checks worth scripting. **L:** the files below.
   where the PID is lost and the process outlives the script.
   A failed test run's evidence names the failed tests (pytest: the `FAILED`
   lines of `-rf`), so finding them needs no second full run.
+  It is approved with the spec: the implementation reads it before touching
+  it and extends it instead of rewriting it; changes go under "Döntések".
   Live, paid or networked checks only behind an opt-in switch: `--live`
   loads the project's documented local settings itself (and runs the heavy
   steps under the memory limit when the tech stack asks for one). It lives
@@ -150,7 +161,13 @@ with automated checks worth scripting. **L:** the files below.
   `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable` when
   shellcheck is not installed) and fix what they report: an error such as an
   unset variable under `set -u` otherwise stays hidden until the first check
-  that reaches it.
+  that reaches it. Then run its offline part once: a `FAIL` because the new
+  code is missing is expected, but every tool it calls must accept its flags
+  and every summary it greps must appear. Run its `--live` part once as
+  well when it only reads the deployed instance: the tools there may differ
+  from the local ones. A check that compares two outputs compares only
+  their stable part (counts, states), never a file name, timestamp or age
+  that differs by design.
 
 ## 5. Hand over for review
 
