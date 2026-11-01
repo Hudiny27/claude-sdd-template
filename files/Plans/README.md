@@ -32,7 +32,10 @@ találja meg a specet.
    konzisztensek maradjanak.
 3. Az owner a `#spec-ok` kulcsszóval jóváhagyja. Ettől kezdve ezen a branchen
    engedélyezett a kódszerkesztés.
-4. Implementáció, feladatcsoportonként.
+4. Implementáció, feladatcsoportonként. Ha több subagent dolgozik
+   párhuzamosan ugyanabban a munkafában, mindegyik csak a saját fájljait
+   commitolja, név szerint (`git add <útvonalak>`, soha `git add -A`/`.`);
+   ez a subagentnek adott promptba is bekerül.
 5. `/validate-feature`: a `validation.md` minden ellenőrzése, roadmap
    kipipálása, a könyvtár áthelyezése a `done/` alá, merge.
 
@@ -189,6 +192,10 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
   (például `LIVE_TESTS=1`).
 - A saját mappáját `$(dirname "$0")`-val találja meg, és sehol nem írja be a
   `Plans/<dir>` útvonalat, így a `Plans/done/` alá költözés után is fut.
+- Ha a `main` kódjával hasonlít, a másolatot a repóból exportálja (`git -C
+  "$ROOT" archive main`, soha nem egy ideiglenes mappából), és előbb
+  ellenőrzi, hogy nem üres; különben az összevetés csendben önmagával
+  egyezik.
 - A helyi, git által ignorált beállításokat (például az élő minták útvonalát,
   titkot soha) a projekt által dokumentált fájlból olvassa. Az API-kulcsok a
   környezetből vagy a `tech-stack.md`-ben megnevezett kulcstárból jönnek.
@@ -233,6 +240,10 @@ próbával, párhuzamosan:
    feladata a mintaprojekt valódi tartalmából készül (a spec írásakor egy
    pillantás a mintára: mi van benne, milyen szegmensek, jelenetek): egy
    olyan kérés, amely a mintán értelmes, és amelynek a sikere ellenőrizhető.
+   A `validation.md` nevezze meg a próbakörnyezet korlátait (például
+   belépéshez kötött oldal munkamenet-fájl nélkül, hálózat, hiányzó fájl),
+   és a sikerfeltétel ezekhez igazodjon: egy olyan lépés, amelyet a
+   dokumentum ebben a környezetben helyesen tilt, ne legyen sikerfeltétel.
 3. **Értékelés:** a próba sikeres, ha teljesíti a `validation.md`
    sikerkritériumát. A „talált hiányok” közül csak a valódiak számítanak:
    a próba felállításából adódó félreértés (például egy másolt projekt
@@ -245,7 +256,8 @@ próbával, párhuzamosan:
 4. **Javítás és ismétlés:** a valódi hiányok javítása után új, friss
    subagent és új másolat jön, amíg egy kör nem talál új lényeges hiányt
    (legfeljebb 3 kör). Az utolsó kör apró hiányai ugyanabban a körben
-   javíthatók.
+   javíthatók. Ha a 3. kör után is van lényeges hiány, az agent nem indít
+   új kört: megáll, és jelzi az ownernek (mi maradt, miért).
 5. **Rögzítés:** a körök eredménye (siker, a javított hiányok, a nyitva
    maradt kérdések) a `requirements.md` „Döntések” szakaszába kerül, a
    hatókörön kívüli ötletek a backlogba.

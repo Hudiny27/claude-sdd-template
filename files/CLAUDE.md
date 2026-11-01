@@ -112,8 +112,8 @@ követett dokumentumot vagy skillt szállít (útmutató, prompt, skill), a
 `validation.md`-be kerüljön friss subagent-próba is: egy subagent csak a
 dokumentumot kapja meg, elvégzi vele a feladatot, és jelenti, hol akadt el.
 A javítások után a próbát egy újabb friss subagenttel meg kell ismételni,
-amíg egy kör nem talál új lényeges hiányt (legfeljebb 3 kör; a mércét lásd
-`Plans/README.md`). Ha a feature
+amíg egy kör nem talál új lényeges hiányt (legfeljebb 3 kör, utána
+megállás és jelzés az ownernek; a mércét lásd `Plans/README.md`). Ha a feature
 fizetős API-t hív, a `validation.md` megbecsüli az élő és a kézi
 ellenőrzések költségét. Az agent által választott, valódi adattól függő
 számértékek (küszöbök, időkorlátok, sebesség) „kalibrálandó” jelölést
@@ -129,7 +129,8 @@ hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben. A
 amelyik bevezeti őket, nem csak a végső kézi ellenőrzésnél. A következő
 csoport kódjához csak az előző csoport commitja után nyúlj; amíg a
 tesztkör a háttérben fut, legfeljebb olvass és tervezz. Így minden commit
-pontosan egy csoportot tartalmaz, utólagos szétválogatás nélkül.
+egy csoport. A regressziós teszt „a javítás előtt bukik” próbája csak az új
+tesztet futtatja, időkorláttal: a régi kód más teszteket is elindíthat.
 Ha a feature látható vagy hallható kimenetet ad (stílus, elrendezés,
 hangszint), az owner egy élő mintát már abban a csoportban megnéz,
 amelyik bevezeti (S/M-nél az implementáció közben), nem csak a végső kézi
@@ -153,7 +154,8 @@ a döntés a `requirements.md` „Döntések” szakaszába kerül (`döntött: 
 kódjavításhoz is kell spec és `#spec-ok`, de elég egy S fokozatú, három
 soros `spec.md`; nagyobb új munka új roadmap-fázis
 lesz. A feature közben felmerülő ötletek a `specs/backlog/YYYY-MM-DD-<topic>.md`
-alá kerülnek, nem az aktuális branchre és nem a roadmapre.
+alá kerülnek, nem az aktuális branchre és nem a roadmapre; ezt a
+subagentnek adott promptba is írd bele.
 
 **Párhuzamos munka:** egy munkafában egyszerre egy branch dolgozik. Ha egy
 feature közben más branchen kell dolgozni (például egy backlog-javaslat egy

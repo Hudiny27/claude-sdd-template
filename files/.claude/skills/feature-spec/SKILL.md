@@ -128,7 +128,8 @@ with automated checks worth scripting. **L:** the files below.
   brought up to date once, a fresh copy per round with its generated
   documents regenerated). The agent runs the probe during validation and fixes the
   gaps it finds, then repeats it with a new fresh subagent until a round
-  finds no new significant gap (at most 3 rounds; the measure is in
+  finds no new significant gap (at most 3 rounds, then stop and tell the
+  owner what remains; the measure is in
   `Plans/README.md`, minor gaps start no new round). If checks call a paid API, state the expected cost of
   the live and the manual checks (characters, minutes, calls). A test that
   checks a time upper bound (a wait, a delay, a duration) measures again a
@@ -141,13 +142,21 @@ with automated checks worth scripting. **L:** the files below.
   event and checks that the trace shows it: "0 events" alone may mean a
   broken trace.
 - `validate.sh`: every automated check from `validation.md` as one bash
-  script, run from the repo root. One `PASS`/`FAIL` line per check with short
+  script, run from the repo root; before handing over, go through the
+  automated bullets of `validation.md` one by one and name the `validate.sh`
+  check (or the test module it runs) that covers each. A test never names
+  the spec folder (`Plans/<dir>/...`): the archive move to `Plans/done/`
+  breaks it. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.
   Background processes it starts (servers, stub APIs) are stopped at exit,
   failed runs included; start them in the main shell, never inside `$(...)`,
   where the PID is lost and the process outlives the script.
   A failed test run's evidence names the failed tests (pytest: the `FAILED`
   lines of `-rf`), so finding them needs no second full run.
+  A check that compares with `main`'s code exports it from the repo
+  (`git -C "$ROOT" archive main`, never from a temp dir) and first checks
+  that the copy is not empty, so the comparison cannot silently match the
+  branch with itself.
   It is approved with the spec: the implementation reads it before touching
   it and extends it instead of rewriting it; changes go under "Döntések".
   Live, paid or networked checks only behind an opt-in switch: `--live`

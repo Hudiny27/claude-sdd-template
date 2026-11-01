@@ -24,13 +24,16 @@ under "Döntések" what was added or dropped.
 Run every automated check in `validation.md` (S/M: the "Ellenőrzés" lines
 of `spec.md`): `bash Plans/<dir>/validate.sh` if it exists
 (with `--live` for the live part), plus by hand any check the script does
-not cover (and fix the script). Run the fresh-subagent probe if
+not cover (and fix the script). Before the first run, match every automated
+bullet of `validation.md` to a `validate.sh` check or a test it runs; add
+the missing ones first, so the full run happens once. Run the fresh-subagent probe if
 `validation.md` has one, as `Plans/README.md` ("Friss subagent-próba")
 describes: a fresh scratch copy per round and probe, the prompt skeleton,
 the probes of one round in parallel. After fixing what it finds, repeat with
 a new fresh subagent until a round finds no new significant gap (one that
 made the probe fail, need a workaround, or guess its way to a wrong result;
-`Plans/README.md` has the measure) (at most 3 rounds); minor gaps (a tip, a
+`Plans/README.md` has the measure) (at most 3 rounds; a significant gap left
+after round 3 stops the validation and goes to the owner); minor gaps (a tip, a
 judgement call) are fixed but start no new round. Record the rounds under
 "Döntések". Report
 each one as a row: check, pass/fail, short evidence (exit code, key output
@@ -38,6 +41,13 @@ line). Do not paste long logs. Never mark a check as passed without running
 it. Run the full test suite a second time: a test that fails in only one
 run is flaky; find its cause (often a time upper bound) before calling the
 checks passed.
+
+Order the runs so the full suite runs as few times as possible: run the
+probes and their fix rounds first; after each fix round run only the test
+modules it touches (plus lint and types), never the full suite. Run
+`validate.sh` (with the full suite, plus the second suite run above) once,
+on the final commit, after the last fix; a later code change means one more
+full run, a docs-only change does not.
 
 ## 3. Compare code with spec
 
