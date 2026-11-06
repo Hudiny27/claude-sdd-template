@@ -66,6 +66,9 @@ Offer it for M and L (not for S); run it if the owner agrees. Spawn 2–3 parall
 whole change, each with one focus: correctness and edge cases; conformance to
 `requirements.md` and `specs/tech-stack.md`; tests, security and error
 handling. They report findings only. Verify each finding before acting on it.
+Each reviewer's prompt names a scratch folder outside the repo for any file it
+writes (probe scripts, test pages); after the reviewers finish, `git status`
+must show no file they left.
 This keeps the main context clean and catches what a single pass misses.
 
 ## 5. Hand over to the owner
@@ -100,7 +103,10 @@ will ask about them.
 3. Tick every check in `validation.md` (S/M: in the "Ellenőrzés" section of
    `spec.md`) that passed (`[ ]` → `[x]`), then move
    the spec directory to `Plans/done/`. Fix any `Plans/<dir>` path the
-   archived files still mention, and rerun `validate.sh` from its new place.
+   archived files still mention, and rerun `validate.sh` from its new place:
+   with `--quick` when the code has not changed since its last full pass
+   (the move changes only paths), else in full. An older `validate.sh`
+   without `--quick` runs in full.
    Start the move from an empty index (`git status` clean) and commit it on
    its own: a move staged early (`git mv`) lands in whatever commit comes
    next.

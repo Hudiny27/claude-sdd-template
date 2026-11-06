@@ -146,7 +146,10 @@ with automated checks worth scripting. **L:** the files below.
   automated bullets of `validation.md` one by one and name the `validate.sh`
   check (or the test module it runs) that covers each. A test never names
   the spec folder (`Plans/<dir>/...`): the archive move to `Plans/done/`
-  breaks it. One `PASS`/`FAIL` line per check with short
+  breaks it. A helper script in the spec folder (a measurement, a probe)
+  takes the repo root from the working directory or `git rev-parse
+  --show-toplevel`, never from its own place (`parents[n]`), for the same
+  reason. One `PASS`/`FAIL` line per check with short
   evidence, non-zero exit if any check fails, its own temp dir cleaned up.
   Background processes it starts (servers, stub APIs) are stopped at exit,
   failed runs included; start them in the main shell, never inside `$(...)`,
@@ -157,6 +160,9 @@ with automated checks worth scripting. **L:** the files below.
   (`git -C "$ROOT" archive main`, never from a temp dir) and first checks
   that the copy is not empty, so the comparison cannot silently match the
   branch with itself.
+  It takes a `--quick` switch that skips the full test suite and the
+  repeated or load runs, for the rerun after the archive move when the code
+  has not changed since the last full pass.
   It is approved with the spec: the implementation reads it before touching
   it and extends it instead of rewriting it; changes go under "Döntések".
   Live, paid or networked checks only behind an opt-in switch: `--live`
@@ -182,6 +188,9 @@ with automated checks worth scripting. **L:** the files below.
 
 - Summarise the spec in a few lines and list the assumptions you made. Each
   assumption is also recorded under "Döntések" as an `agent` decision.
+- If the spec changes a locked file (the constitution, the guard's files),
+  name it in the summary: the implementation asks for `#spec-szerkesztes`
+  at its start, not during the validation.
 - Apply review changes yourself and keep the spec files (including
   `validate.sh`) consistent.
 - Ask about the commit `docs(plans): add spec for <feature>` in a popup

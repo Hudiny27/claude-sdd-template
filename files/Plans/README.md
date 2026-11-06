@@ -236,6 +236,9 @@ próbával, párhuzamosan:
    követetlenek valódi adatot tartalmazhatnak), az új fájlokat a próba előtt
    indexbe kell tenni (`git add`, commit nélkül); különben a másolatból
    hiányzik az útmutató és az eszköz.
+   A próba promptja megnevez egy scratch-mappát a repón kívül minden
+   fájlnak, amelyet a próba ír; a kör után a `git status` nem mutathat
+   általa hagyott fájlt.
 2. **Prompt:** az alábbi váz, a próba feladatával kitöltve. A próba
    feladata a mintaprojekt valódi tartalmából készül (a spec írásakor egy
    pillantás a mintára: mi van benne, milyen szegmensek, jelenetek): egy
