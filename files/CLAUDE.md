@@ -243,6 +243,7 @@ dönthet el maga.
   commitoljon (a csoport kódja, tesztjei és a hozzá tartozó specfrissítés
   egy commitban), ha a csoport tesztjei, lintje és típusellenőrzése
   sikeres. S és M fokozatnál nincs feladatcsoport: a teljes változás egy
-  commit, miután az ellenőrzései sikeresek. Soha ne pusholj és ne mergelj kérdezés nélkül.
+  commit, miután az ellenőrzései sikeresek. Az ellenőrzés és a commit egy
+  parancsban `&&`-vel kapcsolódik, soha `;`-vel. Soha ne pusholj és ne mergelj kérdezés nélkül.
 - Commit scope-ok: `docs(specs): ...` a constitutionhöz, `docs(plans): ...` a
   feature specekhez, Conventional Commits a kódhoz.

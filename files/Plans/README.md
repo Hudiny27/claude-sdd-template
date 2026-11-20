@@ -17,7 +17,9 @@ Plans/
 
 A fokozat a munka méretéhez igazodik: **S** (egy session, kis kockázat), **M**
 (1–3 session vagy egy kockázatos terület) egyetlen `spec.md`-t kap, **L**
-(nagy vagy nehezen visszafordítható) a három fájlt és a `validate.sh`-t. A
+(nagy vagy nehezen visszafordítható) a három fájlt és a `validate.sh`-t. Egy M
+fokozatú spec mellé is kerülhet `validate.sh`, ha az „Ellenőrzés” szakasz több
+gépi ellenőrzést egy parancsra fűz. A
 jóváhagyás mindháromnál `#spec-ok`.
 
 Branch `feature/phase-2-agents` ↔ könyvtár `Plans/2026-10-05-phase-2-agents/`.
@@ -177,6 +179,14 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
 - Egy „nincs X” állítás (nincs hibaüzenet, nincs kapcsolat, nincs kulcs a
   naplóban) csak akkor bizonyít, ha egyszer egy valódi X-en elbukott: a
   keresett mintának egyeznie kell azzal, amit a rendszer ténylegesen kiír.
+- Egy „tiltva” vagy „hibaállapot” teszt a felhasználónak megjelenő okot is
+  ellenőrzi (üzenet, súgó), nem csak azt, hogy a gomb tiltott: így nem megy
+  át, ha egy másik ok tiltja. A hibát olyan válasszal váltja ki, amelyet a
+  kliens nem próbál újra; különben a teszt a kliens újrapróbálását méri.
+- Egy „soha” állítás (egy elem soha nem tűnik el vagy duplázódik, egy gomb
+  a művelet után azonnal tiltott) tesztje közvetlenül a művelet után,
+  újrapróbálás nélkül mér, és utána a végállapotot is: a kivárásra épülő
+  állítás kivárja az átmeneti hibát, és átengedi.
 - Ha egy tesztkör elbukik, a bizonyíték az elbukott tesztek nevét is
   tartalmazza (pytestnél a `-rf` kapcsoló `FAILED` sorai), hogy ne kelljen
   a teljes kört újrafuttatni a hiba megkereséséhez. Egy csak az egyik

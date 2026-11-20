@@ -80,6 +80,16 @@ in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
 
 Point out conflicts with the constitution. Do not resolve them silently.
 
+When the feature copies an existing interface (another product, a sister
+project, a screenshot the owner sent), write down its behaviour before the
+interview, not only its look: the states an item can be in, and what each
+click does to it (toggles it, moves it, removes it from the list). Put the
+choices that differ from the reference into the interview.
+
+A scope line that leaves something out because "it does not exist today"
+(no such action, no such field) is checked in the code or the running
+interface first.
+
 When the feature calls an external API or SDK, read the installed SDK's
 signature and docstrings for every parameter the spec will use, before the
 interview: mutually exclusive parameters, ranges, defaults and plan limits.
