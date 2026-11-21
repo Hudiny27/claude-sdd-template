@@ -38,6 +38,9 @@ találja meg a specet.
    párhuzamosan ugyanabban a munkafában, mindegyik csak a saját fájljait
    commitolja, név szerint (`git add <útvonalak>`, soha `git add -A`/`.`);
    ez a subagentnek adott promptba is bekerül.
+   Látható kimenetnél az owner élő mintájának átadása felsorolja az agent
+   saját, látható viselkedést érintő döntéseit (például „a gomb tiltás
+   helyett aktív marad”), hogy az owner a mintán felülbírálhassa őket.
 5. `/validate-feature`: a `validation.md` minden ellenőrzése, roadmap
    kipipálása, a könyvtár áthelyezése a `done/` alá, merge.
 
@@ -127,7 +130,10 @@ Branch: feature/<slug>
 Az agent által választott, valódi adattól függő számértékek (küszöbök,
 időkorlátok, sebesség) „kalibrálandó” jelölést kapnak a döntésükben; a
 `plan.md` abban a feladatcsoportban méri őket az élő mintákon, amelyik
-bevezeti őket. Az eredmény a `requirements.md` „Kalibrálás” szakaszába
+bevezeti őket. Ha a mért érték egy constitutionben rögzített számot
+változtat (például egy alapértelmezett korlátot), a constitution ugyanabban a
+csoportban frissül (a zár feloldása után), nem a lezáráskor. Az eredmény a
+`requirements.md` „Kalibrálás” szakaszába
 kerül, értékenként (vagy összetartozó értékcsoportonként) egy alszakaszban,
 mindig ugyanebben a rendben:
 
@@ -144,7 +150,9 @@ constitutionből vagy az owner kifejezett kéréséből származik. `agent`: az
 agent döntötte el (feltételezés, alapérték, implementációs választás), és a
 `#spec-ok` hagyja jóvá; a review során később hozott agent-döntésekre az
 owner rákérdezhet. Soronként egy döntéshozó szerepel, a vegyes döntéseket
-szét kell bontani.
+szét kell bontani. Ha egy döntés felvált egy korábbit, ugyanabban a
+változtatásban a régi a végén `(felváltva YYYY-MM-DD, lásd …)` jelölést
+kap; a régi nem törlődik.
 
 ## validation.md
 
@@ -198,6 +206,12 @@ spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
   `$(...)`-ben: az alhéjban kapott folyamatazonosító elvész, és a folyamat
   a script után is fut (eredet: 2026-10-23, egy épített felület
   validate.sh-ja).
+- Az általa indított szerver szabad portot kap (például a Python `socket`
+  0-s portjával), soha nem rögzítettet: egy rögzített porton egy korábban
+  ott hagyott szerver válaszolhat a friss kód helyett.
+- Egy szervert vagy háttérfolyamatot a saját folyamatazonosítójával (PID)
+  állít le, soha `pkill -f <minta>`-val: a minta a leállító parancs saját
+  sorára is illik, és azt is leállítja.
 - Élő, fizetős vagy hálózatot igénylő ellenőrzést csak kapcsolóval futtat
   (például `LIVE_TESTS=1`).
 - A saját mappáját `$(dirname "$0")`-val találja meg, és sehol nem írja be a
@@ -292,6 +306,8 @@ Situation: <mode, e.g. interactive at the review gate>. Do only this part:
 
 Rules: run commands from <repo> with <command prefix>. Never run <paid or
 irreversible commands>. Write nothing outside <allowed folders>.
+<When the probe has fewer tools than the real run (for example no Glob or
+Grep), say so here, so it does not report the missing tool as a gap.>
 
 Report back (plain text), briefly:
 - <the result items the success criterion needs>;

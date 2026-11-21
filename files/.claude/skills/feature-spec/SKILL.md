@@ -124,6 +124,9 @@ with automated checks worth scripting. **L:** the files below.
   in the task group that introduces it, not only in the final manual check;
   the results go to a "Kalibrálás" section in the format of
   `Plans/README.md`.
+  A measured value the spec pins (a hash, a cache key, a count "measured on
+  main") names the exact input it was measured from (the request, the file,
+  the command), so the implementation can reproduce it.
 - `validation.md`: automated checks the agent runs (exact commands and
   expected results), manual checks for the owner, definition of done. If the
   feature ships a document or skill that an LLM follows (a guide, a prompt, a
@@ -190,7 +193,11 @@ with automated checks worth scripting. **L:** the files below.
   code is missing is expected, but every tool it calls must accept its flags
   and every summary it greps must appear. Run its `--live` part once as
   well when it only reads the deployed instance: the tools there may differ
-  from the local ones. A check that compares two outputs compares only
+  from the local ones. Open every live URL it uses once now (status and
+  final host after redirects): a page behind a login otherwise fails only
+  at validation. A check that calls an endpoint or command the feature adds
+  runs once in the task group that adds it (`plan.md` says so), so a wrong
+  path or body surfaces there. A check that compares two outputs compares only
   their stable part (counts, states), never a file name, timestamp or age
   that differs by design.
 
