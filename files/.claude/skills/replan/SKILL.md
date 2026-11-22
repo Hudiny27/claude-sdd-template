@@ -10,10 +10,8 @@ validation, so make time between features to adjust the plan.
 
 ## 1. Clean start
 
-- On an up-to-date `main`, clean working tree, last feature merged. Report
-  and stop if not.
-- List the manual checks earlier features left open (`- [ ]` lines in
-  `Plans/done/*/validation.md`); ask the owner about them in step 2.
+- Read `../feature-spec/clean-start.md` and run its checks, including the
+  `/replan` part (open manual checks; ask about them in step 2).
 - Read `specs/mission.md`, `specs/tech-stack.md`, `specs/roadmap.md`, recent
   entries in `Plans/done/` and `specs/backlog/`.
 
@@ -25,35 +23,49 @@ Use the AskUserQuestion tool, grouped:
    merged, split or reordered? Should backlog items be scheduled?
 2. **Constitution:** New stakeholder input, testing preferences, stack changes?
 3. **Workflow:** What repeated manually in the last feature and could become a
-   skill or a check (validation steps, changelog, release notes)? If the
-   session's SDD status has a `Template:` line, offer to bring those files
-   over from the template (diff them first: keep anything project-specific;
-   the guard's files need `#spec-szerkesztes`).
-   Record every workflow improvement locally first:
-   - It goes into the project's own file, and gets one line in
-     `.claude/workflow-log.md` (format there). Any change to a workflow file
-     (`CLAUDE.md`, the `Plans/` and `specs/` READMEs, the skills, the guard)
-     counts; code, specs and the roadmap do not.
-   - **Place by cost:** `CLAUDE.md` loads in every session, so only rules
-     that matter in every session go there; keep it under about 2000 words,
-     and a new rule there replaces or condenses an old one. A rule tied to
-     one step goes into that step's skill or `Plans/README.md`.
-   - **Review:** when the SDD status says the log reached 10 entries since
-     the last review, go through them with the owner, one decision each:
-     *template* (only if it holds for any project: no project name, path,
-     machine or tool in it; it answered a real failure; it is a checkable
-     rule; no existing rule covers it), *keep local*, or *drop* (remove the
-     rule from its file). A template change is its own commit in the
-     template repo, only with the owner's approval. Then append
-     `review: YYYY-MM-DD` to the log; the count starts again from there.
+   skill or a check (validation steps, changelog, release notes)? Prefer a
+   mechanism (code, a check) to a sentence. If the session's SDD status has
+   a `Template:` line, offer to update the template-owned files with
+   `install.sh --update` (it shows the diff first; the guard's files need
+   `#spec-szerkesztes`).
 
 Bring your own observations from the last feature as options.
 
-## 3. Apply
+## 3. Workflow improvements
+
+Template-owned files (`CLAUDE.md`, the four skills and their reference
+files, `Plans/README.md`, `specs/README.md`, the hooks) are not edited in a
+project: a template update overwrites them. Project lessons go to the
+extension points: `.claude/rules/<topic>.md`, `.claude/project.md`, and the
+project's own scripts and tests.
+
+- **Placement order.** Every workflow improvement takes the first rung that
+  works:
+  1. code or a check (a script, a test, a hook in the project);
+  2. a path-scoped rule: `.claude/rules/<topic>.md` with `paths:`
+     frontmatter (only `paths` is read; a rule without it loads at launch);
+  3. a step's reference file, read only at that step (in the template: the
+     skill's folder; in a project: a project file a rule or a project skill
+     names for that step);
+  4. `CLAUDE.md` (in a project: `.claude/project.md`, which `CLAUDE.md`
+     loads in every session): only what matters in every session, short.
+- **Log.** Each improvement gets one line in `.claude/workflow-log.md`
+  (format there), with the rung it landed on. Code, specs and the roadmap
+  are not logged.
+- **Review.** When the SDD status says the log reached 10 entries since the
+  last review, go through them with the owner to tidy up locally. For each
+  entry one decision: turn it into code or a check if possible, merge it
+  with another, or delete it. The result is usually less text than before.
+  Then append `review: YYYY-MM-DD` to the log; the count starts again.
+- **Template gate.** A lesson goes to the template only if all hold: it is
+  a mechanism (code, hook, test, step structure) or concerns the
+  philosophy; it came up independently in at least two projects; it cannot
+  be solved at the project's extension points. A template change is a
+  proposal file in the template repo's `backlog/`, approved by the owner.
+
+## 4. Apply
 
 - Work on a `replanning/<topic>` branch.
-- Constitution changes are locked. Show the exact proposed change first (file,
-  section, old -> new, why), then ask the owner to send `#spec-szerkesztes`.
 - Small code corrections need their own spec, like any feature
   (`Plans/YYYY-MM-DD-<topic>/` + `#spec-ok`; the guard enforces this). Larger
   new work becomes a new roadmap phase instead of being done here.
@@ -62,9 +74,9 @@ Bring your own observations from the last feature as options.
 - New workflow skills go to `.claude/skills/<name>/SKILL.md` (project) unless
   the owner wants them global.
 
-## 4. Close
+## 5. Close
 
-Ask in one popup (CLAUDE.md, "Döntések és következő lépések felugró
+Ask in one popup (`CLAUDE.md`, "Döntések és következő lépések felugró
 ablakban"), a multi-select: the commits, the merge, any cleanup (worktree,
 temporary files) and `/feature-spec` for the next feature. Do only what the
 owner ticks, in order; the push gets its own question.

@@ -20,7 +20,7 @@ Then, in Claude Code, in the project directory: `/sdd-init`
 Or from a shell, without Claude:
 
 ```bash
-bash ~/.claude/templates/sdd/install.sh [TARGET_DIR] [--with-ci]
+bash ~/.claude/templates/sdd/install.sh [TARGET_DIR] [--with-ci] [--update]
 ```
 
 The installer does the following:
@@ -34,6 +34,13 @@ The installer does the following:
 - It runs the guard's self-test in the target.
 
 Re-running it adds only what is missing, so it is safe after a template update.
+With `--update` it also overwrites the template-owned files (`CLAUDE.md`, the
+skills and their reference files, the `Plans/` and `specs/` READMEs, the
+hooks) that differ, after printing a diff of each. It never touches the
+extension points (`.claude/project.md`, `.claude/rules/`), the workflow log,
+or `specs/` and `Plans/` content, and it only shows the diff of the
+project-merged `.claude/settings.json`. Project lessons go to those extension
+points, never into the template-owned files.
 Restart Claude Code afterwards, because hooks load at session start.
 
 ## What gets installed
@@ -52,7 +59,7 @@ Restart Claude Code afterwards, because hooks load at session start.
 
 Language: the project's Markdown docs (`CLAUDE.md`, `specs/`, `Plans/`) are
 written in Hungarian. Skills, code, code comments and commit messages stay in
-English. Roadmap lines read `- [ ] Fázis N — <cím>`; the guard only parses the
+English. Roadmap lines read `- [ ] Fázis N: <cím>`; the guard only parses the
 `- [ ] ` prefix, so phase naming is language-independent.
 
 ## Workflow and keywords
