@@ -88,27 +88,36 @@ kódszerkezet-felmérés közben).
 
 ## docs/szotar.md
 
-A projekt saját fogalmai: ugyanaz a szó a felületen, az üzenetekben, a
-specekben és a kódban. Általános programozási fogalom (időkorlát, hibatípus)
-nem kerül bele, és megvalósítási részlet sem: ez szótár, nem spec.
+A projekt saját fogalmai: a felület, az üzenetek, a specek és a doksi
+ugyanazt a magyar szót használja, a kód pedig mindig ugyanazt az angol nevet.
+Általános programozási fogalom (időkorlát, hibatípus) csak akkor kerül bele,
+ha ebben a projektben mást jelent, vagy két jelentésben fut. Megvalósítási
+részlet, élettartam és állapot nem kerül bele: az a specbe tartozik. Nincs
+létszámkorlát; először a félreérthető szavak kerülnek be.
 
 ```markdown
 # Szótár: <projekt>
 
 <1–2 mondat: miről szól a projekt nyelve.>
 
-## <fogalomcsoport, ha van>
+## <fogalomcsoport: a felhasználó útjának lépései szerint, ha van ilyen>
 
-**<fogalom>** (kódban: `<english_name>`):
-<1–2 mondat: mi ez, nem az, hogy mit csinál.>
-_Kerülendő_: <szinonimák, amelyeket nem használunk>
+- **<fogalom>**: <1–2 mondat: mi ez; műveletnél: mit ér el a felhasználó szemével.>
+  - Kódban: `<a fő angol azonosító>` (vagy: még nincs; ha a kód ma mást használ: „ma: `<régi név>`”)
+  - Kerülendő: <szinonimák, amelyeket nem használunk>
+  - Nyitott: <ütközés, amelyről az owner még nem döntött> (csak amíg nyitott)
 ```
 
-- Egy fogalomra egy szó: a többi a „Kerülendő” sorba kerül.
-- A kódbeli név angol, és a szótár rögzíti; a felület és a doksi a magyar
-  szót használja.
-- Ha egy szó két jelentésben fut, az ütközés az ownernek szóló kérdés, nem
-  csendes döntés.
+- Egy fogalomra egy szó; a többi a „Kerülendő” sorba kerül. Ha a felület,
+  a doksi és a kód eltérő szót használ, az agent javasol, az owner választ:
+  addig a bejegyzés „Nyitott” sort kap. Ugyanez, ha egy szó két jelentésben
+  fut.
+- A „Kódban” sor a fő azonosító (osztály, függvény vagy mező, ami a fogalmat
+  hordozza). Ha a kívánt név eltér a mostanitól, az átnevezés backlog-tétel,
+  nem csendes kódváltozás.
+- A magyar szó és a kódnév lehet azonos (`vault`).
+- Ha a projektben már van fogalomtár (egy doksi „Fogalmak” szakasza), annak
+  tételei átkerülnek ide, és a régi helyén egy mutató marad.
 
 ## docs/decisions/
 
