@@ -928,6 +928,13 @@ def find_batch(root, name):
     return BATCH_DIR + "/" + max(names) if names else None
 
 
+def spec_committed(root, spec):
+    """True when the spec folder is tracked by git and has no uncommitted change."""
+    tracked = git(root, "ls-files", "--", spec)
+    status = git(root, "status", "--porcelain", "--untracked-files=all", "--", spec)
+    return bool(tracked and tracked.stdout.strip()) and status is not None and not status.stdout.strip()
+
+
 def batch_keyword(text):
     """The batch name of a `#spec-ok köteg <name>` line, else None."""
     for line in text.splitlines():
@@ -961,6 +968,9 @@ def approve_batch(payload, proj, name):
             spec = find_spec_dir(path, branch)
             if not spec:
                 refused.append(branch + ": no spec under " + wt + "/Plans/")
+                continue
+            if not spec_committed(path, spec):
+                refused.append(branch + ": commit the spec first (" + wt + "/" + spec + " has uncommitted changes)")
                 continue
             write_flag(
                 approved_flag(proj, branch),
