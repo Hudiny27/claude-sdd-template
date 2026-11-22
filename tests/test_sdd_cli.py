@@ -127,7 +127,7 @@ def test_new_l_creates_four_files_and_a_runnable_validate_sh(project):
 
 
 def test_new_refuses_a_dirty_tree_an_existing_branch_and_a_bad_level(project):
-    assert sdd(project, "new", "feature/x", "--level", "Q").returncode == 1
+    assert sdd(project, "new", "feature/x", "--level", "Q").returncode == 2
     project.git("branch", "feature/taken")
     r = sdd(project, "new", "feature/taken", "--level", "M")
     assert r.returncode == 1 and "already exists" in r.stderr
@@ -264,3 +264,11 @@ def test_batch_status_shows_each_member(project):
     out = sdd(project, "batch", "status", "ejjel").stdout
     assert "feature/phase-1-hello" in out
     assert "not approved" in out
+
+
+def test_help_lists_the_commands_and_usage_errors_exit_2(project):
+    r = sdd(project, "--help")
+    assert r.returncode == 0
+    assert "sdd batch add NAME BRANCH" in r.stdout and "sdd preflight" in r.stdout
+    assert sdd(project, "batch", "add").returncode == 2
+    assert sdd(project, "new", "feature/x").returncode == 2
