@@ -40,6 +40,9 @@ Branch: <branch>
 ## Döntések
 - <döntés>: <miért> (döntött: owner | agent, ÉÉÉÉ-HH-NN)
 
+## Kontextus (ha a kikérdezés tényt talált)
+- <tény, és honnan tudjuk: fájl:sor, parancs, dokumentum>
+
 ## Kész, ha
 - <ellenőrizhető állítás>
 
