@@ -23,6 +23,9 @@ szint: S | M
 ---
 # <cím>
 
+Roadmap: Fázis <n>: <cím> (vagy: nincs, `fix/` javítás)
+Branch: <branch>
+
 ## Cél
 <1–3 mondat: mit akar elérni az owner, és miért.>
 
@@ -39,7 +42,7 @@ szint: S | M
 - <ellenőrizhető állítás>
 
 ## Ellenőrzés
-- [ ] Agent: <parancs vagy teszt> → <várt eredmény> (validate.sh esetén: `bash Plans/<dir>/validate.sh`, check-név: <név>)
+- [ ] Agent: <parancs vagy teszt> → <várt eredmény> (validate.sh esetén: `bash Plans/<dir>/validate.sh`, a check azonosítója: <ID>; ami a kód előtt csak bukhat, itt jelölve)
 - [ ] Owner: <1–3 lépés, amit ő maga megnéz>
 
 ## Kockázat és visszaút
@@ -86,7 +89,7 @@ Branch: feature/<slug>
 - <mit nem csinál szándékosan>
 
 ## Döntések
-- <döntés>: <miért> (YYYY-MM-DD, döntött: owner | agent)
+- <döntés>: <miért> (döntött: owner | agent, ÉÉÉÉ-HH-NN)
 
 ## Kontextus
 - <korlátok, kapcsolódó kód, érintettek megjegyzései>
@@ -105,7 +108,7 @@ agent döntötte el (feltételezés, alapérték, implementációs választás),
 a `#spec-ok` hagyja jóvá; a review során később hozott agent-döntésekre az
 owner rákérdezhet. Soronként egy döntéshozó szerepel, a vegyes döntéseket
 szét kell bontani. Ha egy döntés felvált egy korábbit, ugyanabban a
-változtatásban a régi a végén `(felváltva YYYY-MM-DD, lásd …)` jelölést
+változtatásban a régi a végén `(felváltva ÉÉÉÉ-HH-NN, lásd …)` jelölést
 kap; a régi nem törlődik.
 
 ## validation.md
@@ -136,8 +139,10 @@ skill), a `validation.md` friss subagent-próbát is tartalmaz:
 
 A `validation.md` minden automatikus ellenőrzése egy bash scriptben, amelyet
 az agent a speccel együtt ír meg; a spec-mappában él, ezért nem kódnak
-számít, és nem kell hozzá `#spec-ok`. A szabályai:
-`.claude/skills/feature-spec/validate-sh.md`.
+számít, és nem kell hozzá `#spec-ok`. A sablon közös könyvtárát
+(`.claude/lib/sdd_check.sh`) forrásolja be, és annak függvényeivel
+ellenőriz; ha valami hiányzik belőle, a könyvtár a sablonban bővül. Minta
+és szabályok: `.claude/skills/feature-spec/validate-sh.md`.
 
 ## Részletesség
 
