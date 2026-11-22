@@ -30,13 +30,13 @@ Plans/                     # feature specek: az agent írja, az owner hagyja jó
 .claude/rules/             # a projekt saját szabályai, útvonalhoz kötve
 .claude/workflow-log.md    # helyi munkafolyamat-javítások naplója (10 tételenként review)
 .githooks/pre-commit       # agenttől független védővonal
+docs/                      # szotar.md (közös nyelv), decisions/ (döntésnapló), kodolasi-szabalyok.md
 ```
 
 Formátumok: `specs/README.md` és `Plans/README.md`. Branch `feature/phase-2-agents`
-↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a branchnév utolsó része:
-`phase-<N>-` és rövid angol kebab-case a fázis címéből; a dátum a spec
-megírásának napja).
-Roadmapen kívüli S javítás branchneve `fix/<slug>`; ennek nincs fázisa.
+↔ `Plans/YYYY-MM-DD-phase-2-agents/` (slug: a branchnév utolsó része, `phase-<N>-`
+és a fázis címe rövid angol kebab-case-ben; dátum: a spec napja). Roadmapen
+kívüli S javítás: `fix/<slug>`, fázis nélkül.
 
 ## Munkafolyamat
 

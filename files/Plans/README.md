@@ -48,6 +48,8 @@ Branch: <branch>
 - [ ] Owner: <1–3 lépés, amit ő maga megnéz>
 
 ## Kockázat és visszaút
+- ajtó: egyirányú | kétirányú: <visszavonható-e teljesen, és mivel>
+- hatósugár: kicsi | közepes | nagy: <kit vagy mit ér el, ha elromlik>
 - <mi romolhat el, és hogyan vonjuk vissza>
 
 ## Költség (ha fizetős API-t hív)
@@ -59,6 +61,15 @@ Branch: <branch>
 
 S fokozatnál elég a „Cél”, a „Kész, ha” és az „Ellenőrzés”; a többi szakasz
 elhagyható.
+
+A két kockázati mező (M és L fokozatnál kötelező) méretezi a validálás
+végén kért kézi munkát. `ajtó`: egyirányú, ha a változás nem vonható vissza
+teljesen (adatvesztés, kiküldött levél vagy adat, migráció, éles
+konfiguráció); kétirányú, ha egy revert mindent helyreállít. `hatósugár`:
+kicsi (egy felület vagy fájl, csak fejlesztői hatás), közepes (egy
+felhasználói folyamat), nagy (minden felhasználó, adat vagy kimenő
+forgalom). A projekt szigoríthat a saját szabályában (például „ami kimenő
+adatot érint, az mindig nagy”).
 
 ## plan.md
 
@@ -95,6 +106,11 @@ Branch: feature/<slug>
 
 ## Kontextus
 - <korlátok, kapcsolódó kód, érintettek megjegyzései>
+
+## Kockázat és visszaút
+- ajtó: egyirányú | kétirányú: <visszavonható-e teljesen, és mivel>
+- hatósugár: kicsi | közepes | nagy: <kit vagy mit ér el, ha elromlik>
+- <mi romolhat el, és hogyan vonjuk vissza>
 
 ## Kalibrálás
 <!-- a kalibrálandó értékek mért eredménye, abban a csoportban, amelyik bevezeti őket -->

@@ -13,6 +13,7 @@ Once per machine:
 ```bash
 git clone git@github.com:Hudiny27/claude-sdd-template.git ~/.claude/templates/sdd
 mkdir -p ~/.claude/skills && cp -r ~/.claude/templates/sdd/claude-skill/sdd-init ~/.claude/skills/
+cp -r ~/.claude/templates/sdd/claude-skill/architecture-review ~/.claude/skills/  # optional: architecture review (adapted from Matt Pocock's MIT skills)
 ```
 
 Then, in Claude Code, in the project directory: `/sdd-init`

@@ -88,7 +88,12 @@ Példa: `#spec-szerkesztes a mission-ben egészítsd ki a célközönséget`
 git clone git@github.com:Hudiny27/claude-sdd-template.git ~/.claude/templates/sdd
 mkdir -p ~/.claude/skills
 cp -r ~/.claude/templates/sdd/claude-skill/sdd-init ~/.claude/skills/
+cp -r ~/.claude/templates/sdd/claude-skill/architecture-review ~/.claude/skills/
 ```
+
+Az `architecture-review` a kódszerkezet-felmérés (a `/replan` ajánlja fel
+feature-ök között); Matt Pocock MIT licencű skilljeiből átdolgozva, a
+licenc a mappájában.
 
 Feltételek: `git`, `python3` (3.9+) és Claude Code. Más függőség nincs.
 
@@ -182,6 +187,7 @@ a `- [ ] ` előtagot olvassa, így a fázisok elnevezése nyelvfüggetlen.
 | `files/gitignore` | A `.gitignore`-hoz fűzött sorok |
 | `tests/` | A sablon tesztjei: telepítő, méretkeret, a `.claude/lib/` könyvtárak, a lint és az `sdd` parancs (`python3 -m pytest -q tests/`) |
 | `claude-skill/sdd-init/` | A globális `/sdd-init` skill (a `~/.claude/skills/` alá kell másolni) |
+| `claude-skill/architecture-review/` | A globális kódszerkezet-felmérő skill (szintén a `~/.claude/skills/` alá) |
 
 ---
 

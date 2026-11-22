@@ -29,7 +29,9 @@ Use the AskUserQuestion tool, grouped:
    `install.sh --update` (it shows the diff first; the guard's files need
    `#spec-szerkesztes`).
 
-Bring your own observations from the last feature as options.
+Bring your own observations from the last feature as options. Offer
+`/architecture-review` (when installed) on the code the last features
+touched; the candidates the owner picks go to `specs/backlog/`.
 
 ## 3. Workflow improvements
 
@@ -49,6 +51,10 @@ project's own scripts and tests.
      names for that step);
   4. `CLAUDE.md` (in a project: `.claude/project.md`, which `CLAUDE.md`
      loads in every session): only what matters in every session, short.
+
+  A code rule that needs judgement (no lint or test can decide it) goes to
+  `docs/kodolasi-szabalyok.md` instead: the deep review reads it, the
+  implementer does not.
 - **Log.** Each improvement gets one line in `.claude/workflow-log.md`
   (format there), with the rung it landed on. Code, specs and the roadmap
   are not logged.
