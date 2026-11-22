@@ -61,11 +61,11 @@ merges and the push the owner ticks.
 ## Rules for every window
 
 - The batch file (`Plans/kotegek/ÉÉÉÉ-HH-NN-<név>.md`, format in
-  `Plans/README.md`) is the batch's state: update its `Állapot` column at
-  each change (spec, jóváhagyva, épül, merge-kész, parkolva, mergelve,
-  javítás, elvetve). Edit it only in the main checkout (the guard refuses
-  the copies in the worktrees); at night edit without committing, the
-  morning commits it.
+  `Plans/README.md`) is the batch's state. Change a feature's `Állapot`
+  only with `.claude/bin/sdd batch set <név> <branch> <állapot> [megjegyzés]`
+  in the main checkout: it also logs the change outside the repo and parks
+  the dependants of a parked feature. The guard refuses edits of the copies
+  in the worktrees. At night it stays uncommitted; the morning commits it.
 - Each feature works only in its own worktree (`.claude/worktrees/<slug>`):
   run its commands with `git -C <worktree>` or from that folder. The main
   checkout stays on `main` and holds only the batch file and the shared

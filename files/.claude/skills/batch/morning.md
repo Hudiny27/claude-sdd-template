@@ -35,12 +35,12 @@ Then, in this order:
 
 - **Merge:** in the main checkout, merge each chosen branch into `main` in
   dependency order (`--no-ff`), tick its roadmap phase with the Edit tool,
-  run the project's check once on `main`, remove its worktree, and set
-  `Állapot: mergelve`.
+  run the project's check once on `main`, remove its worktree, and
+  `sdd batch set … mergelve`.
 - **Javítás:** record the owner's request under the spec's "Döntések"
-  (`döntött: owner`), set `Állapot: javítás`; the feature becomes the first
+  (`döntött: owner`), `sdd batch set … javítás`; the feature becomes the first
   item of the next batch. Its worktree stays.
-- **Elvetés:** set `Állapot: elvetve`, note the reason in the batch file;
+- **Elvetés:** `sdd batch set … elvetve "<reason>"`;
   remove the worktree and the branch only if the owner ticked that too.
 - **Később:** nothing changes; the next report shows it again.
 - **Push:** only if ticked; a denied push is a stop sign.
