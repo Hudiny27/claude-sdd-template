@@ -15,7 +15,8 @@ Usage (from the repository root or anywhere inside it):
                on main itself: HEAD)
 
 Checks:
-  spec         spec.md: `szint: S|M` and the sections its level needs;
+  spec         no template placeholder left (`<what to write>`, `- …`);
+               spec.md: `szint: S|M` and the sections its level needs;
                level L: plan.md task groups, the requirements.md and
                validation.md sections, a validate.sh; a `Branch:` line
                that matches the folder.
@@ -71,6 +72,8 @@ DATED_SPEC = re.compile(r"Plans/(?:done/)?\d{4}-\d{2}-\d{2}-")
 PARENTS = re.compile(r"\.parents\[\d+\]|(?:\.parent){2,}")
 CHECK_ID = re.compile(r"(?:^|[\s;&|(])check\s+([A-Za-z][A-Za-z0-9_.-]*)\s")
 PROBE_WORDS = re.compile(r"subagent|próba|probe", re.I)
+# A template hint such as `<1–3 mondat: ...>`; `<dir>` (no space) and HTML comments are not.
+PLACEHOLDER = re.compile(r"<[^!<>\s][^<>\n]* [^<>\n]*>")
 BACKTICK = re.compile(r"`([^`\s]+)`")
 NOT_A_PATH = re.compile(r"[<>*{}$…|?\[\]()'\"=,;:@~^]")
 DANGLING_SKIP = ("Plans/done/", "specs/backlog/")
@@ -114,8 +117,22 @@ class Lint:
 
     # -- checks
 
+    def placeholders(self, rel, text):
+        fence = False
+        for i, ln in enumerate(text.splitlines(), 1):
+            if ln.startswith("```"):
+                fence = not fence
+                continue
+            plain = re.sub(r"`[^`]*`", "", ln)
+            if not fence and (PLACEHOLDER.search(plain) or plain.strip() in ("- …", "…")):
+                self.add(rel, i, "spec", "template placeholder left: " + short(ln.strip()))
+
     def spec(self, spec_dir):
         light = spec_dir + "/" + guard.LIGHT_SPEC
+        for name in (guard.LIGHT_SPEC, *guard.SPEC_FILES):
+            text = self.read(spec_dir + "/" + name)
+            if text is not None:
+                self.placeholders(spec_dir + "/" + name, text)
         if self.exists(spec_dir + "/plan.md"):
             self.spec_l(spec_dir)
             return

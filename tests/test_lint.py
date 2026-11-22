@@ -284,3 +284,9 @@ def test_template_files_pass_their_own_lint(repo):
     for rel in ("CLAUDE.md", ".claude/skills/feature-spec/SKILL.md", ".claude/project.md"):
         repo.write(rel, (LIB.parent.parent / rel).read_text(encoding="utf-8"))
     assert "[size]" not in lint(repo).stdout
+
+
+def test_template_placeholders_left(repo):
+    feature(repo, {"spec.md": SPEC_M.replace("Say hello.", "<1–3 mondat: mit akar az owner>").replace("- farewells", "- …"), "validate.sh": VALIDATE})
+    out = lint(repo).stdout
+    assert out.count("template placeholder left") == 2, out
