@@ -375,3 +375,14 @@ def test_bad_batch_file(repo):
     out = lint(repo, "--staged").stdout
     for part in ("artifact", "Fokozat", "feature/zz", ".claude/worktrees/", "auth", "Állapot"):
         assert part in out, part
+
+
+def test_batch_file_without_rows_yet_commits(repo):
+    start = BATCH.split("| 1 | feature/a")[0]
+    repo.write("Plans/kotegek/2026-11-22-ejjel.md", start)
+    repo.git("add", "Plans/kotegek/2026-11-22-ejjel.md")
+    r = lint(repo, "--staged")
+    assert r.returncode == 0, r.stdout
+    repo.write("Plans/kotegek/2026-11-22-ejjel.md", start.split("## Feature-ök")[0])
+    repo.git("add", "Plans/kotegek/2026-11-22-ejjel.md")
+    assert "no feature table" in lint(repo, "--staged").stdout
