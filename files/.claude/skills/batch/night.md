@@ -19,6 +19,9 @@ adds what a batch needs.
   commits into it first, never rebase, then rerun its checks).
 - Full test suites queue on the suite lock by themselves; do not start a
   third feature to fill the wait.
+- When `main` moved on since a feature branched (for example a template
+  update), merge `main` into the feature branch (never rebase), rerun its
+  checks and log it.
 
 ## Per feature, to merge-ready
 

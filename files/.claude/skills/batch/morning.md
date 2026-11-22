@@ -4,14 +4,17 @@ The owner has 15–30 minutes. Everything is decided here; nothing is built.
 
 ## The report
 
-Written at the end of the night into the overnight folder's `jelentes.md`
+Written at the end of the night, from the batch file, the batch ledger
+(`~/.claude/execute/<projekt>/köteg-<név>/naplo.md`) and the overnight log,
+into the overnight folder's `jelentes.md`
 and given as the chat message; with `artifact: igen` also as a private
 artifact page with the same content. Plain Hungarian (the `plain` rules):
 
 1. **Egy mondatban:** how many features are merge-ready, parked, unfinished.
 2. **Feature-enként** (in the batch order): a status (zöld: merge-kész;
-   sárga: merge-kész, but a decision or a check needs the owner; piros:
-   parkolva), the evidence (the checks with their result line, a screenshot
+   sárga: merge-kész, but a night decision changed behaviour or scope, or a
+   check was flaky or skipped; a manual check alone does not make it
+   yellow; piros: parkolva), the evidence (the checks with their result line, a screenshot
    or command output for a visible change), and what it depends on.
 3. **Éjjeli döntések:** the `agent` decision lines added during the night,
    per feature.
