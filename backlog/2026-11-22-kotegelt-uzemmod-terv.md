@@ -36,3 +36,7 @@ egyenkénti folyamat változatlanul megmarad mellette.
 - Biztonsági és auth feature nem kerülhet kötegbe; nappal, a mostani módon megy (döntött: owner, 2026-11-22).
 - A köteget egy kulcsszó hagyja jóvá: `#spec-ok köteg <név>` sor elején; az őr a köteg minden specét jóváhagyja (döntött: owner, 2026-11-22).
 - Eltörő subagent nem fut a kikérdezésben: a változás a munkafolyamatot érinti, nem adatot, és visszavonható (döntött: agent, 2026-11-22).
+- Az aktív ablak egy közös körrel kezd az egész kötegre (sorrend, függések, közös fájlok, közös fogalmak), utána minden feature a teljes `grill`-t kapja (döntött: owner, 2026-11-22).
+- A kötegnek nincs fix mérete: az agent a specek alapján megbecsli a futásidőt, és a jóváhagyás előtt szól, ha nem fér bele az éjszakába; a kimaradókról az owner dönt (döntött: owner, 2026-11-22).
+- Ha reggel egy feature javítást kér, a kérés a specje „Döntések” szakaszába kerül, és a feature a következő köteg első tétele lesz (döntött: owner, 2026-11-22).
+- A reggeli jelentés a chatben és a `jelentes.md`-ben jön (ahogy az `overnight` skillben); egy artifact oldal opcionális: a köteg indításakor az agent megkérdezi, kér-e az owner a végén artifactot (döntött: owner, 2026-11-22).
