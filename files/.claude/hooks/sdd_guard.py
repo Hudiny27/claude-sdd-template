@@ -24,6 +24,7 @@ agent report or a quoted mention inside a sentence does not trigger them.
   #spec-szerkesztes  unlock the constitution for this session (max 12 hours)
   #spec-zar          lock it again
   #spec-ok           approve the feature spec of the current branch
+  #spec-ok köteg N   approve every feature of the batch file Plans/kotegek/*-N.md
 
 Lessons inherited from an earlier PRD guard:
   - No Stop hook. Stop also fires when a subagent finishes, so re-locking
@@ -63,6 +64,12 @@ SPEC_FILES = ("plan.md", "requirements.md", "validation.md")
 # Levels S and M (see the size-up skill) keep the whole spec in one file.
 LIGHT_SPEC = "spec.md"
 SPEC_HINT = "{plan,requirements,validation}.md (level L) or spec.md (levels S and M)"
+
+# A batch file lists the features one approval covers, each in its own
+# worktree under the project: Plans/kotegek/YYYY-MM-DD-<name>.md.
+BATCH_DIR = "Plans/kotegek"
+BATCH_WORD = "köteg"
+BATCH_SECTION = "Feature-ök"
 
 # Owner-controlled project documents (relative to a checkout root).
 CONSTITUTION = ("specs/mission.md", "specs/tech-stack.md", "specs/roadmap.md")
@@ -893,6 +900,81 @@ def approve(payload, proj):
     )
 
 
+def batch_rows(text):
+    """The rows of the batch file's feature table, as dicts keyed by the lower-cased header."""
+    rows, header, inside_section = [], None, False
+    for line in text.splitlines():
+        if line.startswith("## "):
+            inside_section = line[3:].strip() == BATCH_SECTION
+            header = None
+            continue
+        if not inside_section or not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if header is None:
+            header = [c.lower() for c in cells]
+        elif not all(set(c) <= set("-: ") for c in cells):
+            rows.append(dict(zip(header, cells)))
+    return rows
+
+
+def find_batch(root, name):
+    """Plans/kotegek/YYYY-MM-DD-<name>.md (the newest), relative to root, or None."""
+    pattern = re.compile(r"^\d{4}-\d{2}-\d{2}-" + re.escape(name) + r"\.md$")
+    try:
+        names = [n for n in os.listdir(os.path.join(root, BATCH_DIR)) if pattern.match(n)]
+    except OSError:
+        return None
+    return BATCH_DIR + "/" + max(names) if names else None
+
+
+def batch_keyword(text):
+    """The batch name of a `#spec-ok köteg <name>` line, else None."""
+    for line in text.splitlines():
+        words = line.strip().split()
+        if len(words) >= 3 and words[0] == APPROVE_KEYWORD and words[1] == BATCH_WORD:
+            return words[2]
+    return None
+
+
+def approve_batch(payload, proj, name):
+    root = session_root(payload, proj)
+    rel = find_batch(root, name)
+    if not rel:
+        print("SDD: " + APPROVE_KEYWORD + " " + BATCH_WORD + " " + name + " ignored: no batch file "
+              + BATCH_DIR + "/YYYY-MM-DD-" + name + ".md in " + root + ".")
+        return
+    with open(os.path.join(root, rel), encoding="utf-8") as fh:
+        rows = batch_rows(fh.read())
+    done, refused = [], []
+    for row in rows:
+        branch = row.get("branch", "").strip("`")
+        wt = row.get("worktree", "").strip("`")
+        path = normalise(wt, root) if wt else ""
+        if row.get("auth/biztonság", "").lower() != "nem":
+            refused.append(branch + ": an auth or security feature is never part of a batch")
+        elif not path or not inside(path, proj):
+            refused.append(branch + ": its worktree " + (wt or "(none)") + " is outside the project; use .claude/worktrees/")
+        elif not os.path.isdir(path) or branch_of(path) != branch:
+            refused.append(branch + ": no worktree at " + wt + " with this branch checked out")
+        else:
+            spec = find_spec_dir(path, branch)
+            if not spec:
+                refused.append(branch + ": no spec under " + wt + "/Plans/")
+                continue
+            write_flag(
+                approved_flag(proj, branch),
+                "branch: " + branch + "\nspec: " + spec + "\nlevel: " + spec_level(path, spec)
+                + "\nbatch: " + rel + "\napproved: " + datetime.now().isoformat(timespec="seconds") + "\n",
+            )
+            done.append(branch + " (" + spec + ", level " + spec_level(path, spec) + ")")
+    print("SDD: the owner approved the batch " + rel + ": " + (", ".join(done) or "nothing") + ".")
+    if refused:
+        print("SDD: not approved: " + "; ".join(refused) + ".")
+    if done:
+        print("SDD: code edits are allowed in these worktrees now. Build them as the batch file says.")
+
+
 def prompt(payload):
     proj = project_dir(payload)
     text = payload.get("prompt") or ""
@@ -906,7 +988,11 @@ def prompt(payload):
             "session, until " + RELOCK_KEYWORD + " or " + str(UNLOCK_TTL_SECONDS // 3600) + " hours."
         )
     if has_keyword(text, APPROVE_KEYWORD):
-        approve(payload, proj)
+        name = batch_keyword(text)
+        if name:
+            approve_batch(payload, proj, name)
+        else:
+            approve(payload, proj)
 
 
 def same_bytes(a, b):
