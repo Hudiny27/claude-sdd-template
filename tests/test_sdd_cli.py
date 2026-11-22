@@ -321,3 +321,56 @@ def test_batch_set_parks_dependants_and_logs_outside_the_repo(project):
     assert "feature/a | parkolva | 3 sikertelen javítási kör" in entries
     assert "feature/c | parkolva | vár: feature/a" in entries
     assert sdd(project, "batch", "set", "ejjel", "feature/a", "kész").returncode == 2
+
+
+# --- batch: report and merge ------------------------------------------------
+
+def built_batch(project):
+    """A batch of two, a and c (c builds on a), each with one commit and an archived spec."""
+    project.write(".claude/check.sh", "true\n")
+    project.commit("chore: check")
+    sdd(project, "batch", "new", "ejjel")
+    sdd(project, "batch", "add", "ejjel", "feature/a", "--level", "S")
+    sdd(project, "batch", "add", "ejjel", "feature/c", "--level", "S", "--after", "feature/a")
+    batch = project.path / f"Plans/kotegek/{TODAY}-ejjel.md"
+    batch.write_text(batch.read_text(encoding="utf-8").replace("| ? | ? | spec |", "| 1 óra | nem | merge-kész |"), encoding="utf-8")
+    for name in ("a", "c"):
+        wt = project.path / ".claude/worktrees" / name
+        spec = wt / f"Plans/{TODAY}-{name}/spec.md"
+        spec.write_text(
+            "---\nszint: S\n---\n# " + name + "\n\n## Cél\nx\n\n## Kész, ha\n- x\n\n## Ellenőrzés\n- [ ] Owner: nézd meg " + name + "\n\n"
+            "## Döntések\n- éjjeli döntés " + name + " (döntött: agent, " + TODAY + ")\n", encoding="utf-8")
+        (wt / (name + ".py")).write_text("X = 1\n", encoding="utf-8")
+        if name == "c":
+            project.git("-C", str(wt), "merge", "-q", "feature/a", "-m", "merge a")
+        project.git("-C", str(wt), "add", "-A")
+        project.git("-C", str(wt), "-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "feat: " + name)
+    return batch
+
+
+def test_batch_report_lists_states_decisions_and_manual_checks(project):
+    built_batch(project)
+    out = sdd(project, "batch", "report").stdout
+    assert "feature/a" in out and "feature/c" in out
+    assert "merge-kész" in out
+    assert "éjjeli döntés a" in out and "éjjeli döntés c" in out
+    assert "Owner: nézd meg a" in out
+    assert "feature/a" in out.split("feature/c")[1]  # c names what it depends on
+
+
+def test_batch_merge_refuses_a_dependant_without_its_base(project):
+    built_batch(project)
+    r = sdd(project, "batch", "merge", "ejjel", "feature/c")
+    assert r.returncode == 1 and "feature/a" in r.stderr
+    assert project.git("log", "--oneline", "-1").strip().endswith("chore: check")
+
+
+def test_batch_merge_merges_in_order_checks_and_cleans_up(project):
+    batch = built_batch(project)
+    r = sdd(project, "batch", "merge", "ejjel", "feature/c", "feature/a")
+    assert r.returncode == 0, r.stdout + r.stderr
+    log = project.git("log", "--first-parent", "--format=%s", "-2").splitlines()
+    assert log == ["Merge branch 'feature/c'", "Merge branch 'feature/a'"]
+    assert not (project.path / ".claude/worktrees/a").exists()
+    assert project.git("branch", "--list", "feature/a").strip() == ""
+    assert batch.read_text(encoding="utf-8").count("| mergelve |") == 2

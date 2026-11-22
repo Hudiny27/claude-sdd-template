@@ -29,6 +29,13 @@ project; propose changes in the template's backlog/ instead.
   sdd batch next [NAME]      the features that may start now (at most two
                              running, dependencies merge-ready, "nem
                              egyszerre" pairs apart)
+  sdd batch report [NAME]    the morning report's raw material per feature:
+                             state, commits, spec, the night's agent
+                             decisions, manual checks, ledger lines
+  sdd batch merge NAME BRANCH...
+                             merge the chosen merge-ready features into main
+                             in dependency order, run .claude/check.sh, then
+                             remove their worktrees and branches
   sdd commit -m MSG [-- FILE...]
                              stage the named files, run .claude/check.sh
                              (the project's lint, type and test command) and
@@ -470,10 +477,123 @@ def batch_next(root, argv):
     return 0
 
 
+def branch_spec(root, branch):
+    """(spec folder on the branch, {file name: text}) read from the branch itself, newest and archived first."""
+    names = git(root, "ls-tree", "-r", "--name-only", branch, "--", "Plans").stdout.splitlines()
+    pattern = re.compile(r"^(Plans/(?:done/)?\d{4}-\d{2}-\d{2}-" + re.escape(guard.branch_slug(branch)) + r")/([^/]+\.md)$")
+    folders = {}
+    for n in names:
+        m = pattern.match(n)
+        if m:
+            folders.setdefault(m.group(1), []).append(m.group(2))
+    if not folders:
+        return None, {}
+    folder = max(folders, key=lambda f: (os.path.basename(f), f.startswith("Plans/done/")))
+    return folder, {f: git(root, "show", branch + ":" + folder + "/" + f).stdout for f in folders[folder]}
+
+
+def manual_checks(files):
+    out = []
+    for name, text in files.items():
+        kezi = False
+        for line in text.splitlines():
+            if line.startswith("## "):
+                kezi = line[3:].strip().lower().startswith("kézi")
+            elif re.match(r"^\s*- \[ \] ", line) and ("Owner:" in line or (name == "validation.md" and kezi)):
+                out.append(line.strip()[6:])
+    return out
+
+
+def batch_report(root, argv):
+    rel, text, rows = read_batch(root, argv, "usage: sdd batch report [NAME]")
+    since = (re.search(r"^datum:\s*(\d{4}-\d{2}-\d{2})", text, re.M) or [None, "0000-00-00"])[1]
+    log = ledger_path(root, rel)
+    try:
+        with open(log, encoding="utf-8") as fh:
+            ledger = fh.read().splitlines()
+    except OSError:
+        ledger = []
+    print("# Köteg: " + rel + " (napló: " + log + ")")
+    for r in rows:
+        branch, state, dep = r.get("branch", ""), r.get("állapot", ""), r.get("függ", "-")
+        print("\n## " + r.get("#", "?") + ". " + branch + " [" + state + "]")
+        print("- Függ: " + (dep if dep not in ("", "-") else "nincs"))
+        if git(root, "show-ref", "--verify", "--quiet", "refs/heads/" + branch).returncode != 0:
+            print("- Branch: nincs (mergelve vagy törölve)")
+            continue
+        count = git(root, "rev-list", "--count", "main.." + branch).stdout.strip()
+        print("- Commitok a main fölött: " + count)
+        folder, files = branch_spec(root, branch)
+        print("- Spec: " + (folder or "nincs a branchen"))
+        decisions = [ln.strip()[2:] for t in files.values() for ln in t.splitlines()
+                     if ln.startswith("- ") and re.search(r"döntött: agent, (\d{4}-\d{2}-\d{2})", ln)
+                     and re.search(r"döntött: agent, (\d{4}-\d{2}-\d{2})", ln).group(1) >= since]
+        print("- Agent-döntések a köteg napja óta:" + ("" if decisions else " nincs"))
+        for d in decisions:
+            print("  - " + d)
+        checks = manual_checks(files)
+        print("- Kézi ellenőrzések:" + ("" if checks else " nincs"))
+        for c in checks:
+            print("  - " + c)
+        events = [ln[2:] for ln in ledger if "| " + branch + " |" in ln]
+        print("- Napló:" + ("" if events else " nincs bejegyzés"))
+        for e in events:
+            print("  - " + e)
+    return 0
+
+
+def batch_merge(root, argv):
+    usage = "usage: sdd batch merge NAME BRANCH..."
+    if len(argv) < 2:
+        raise Fail(usage)
+    on_main(root)
+    if git(root, "diff", "--cached", "--quiet").returncode != 0:
+        raise Fail("the index of the main checkout is not empty; commit or unstage first")
+    rel, text, rows = read_batch(root, argv[:1], usage)
+    by_branch = {r.get("branch"): r for r in rows}
+    chosen = set(argv[1:])
+    for b in chosen:
+        if b not in by_branch:
+            raise Fail(b + " is not in the batch")
+        if by_branch[b].get("állapot") != "merge-kész":
+            raise Fail(b + " is " + by_branch[b].get("állapot", "?") + ", not merge-kész")
+        dep = by_branch[b].get("függ", "-")
+        if dep not in ("", "-") and dep not in chosen and by_branch.get(dep, {}).get("állapot") != "mergelve":
+            raise Fail(b + " builds on " + dep + ", which is neither chosen nor merged; choose both or neither")
+    order = [r.get("branch") for r in rows if r.get("branch") in chosen]
+    done = []
+    for b in order:
+        out = git(root, "merge", "--no-ff", "-q", b, "-m", "Merge branch '" + b + "'")
+        if out.returncode != 0:
+            git(root, "merge", "--abort")
+            raise Fail("merging " + b + " failed (" + (out.stdout + out.stderr).strip().splitlines()[-1]
+                       + "); merged so far: " + (", ".join(done) or "nothing") + ". Nothing was cleaned up.")
+        done.append(b)
+        say("OK", "merged " + b)
+    check = os.path.join(root, CHECK_SCRIPT)
+    if os.path.isfile(check):
+        say("RUN", CHECK_SCRIPT + " on main")
+        if subprocess.run(["bash", check], cwd=root).returncode != 0:
+            raise Fail(CHECK_SCRIPT + " failed on main after merging " + ", ".join(done)
+                       + "; the merges stay, nothing was cleaned up; tell the owner before undoing anything")
+    for b in done:
+        wt = by_branch[b].get("worktree", "")
+        if wt and os.path.isdir(os.path.join(root, wt)):
+            out = git(root, "worktree", "remove", wt)
+            say("OK" if out.returncode == 0 else "NOTE", ("removed " if out.returncode == 0 else "kept ") + wt
+                + ("" if out.returncode == 0 else ": " + out.stderr.strip()))
+        if git(root, "branch", "-d", b).returncode == 0:
+            say("OK", "deleted branch " + b)
+        batch_set(root, [argv[0], b, "mergelve"])
+    print("Next: tick each merged feature's roadmap phase with the Edit tool, then commit the batch file.")
+    return 0
+
+
 def batch(root, argv):
-    handlers = {"new": batch_new, "add": batch_add, "status": batch_status, "set": batch_set, "next": batch_next}
+    handlers = {"new": batch_new, "add": batch_add, "status": batch_status, "set": batch_set, "next": batch_next,
+                "report": batch_report, "merge": batch_merge}
     if not argv or argv[0] not in handlers:
-        raise Fail("usage: sdd batch new|add|status|set|next ...")
+        raise Fail("usage: sdd batch new|add|status|set|next|report|merge ...")
     return handlers[argv[0]](root, argv[1:])
 
 
