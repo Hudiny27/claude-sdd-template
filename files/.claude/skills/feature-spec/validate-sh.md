@@ -41,8 +41,9 @@ sdd_finish
   `check ID NAME CMD...` (a multi-step check is a shell function). A step
   that can fail runs inside `check`; outside it, errexit stops the script
   (the library still prints a `FAIL  EXIT` line and the summary).
-- Go through the automated bullets of `validation.md` one by one and name
-  the check ID (or the test module it runs) that covers each.
+- Every automated bullet of `validation.md` (S/M: every `Agent:` line)
+  names the ID of the check that covers it; the lint enforces this (a
+  fresh-subagent probe is exempt).
 - A "there is no X" claim: use `assert_absent` with a proof sample of what
   the system really prints.
 - The test suite: use `run_suite` (pytest with `-rf`) inside `full_once`,
@@ -59,25 +60,21 @@ sdd_finish
   in the git-ignored `.claude/local.env` (name its keys in the spec, never
   secrets); API keys come from the environment or the key store named in
   `tech-stack.md`.
-- Use `$SDD_DIR` for the script's own folder and `$SDD_TMP` for temp files.
-  A test never names the spec folder (`Plans/<dir>/...`): the archive move
-  breaks it. The spec text may name it (the `bash Plans/<dir>/validate.sh`
-  command): the archive step fixes those paths (`validate-feature/finish.md`).
-  A helper script in the spec folder takes the repo root from
-  `git rev-parse --show-toplevel`, never from its own place (`parents[n]`).
+- Use `$SDD_DIR` for the script's own folder and `$SDD_TMP` for temp files;
+  the lint rejects a dated spec path in code and `parents[n]` in a spec
+  script (the archive move breaks both). The spec text may name the folder:
+  `sdd archive` fixes those paths.
 
 ## Before handing over the spec
 
-- Run `bash -n` and `shellcheck` on it (via `docker run --rm -v
-  "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable` when shellcheck is not
-  installed) and fix what they report.
-- Run its offline part once: a `FAIL` because the new code is missing is
-  expected, but every tool it calls must accept its flags and every summary
-  it greps must appear. A branch that cannot run before the new code exists
-  (a server that does not start yet) is not faked with stub code; the spec
-  names it, and the task group that adds the code (S/M: the implementation,
-  before its commit) runs that check once.
-- Open every live URL it uses once: use `check_url`.
+`sdd handover` runs `bash -n`, `shellcheck` (through Docker when it is not
+installed), the offline part once and every live URL. In its output, a
+`FAIL` because the new code is missing is expected; a tool rejecting a
+flag or a grepped summary that never appears is a spec bug. A branch that
+cannot run before the new code exists (a server that does not start yet)
+is not faked with stub code; the spec names it, and the task group that
+adds the code (S/M: the implementation, before its commit) runs that check
+once.
 
 ## At validation
 

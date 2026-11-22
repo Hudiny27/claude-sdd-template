@@ -10,8 +10,8 @@ validation, so make time between features to adjust the plan.
 
 ## 1. Clean start
 
-- Read `../feature-spec/clean-start.md` and run its checks, including the
-  `/replan` part (open manual checks; ask about them in step 2).
+- Run `.claude/bin/sdd preflight`; stop on any `FAIL` line. Ask about the
+  open manual checks it lists in step 2.
 - Read `specs/mission.md`, `specs/tech-stack.md`, `specs/roadmap.md`, recent
   entries in `Plans/done/` and `specs/backlog/`.
 
@@ -34,8 +34,8 @@ Bring your own observations from the last feature as options.
 ## 3. Workflow improvements
 
 Template-owned files (`CLAUDE.md`, the four skills and their reference
-files, `Plans/README.md`, `specs/README.md`, the hooks) are not edited in a
-project: a template update overwrites them. Project lessons go to the
+files, `Plans/README.md`, `specs/README.md`, the hooks, `.claude/lib/`
+and `.claude/bin/`) are not edited in a project: a template update overwrites them. Project lessons go to the
 extension points: `.claude/rules/<topic>.md`, `.claude/project.md`, and the
 project's own scripts and tests.
 

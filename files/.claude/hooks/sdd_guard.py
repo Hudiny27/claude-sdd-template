@@ -5,11 +5,14 @@ One file, several entry points (first CLI argument):
 
   session  SessionStart hook: print the SDD status into the agent's context.
   prompt   UserPromptSubmit hook: handle the owner's keywords.
-  pretool  PreToolUse hook (Edit|Write|MultiEdit|NotebookEdit|Bash): deny
+  pretool  PreToolUse hook (Edit|Write|MultiEdit|NotebookEdit|Bash|Agent|Task): deny
              - writes to the constitution and to the guard's own files while
                they are locked,
              - writes to code while the current branch has no approved spec,
-             - git commands that would bypass the git hooks.
+             - git commands that would bypass the git hooks,
+             - `git add -A`/`.`, `git commit -a` and `pkill -f`,
+             - switching branches in the worktree of a running feature,
+             - a subagent prompt with a line that starts with a keyword.
   ci       CI check: `sdd_guard.py ci <base-sha> <head-branch>`. Fails when a
            change touches code without touching a spec.
 
@@ -82,14 +85,10 @@ USER_SETTINGS = (os.path.expanduser("~/.claude/settings.json"),)
 # Installed projects do not update themselves; the session status names the
 # workflow files that drifted from the template so /replan can bring them over.
 TEMPLATE_FILES_DIR = os.environ.get("SDD_TEMPLATE_DIR") or os.path.expanduser("~/.claude/templates/sdd/files")
-# settings.json is left out: projects merge their own hooks and permissions in.
-TEMPLATE_SYNCED = (
-    "CLAUDE.md",
-    "Plans/README.md",
-    "specs/README.md",
-    ".claude/hooks/sdd_guard.py",
-    ".githooks/pre-commit",
-)
+# Every template file is compared except the project's own (extension points,
+# specs, plans) and these: projects merge their own hooks and permissions into
+# settings.json, and gitignore is appended to .gitignore, not copied.
+TEMPLATE_NOT_SYNCED = (".claude/settings.json", "gitignore")
 # Compared only when the project has it (the CI check is optional).
 TEMPLATE_OPTIONAL = (".github/workflows/sdd-check.yml",)
 
@@ -149,6 +148,27 @@ REASON_BYPASS = (
     "SDD guard: bypassing git hooks (--no-verify, core.hooksPath) is not "
     "allowed. If a hook blocks a commit, fix the cause or ask the owner."
 )
+REASON_ROADMAP_TICK = (
+    " To tick a finished phase ([ ] -> [x]), use the Edit tool on "
+    + ROADMAP + ": that edit needs no unlock."
+)
+REASON_ADD_ALL = (
+    "SDD guard: `git add -A`, `git add .` and `git commit -a` stage files you "
+    "did not write (another agent's work, logs, local settings). Name your "
+    "files: `git add <file> ...`, or `.claude/bin/sdd commit -m MSG -- <file> ...`."
+)
+REASON_PKILL = (
+    "SDD guard: `pkill -f` matches by command line and also kills processes "
+    "that are not yours (another session's server, the editor). Stop a "
+    "process by its PID: `kill <PID>`, or `stop_bg NAME` in validate.sh."
+)
+REASON_SUBAGENT_KEYWORD = (
+    "SDD guard: a line of this subagent prompt starts with an owner keyword "
+    "(#spec-...). Keywords belong to the owner alone. Rephrase so the keyword "
+    "is not at a line start (or leave it out), and never ask a subagent to "
+    "unlock or approve anything."
+)
+OWNER_KEYWORD_LINE = re.compile(r"^\s*#spec-", re.M)
 
 
 # ------------------------------------------------------------------ helpers
@@ -542,6 +562,92 @@ def git_bypass(words):
     return any(a == "--no-verify" or (re.match(r"^-[A-Za-z]+$", a) and "n" in a[1:]) for a in rest)
 
 
+# git commit options whose value is the next word (a message may look like a flag).
+COMMIT_VALUE_OPTS = {"-m", "-F", "-C", "-c", "-t", "--message", "--file", "--author", "--date", "--template", "--reuse-message", "--reedit-message", "--fixup", "--squash", "--cleanup", "--trailer"}
+ADD_ALL_PATHS = {".", "./", ":/", ":"}
+
+
+def short_flags(arg):
+    """The letters of a short option group (-am -> 'am'), '' for anything else."""
+    return arg[1:] if re.match(r"^-[A-Za-z0-9]+$", arg) else ""
+
+
+def commit_all(rest):
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if a in COMMIT_VALUE_OPTS:
+            i += 2
+            continue
+        if a == "--all":
+            return True
+        letters = short_flags(a)
+        if "a" in letters:
+            return True
+        # -m/-F/-C/-c at the end of a group take the next word as their value.
+        i += 2 if letters and letters[-1] in "mFCct" else 1
+    return False
+
+
+def add_all(rest):
+    if "--" in rest:
+        rest = rest[: rest.index("--")] + [a for a in rest[rest.index("--") + 1 :] if a in ADD_ALL_PATHS]
+    return any(a in ("-A", "--all") or a in ADD_ALL_PATHS or "A" in short_flags(a) for a in rest)
+
+
+def running_feature(root, proj):
+    """The spec dir of an approved feature still under Plans/ (not archived), else None."""
+    branch = branch_of(root)
+    if not branch or branch in MAIN_BRANCHES or not approved(proj, root):
+        return None
+    spec = find_spec_dir(root, branch)
+    return spec if spec and not spec.startswith("Plans/done/") else None
+
+
+def switches_branch(root, sub, rest):
+    """True if this git switch/checkout changes the checked-out branch or commit."""
+    if sub == "switch":
+        return not any(a in ("-h", "--help") for a in rest)
+    if sub != "checkout" or "--" in rest:
+        return False
+    if any(a in ("-b", "-B", "--orphan", "--detach") for a in rest):
+        return True
+    plain = [a for a in rest if not a.startswith("-")]
+    if len(plain) != 1:
+        return False
+    out = git(root, "rev-parse", "--verify", "--quiet", plain[0] + "^{commit}")
+    return bool(out) and out.returncode == 0
+
+
+def command_ban(words, cwd, proj):
+    """Deny reason for a shell habit the workflow forbids, or None."""
+    words = strip_wrappers([w for w in words if not REDIRECT_RE.match(w)])
+    if not words:
+        return None
+    cmd = os.path.basename(words[0])
+    args = words[1:]
+    if cmd == "pkill" and any(a == "--full" or "f" in short_flags(a) for a in args):
+        return REASON_PKILL
+    if cmd != "git":
+        return None
+    sub, rest = git_subcommand(args)
+    if (sub == "add" and add_all(rest)) or (sub == "commit" and commit_all(rest)):
+        return REASON_ADD_ALL
+    if sub in ("switch", "checkout"):
+        root = checkout_root(cwd, proj) if inside(cwd, proj) else None
+        spec = root and running_feature(root, proj)
+        if spec and switches_branch(root, sub, rest):
+            branch = branch_of(root)
+            return (
+                "SDD guard: branch " + branch + " is a running feature (approved spec " + spec + "); "
+                "switching branches here mixes its uncommitted work into another branch. Work on the "
+                "other branch in its own worktree: `git worktree add ../<folder> <branch>` (or "
+                "`git worktree add -b <new> ../<folder> main`). This worktree may switch again once "
+                "the spec is archived under Plans/done/."
+            )
+    return None
+
+
 SCRIPT_OPTS = ("-e", "-f", "--expression", "--file")
 
 
@@ -675,6 +781,9 @@ def bash_verdict(command, cwd, proj, payload, depth=0, env=None):
     for words in segments(text):
         if git_bypass(words):
             return REASON_BYPASS
+        reason = command_ban([substitute(w, env) for w in words], cwd, proj)
+        if reason:
+            return reason
         pairs = assignments(words)
         if pairs:
             for name, value in pairs:
@@ -688,6 +797,9 @@ def bash_verdict(command, cwd, proj, payload, depth=0, env=None):
             for path in expand(substitute(raw, env), cwd):
                 reason = verdict(path, cwd, proj, payload, kind)
                 if reason:
+                    loc = locate(normalise(path, cwd), proj)
+                    if reason == REASON_LOCKED and loc and loc[1] == ROADMAP:
+                        reason += REASON_ROADMAP_TICK
                     return reason
         cmd = os.path.basename(stripped[0]) if stripped else ""
         if cmd in SHELLS and "-c" in stripped:
@@ -733,6 +845,8 @@ def pretool(payload):
         reason = verdict(tool_input.get("file_path") or tool_input.get("notebook_path"), cwd, proj, payload)
     elif tool == "Bash":
         reason = bash_verdict(tool_input.get("command", ""), cwd, proj, payload)
+    elif tool in ("Agent", "Task"):
+        reason = REASON_SUBAGENT_KEYWORD if OWNER_KEYWORD_LINE.search(str(tool_input.get("prompt") or "")) else None
     else:
         reason = None
     if reason:
@@ -803,16 +917,34 @@ def same_bytes(a, b):
         return False
 
 
+def template_owned(rel):
+    """True for a template file that `install.sh --update` keeps in sync (mirrors its project_owned)."""
+    if rel in TEMPLATE_NOT_SYNCED or "__pycache__" in rel.split("/"):
+        return False
+    if rel in (".claude/project.md", ".claude/workflow-log.md") or rel.startswith(".claude/rules/"):
+        return False
+    if rel.startswith("specs/") or rel.startswith("Plans/"):
+        return rel in ("specs/README.md", "Plans/README.md")
+    return True
+
+
+def template_files():
+    out = []
+    for dirpath, dirnames, filenames in os.walk(TEMPLATE_FILES_DIR):
+        dirnames[:] = [d for d in dirnames if d not in ("__pycache__", ".pytest_cache")]
+        for name in filenames:
+            rel = os.path.relpath(os.path.join(dirpath, name), TEMPLATE_FILES_DIR).replace(os.sep, "/")
+            if template_owned(rel):
+                out.append(rel)
+    return sorted(out)
+
+
 def template_drift(root):
-    """Workflow files in `root` that differ from the template, or are missing."""
+    """Template-owned files in `root` that differ from the template, or are missing."""
     if not os.path.isdir(TEMPLATE_FILES_DIR):
         return []
-    skills = sorted(
-        os.path.relpath(p, TEMPLATE_FILES_DIR)
-        for p in glob.glob(os.path.join(TEMPLATE_FILES_DIR, ".claude", "skills", "*", "SKILL.md"))
-    )
     drift = []
-    for rel in (*TEMPLATE_SYNCED, *skills, *TEMPLATE_OPTIONAL):
+    for rel in template_files():
         ours = rel
         # The installer puts the rules next to a foreign CLAUDE.md.
         if rel == "CLAUDE.md" and os.path.exists(os.path.join(root, "CLAUDE.sdd.md")):
@@ -879,14 +1011,42 @@ def session(payload):
     if logged >= WORKFLOW_REVIEW_AT:
         lines.append(
             "- Workflow log: " + str(logged) + " local workflow improvements since the last review ("
-            + WORKFLOW_LOG + "): time to review them in /replan (template, keep local, or drop)."
+            + WORKFLOW_LOG + "): time to review them in /replan (turn into code or a check, merge, or delete)."
         )
     elif logged:
         lines.append(
             "- Workflow log: " + str(logged) + "/" + str(WORKFLOW_REVIEW_AT)
             + " local workflow improvement(s) since the last review (" + WORKFLOW_LOG + ")."
         )
+    manual = open_manual_checks(root)
+    if manual:
+        lines.append(
+            "- Open manual checks: " + str(manual) + " in Plans/done/ (merged with checks left open); "
+            "/replan asks the owner about them."
+        )
     print("\n".join(lines))
+
+
+def open_manual_checks(root):
+    """Unticked owner checks of archived specs: the Kézi section of validation.md, Owner lines of spec.md."""
+    count = 0
+    for path in glob.glob(os.path.join(root, "Plans", "done", "*", "*.md")):
+        name = os.path.basename(path)
+        if name not in ("validation.md", LIGHT_SPEC):
+            continue
+        try:
+            with open(path, encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        manual = False
+        for line in text.splitlines():
+            if line.startswith("## "):
+                manual = line[3:].strip().lower().startswith("kézi")
+            elif re.match(r"^\s*- \[ \] ", line):
+                if (name == "validation.md" and manual) or (name == LIGHT_SPEC and re.match(r"^\s*- \[ \] Owner:", line)):
+                    count += 1
+    return count
 
 
 def ci(argv):

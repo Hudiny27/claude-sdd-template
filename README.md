@@ -157,6 +157,8 @@ Plans/                             # feature spec-ek
 ├── hooks/test_sdd_guard.py        # regressziós tesztek
 ├── lib/sdd_check.sh               # a validate.sh közös függvényei (a sablon tesztjei őrzik)
 ├── lib/sdd_probe.sh               # a subagent-próba előkészítése
+├── lib/sdd_lint.py                # a szöveges szabályok ellenőrzése (pre-commit, /validate-feature)
+├── bin/sdd                        # parancsok: preflight, new, handover, archive, commit
 └── skills/                        # constitution, feature-spec, validate-feature, replan, segédfájlokkal
 .githooks/pre-commit               # agent-független védőháló
 .github/workflows/sdd-check.yml    # csak --with-ci esetén
@@ -178,7 +180,7 @@ a `- [ ] ` előtagot olvassa, így a fázisok elnevezése nyelvfüggetlen.
 | `install.sh` | Determinisztikus, idempotens telepítő |
 | `files/` | A projektbe másolt fájlok |
 | `files/gitignore` | A `.gitignore`-hoz fűzött sorok |
-| `tests/` | A sablon tesztjei: telepítő, méretkeret, a `.claude/lib/` könyvtárak (`python3 -m pytest -q tests/`) |
+| `tests/` | A sablon tesztjei: telepítő, méretkeret, a `.claude/lib/` könyvtárak, a lint és az `sdd` parancs (`python3 -m pytest -q tests/`) |
 | `claude-skill/sdd-init/` | A globális `/sdd-init` skill (a `~/.claude/skills/` alá kell másolni) |
 
 ---

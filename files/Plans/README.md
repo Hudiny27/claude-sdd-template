@@ -13,7 +13,9 @@ Plans/
 ```
 
 Egy M fokozatú spec mellé is kerülhet `validate.sh`, ha az „Ellenőrzés”
-szakasz több gépi ellenőrzést egy parancsra fűz.
+szakasz több gépi ellenőrzést egy parancsra fűz. Az alábbi sablonokat a
+`.claude/bin/sdd new` másolja be; a formátumot a `.claude/lib/sdd_lint.py`
+ellenőrzi (a pre-commit hook futtatja).
 
 ## spec.md (S és M fokozat)
 

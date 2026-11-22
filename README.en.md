@@ -53,6 +53,8 @@ Restart Claude Code afterwards, because hooks load at session start.
 | `.claude/settings.json` | Wires the hooks: SessionStart, UserPromptSubmit, PreToolUse |
 | `.claude/hooks/sdd_guard.py` | The guard: status, keywords, write gates, CI mode |
 | `.claude/hooks/test_sdd_guard.py` | Regression tests (stdlib only) |
+| `.claude/lib/` | `validate.sh` libraries (`sdd_check.sh`, `sdd_probe.sh`) and the workflow lint (`sdd_lint.py`, run by the pre-commit hook) |
+| `.claude/bin/sdd` | Workflow commands: `preflight`, `new`, `handover`, `archive`, `commit` |
 | `.claude/skills/{constitution,feature-spec,validate-feature,replan}/` | The workflow steps as skills |
 | `.githooks/pre-commit` | Agent-independent backstop for code commits |
 | `.github/workflows/sdd-check.yml` | Optional (`--with-ci`): PR check for spec–code sync |
