@@ -27,7 +27,10 @@ Reach a shared understanding of the plan before building. Treat the plan as a
 - **Reversible technical choices are your job.** Decide, and record the
   decision with "döntött: agent" so the owner can overrule it later.
 - **The owner decides** product, scope, wording users see, priorities,
-  cost, anything irreversible, and anything under "Ask first".
+  cost, anything irreversible, and anything the owner's rules list as "ask
+  first" (deleting, dependencies, schema migrations, remote or production
+  hosts). A choice the owner already stated is asked again only when a
+  fact or a risk the critical pass found contradicts it.
 - **Someone else decides** legal, a colleague's system, a client's needs:
   write a questionnaire instead of guessing (`questionnaire.md` in this
   skill's folder), note in the plan that it waits on them, and go on.
@@ -43,56 +46,51 @@ complete: check its claims against the code and the data, walk 3–5 edge
 scenarios through it, run a pre-mortem, and pin fuzzy words. When the plan
 is hard to reverse or reaches far, a fresh break-it subagent attacks it
 too. How: `critical-pass.md` in this skill's folder. What it finds enters
-the frontier; facts you record, decisions you ask.
+the frontier as questions; facts go where the plan lives (before the spec
+exists: a running list the caller writes into the spec's context). First
+read the project's own rules for plans (`.claude/rules/` files whose paths
+cover the plan, `.claude/project.md`): they may make a choice a question.
 
 ## Rounds
 
 1. **Build the frontier:** the open owner-decisions whose prerequisites are
    already settled, including what the critical pass found. A question that
-   depends on an answer still open waits for a later round.
-2. **Ask the frontier with AskUserQuestion** (up to 4 questions per popup;
-   more popups if needed). For each question:
-   - the header: a 1-2 word topic;
-   - the question: one plain-Hungarian sentence, with just enough context
-     to answer without scrolling back;
-   - 2-4 options, **the recommended one first, marked "(Javasolt)"**;
-   - in each option's description: what changes for the owner if chosen
-     (cost, time, what users see, what becomes hard later). No jargon; a
-     technical term only with a short explanation in brackets.
-   The owner can always pick "Other" and type; treat that answer as final,
-   unless it is a question or says they do not understand: then explain the
-   question with the `plain` rules and ask it again, simpler.
+   depends on an answer still open waits for a later round. A question whose
+   answer could void the rest (a conflict with the baseline document, "do
+   we build this at all") is asked alone, first. Order the rest by impact;
+   a round is at most two popups, the less consequential questions wait.
+2. **Ask the frontier with AskUserQuestion** (up to 4 questions per popup):
+   a 1-2 word header; one plain-Hungarian sentence with enough context to
+   answer without scrolling back; 2-4 options, **the recommended one first,
+   marked "(Javasolt)"**, each described by what changes for the owner
+   (cost, time, what users see, what becomes hard later), technical terms
+   explained in brackets. An "Other" answer is final, unless it is a
+   question or says they do not understand: then explain with the `plain`
+   rules and ask again, simpler.
 3. **Record each answer** right away where the plan lives (the spec's
    "Döntések" section, the map's "Eddigi döntések"), one line each, with
    "döntött: owner" and the date.
 4. **Recompute the frontier** and ask the next round. Facts you looked up
    meanwhile may close questions; say so in one line instead of asking.
-5. **Finish** when the frontier is empty **and** a second critical pass, over
-   the settled plan, finds no new branch. Then:
-   - **Your own decisions:** list every "döntött: agent" choice made so far
-     in one popup, as multi-select questions of up to 4 decisions each
-     ("Melyiket módosítanád?"). A ticked one becomes an owner question in
-     one more round.
-   - Show the decisions in a short list and confirm with one popup ("Ez így
-     rendben?" / "Van még, amit tisztázni kell"). When the caller (size-up,
-     feature-spec) asks for its own approval right after, skip this popup:
-     the caller's approval covers it. Do not start building until it is
-     confirmed.
+5. **Finish** when the frontier is empty **and** a critical pass over the
+   settled plan finds no new branch; a pass that finds one opens a round,
+   and the pass runs again after it. If a third such pass still finds a
+   branch, ask the owner whether to go on. Then:
+   - **Your own decisions:** every "döntött: agent" choice, in one popup of
+     multi-select questions of up to 4 decisions each ("Melyiket
+     módosítanád?", no recommended option; a lone decision gets "Rendben" /
+     "Módosítanám"); beyond 16, list the rest in the chat. A ticked one
+     becomes an owner question in one more round.
+   - Show the decisions in a short list and confirm in one popup ("Ez így
+     rendben?" / "Van még, amit tisztázni kell"), unless the caller
+     (size-up, feature-spec) asks for its own approval right after. Do not
+     start building until it is confirmed.
 
 There is no round limit. Most M-level plans take 2–4 rounds; start each
 round with one line on what opened it (which answer, which scenario).
 
 ## Terms
 
-When a decision fixes a name users or the team will use (a page, a role, a
-category, a concept), record it in the project's glossary right away, one
-term per answer, not batched at the end:
-
-- an SDD project (its `specs/README.md` has a `docs/szotar.md` section):
-  `docs/szotar.md` in that format, created with the first term;
-- a project with its own glossary (a `/szotar` page, a glossary file): there;
-- otherwise: offer once to start `docs/szotar.md`.
-
-Decisions live in the plan's "Döntések". Offer a decision record
-(`docs/decisions/NNNN-<slug>.md`, the project's format) only when all three
-hold: hard to reverse, surprising without context, a real trade-off.
+When an answer fixes a name users or the team will use, record it in the
+project's glossary right away; a weighty decision may get a decision record.
+Where and when: `terms.md` in this skill's folder.

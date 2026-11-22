@@ -26,6 +26,12 @@ the settled plan: the answers themselves often open new edge cases.
 **Break-it subagent.** When the plan is hard to reverse or reaches far (data
 leaving the machine, deletion, migration, auth, payment, sent mail, a
 format users' files depend on; in an SDD spec `ajtó: egyirányú` or
-`hatósugár: nagy`), also spawn one fresh subagent with only the plan text
-and the files it touches, asked how the plan fails. Check each of its
+`hatósugár: nagy`; during a spec interview the spec does not exist yet, so
+the list decides), also spawn one fresh subagent with the plan text, the
+project's baseline rules (the constitution, `AGENTS.md` or the like) and
+the files you think it touches, asked how the plan fails. Check each of its
 points before it enters the frontier.
+
+A risk with a legal side (third-party data, professional secrecy, a
+contract) is first an owner question: decide it, or ask the lawyer with a
+questionnaire.
