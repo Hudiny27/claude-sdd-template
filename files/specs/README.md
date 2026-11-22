@@ -79,3 +79,74 @@ review-zható és tesztelhető.
 Témánként egy fájl: `backlog/YYYY-MM-DD-<topic>.md`, benne a kérdés, a
 megállapítások, a javaslat és a döntés. Backlog-elem csak újratervezésen
 keresztül kerülhet a roadmapre, a fájljára mutató hivatkozással.
+
+# A projekt közös nyelve és döntései (`docs/`)
+
+Két, nem zárolt fájl a constitution mellett. Egyiket sem kell előre megírni:
+az első bejegyzéssel jönnek létre (a kikérdezés, a spec-interjú vagy a
+kódszerkezet-felmérés közben).
+
+## docs/szotar.md
+
+A projekt saját fogalmai: ugyanaz a szó a felületen, az üzenetekben, a
+specekben és a kódban. Általános programozási fogalom (időkorlát, hibatípus)
+nem kerül bele, és megvalósítási részlet sem: ez szótár, nem spec.
+
+```markdown
+# Szótár: <projekt>
+
+<1–2 mondat: miről szól a projekt nyelve.>
+
+## <fogalomcsoport, ha van>
+
+**<fogalom>** (kódban: `<english_name>`):
+<1–2 mondat: mi ez, nem az, hogy mit csinál.>
+_Kerülendő_: <szinonimák, amelyeket nem használunk>
+```
+
+- Egy fogalomra egy szó: a többi a „Kerülendő” sorba kerül.
+- A kódbeli név angol, és a szótár rögzíti; a felület és a doksi a magyar
+  szót használja.
+- Ha egy szó két jelentésben fut, az ütközés az ownernek szóló kérdés, nem
+  csendes döntés.
+
+## docs/decisions/
+
+Nehezen visszafordítható döntések, sorszámozva: `NNNN-<slug>.md` (a
+legnagyobb sorszám plusz egy). Döntésnapló csak akkor készül, ha mind a
+három igaz; ha egy hiányzik, a döntés a spec „Döntések” sorában marad:
+
+1. **nehezen visszafordítható**: a meggondolás később érdemi költség;
+2. **kontextus nélkül meglepő**: egy későbbi olvasó azt kérdezné, miért így;
+3. **valódi mérlegelés eredménye**: volt komoly alternatíva.
+
+```markdown
+# NNNN – <a döntés rövid címe>
+
+- Állapot: javasolt | eldőlt (ÉÉÉÉ-HH-NN) | felváltva: NNNN
+- Dátum: ÉÉÉÉ-HH-NN
+
+<1–3 mondat: a helyzet, a döntés és az oka.>
+
+## Mérlegelt lehetőségek (ha az elvetés nem magától értetődő)
+## Következmények (ha nem nyilvánvalók)
+```
+
+Jellemző tárgyak: a rendszer szerkezete, technológia bezáródással (adatbázis,
+hitelesítés, hosting), hatókör-határok és a kifejezett nemek, a kézenfekvő
+úttól való szándékos eltérés, a kódban nem látható korlát. A kódszerkezet-
+felmérés nem javasolja újra, amit egy döntésnapló elvetett, csak ha a
+súrlódás valódi.
+
+## docs/kodolasi-szabalyok.md
+
+A projekt kódolási szabályai, amelyek mérlegelést igényelnek (amit lint vagy
+teszt el tud dönteni, az oda kerül, nem ide). Az implementáló agent nem
+tölti be; a `/validate-feature` mély review-jának subagentjei kapják meg, és
+a találatuk megnevezi a megsértett szabályt.
+
+```markdown
+# Kódolási szabályok
+
+- <szabály egy mondatban>: <miért; egy rossz és egy jó példa, ha kell>
+```

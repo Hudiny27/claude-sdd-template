@@ -55,6 +55,10 @@ in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
    know it works (commands the agent can run, manual checks for the owner).
 
 Point out conflicts with the constitution. Do not resolve them silently.
+A name the interview fixes goes to `docs/szotar.md`; a decision that is
+hard to reverse, surprising without context and a real trade-off is offered
+as `docs/decisions/NNNN-<slug>.md` (formats: `specs/README.md`; create them
+when the first entry comes).
 
 ## 4. Write the spec files
 
