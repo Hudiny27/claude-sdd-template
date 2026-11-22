@@ -165,6 +165,33 @@ számít, és nem kell hozzá `#spec-ok`. A sablon közös könyvtárát
 ellenőriz; ha valami hiányzik belőle, a könyvtár a sablonban bővül. Minta
 és szabályok: `.claude/skills/feature-spec/validate-sh.md`.
 
+## köteg.md (kötegelt üzemmód)
+
+Egy köteg több feature-t visz egy jóváhagyással (`#spec-ok köteg <név>`),
+felügyelet nélküli építéssel és reggeli merge-döntéssel. A fájl a `main`
+checkoutban él: `Plans/kotegek/ÉÉÉÉ-HH-NN-<név>.md`; az `sdd batch new`
+hozza létre, az `sdd batch add` ad hozzá egy feature-t a saját worktree-jével
+(`.claude/worktrees/<slug>`) és spec-mappájával.
+
+```markdown
+---
+koteg: <név>
+datum: ÉÉÉÉ-HH-NN
+idokeret: ÓÓ:PP
+artifact: igen | nem
+---
+# Köteg: <név>
+
+## Feature-ök
+| # | Branch | Fokozat | Függ | Worktree | Becslés | Auth/biztonság | Állapot |
+|---|---|---|---|---|---|---|---|
+```
+
+- `Függ`: annak a feature-nek a branche, amelyre ez épül, vagy `-`.
+- `Auth/biztonság`: `nem`; auth- vagy biztonsági feature nem lehet kötegben.
+- `Állapot`: spec | jóváhagyva | épül | merge-kész | parkolva | mergelve |
+  javítás | elvetve.
+
 ## Részletesség
 
 Írd le a célokat, korlátokat, sikerkritériumokat, felhasználói folyamatokat és

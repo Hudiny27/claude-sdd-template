@@ -61,7 +61,7 @@ aktuális spec és jóváhagyása, következő fázis); ennek megfelelően járj
 | `specs/mission.md`, `tech-stack.md`, `roadmap.md` | Zárolt, amint mindhárom létezik; írható, amíg bármelyik hiányzik (bootstrap) | Owner: `#spec-szerkesztes`, `#spec-zar`-ig vagy 12 óráig |
 | Roadmap checkbox `[ ]` → `[x]` (Edit eszköz) | Mindig engedélyezett | nem kell |
 | Őrfájlok: `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/sdd_guard.py`, a tesztje, `.githooks/`, `~/.claude/settings.json` | Zárolt | Owner: `#spec-szerkesztes` |
-| Kód (minden, kivéve `specs/`, `Plans/`, `docs/`, `.claude/`, `.githooks/`, `*.md`, `.gitignore`, git által ignorált fájlok) | Csak olyan feature branchen, amelynek a specjét az owner jóváhagyta | Owner: `#spec-ok` azon a branchen |
+| Kód (minden, kivéve `specs/`, `Plans/`, `docs/`, `.claude/`, `.githooks/`, `*.md`, `.gitignore`, git által ignorált fájlok) | Csak olyan feature branchen, amelynek a specjét az owner jóváhagyta | Owner: `#spec-ok` azon a branchen; kötegre `#spec-ok köteg <név>` |
 | Zár- és jóváhagyás-flagfájlok (`.claude/.sdd-*`) | Az agent soha nem írhatja | nincs |
 | `git commit --no-verify`, a `core.hooksPath` módosítása | Mindig tiltott | nincs |
 | `git add -A`/`.`, `git commit -a`, `pkill -f`, branchváltás futó feature munkafájában, `#spec-` kezdetű sor subagent promptban | Tiltott; az üzenet megnevezi a jó utat | nincs |

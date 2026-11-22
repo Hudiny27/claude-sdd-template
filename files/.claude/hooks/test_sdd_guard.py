@@ -482,6 +482,90 @@ class SubagentPrompt(Repo):
         self.assertFalse(self.agent("Review Plans/x/spec.md."))
 
 
+BATCH_HEAD = (
+    "---\nkoteg: ejjel\ndatum: 2026-11-22\nidokeret: 07:00\nartifact: nem\n---\n# Köteg: ejjel\n\n## Feature-ök\n"
+    "| # | Branch | Fokozat | Függ | Worktree | Becslés | Auth/biztonság | Állapot |\n"
+    "|---|---|---|---|---|---|---|---|\n"
+)
+
+
+class BatchApproval(Repo):
+    """`#spec-ok köteg <név>` approves every branch of the batch file, each in its own worktree."""
+
+    def setUp(self):
+        super().setUp()
+        self.constitution()
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "constitution")
+        self.rows = []
+
+    def member(self, name, level="M", auth="nem", outside=False):
+        branch = "feature/" + name
+        if outside:
+            wt = os.path.realpath(tempfile.mkdtemp(prefix="sdd-wt-"))
+            os.rmdir(wt)
+            self.addCleanup(shutil.rmtree, wt, True)
+            rel = wt
+        else:
+            rel = ".claude/worktrees/" + name
+            wt = os.path.join(self.dir, rel)
+        self.git("worktree", "add", "-q", "-b", branch, wt, "main")
+        spec = os.path.join(wt, "Plans", "2026-11-22-" + name, "spec.md")
+        os.makedirs(os.path.dirname(spec))
+        with open(spec, "w", encoding="utf-8") as fh:
+            fh.write("---\nszint: " + level + "\n---\n# " + name + "\n")
+        self.rows.append("| %d | %s | %s | - | %s | 1 óra | %s | spec |" % (len(self.rows) + 1, branch, level, rel, auth))
+        self.write("Plans/kotegek/2026-11-22-ejjel.md", BATCH_HEAD + "\n".join(self.rows) + "\n")
+        return wt
+
+    def edit_in(self, wt, rel="src/app.py"):
+        return self.denied("Write", {"file_path": os.path.join(wt, rel), "content": "x"})
+
+    def test_batch_keyword_approves_every_member(self):
+        a, b = self.member("a"), self.member("b")
+        self.assertTrue(self.edit_in(a))
+        out = self.say("#spec-ok köteg ejjel")
+        self.assertIn("feature/a", out)
+        self.assertIn("feature/b", out)
+        self.assertFalse(self.edit_in(a))
+        self.assertFalse(self.edit_in(b))
+        # The main checkout itself stays closed for code.
+        self.assertTrue(self.edit("src/app.py"))
+
+    def test_worktree_outside_the_project_is_refused(self):
+        inside, outside = self.member("a"), self.member("x", outside=True)
+        out = self.say("#spec-ok köteg ejjel")
+        self.assertIn("outside the project", out)
+        self.assertFalse(self.edit_in(inside))
+        self.assertIsNone(self.approved_level("feature/x"))
+
+    def test_auth_member_is_refused(self):
+        self.member("login", auth="igen")
+        out = self.say("#spec-ok köteg ejjel")
+        self.assertIn("auth", out)
+        self.assertIsNone(self.approved_level("feature/login"))
+
+    def test_unknown_batch_approves_nothing(self):
+        self.member("a")
+        self.assertIn("no batch", self.say("#spec-ok köteg masik"))
+        self.assertIsNone(self.approved_level("feature/a"))
+
+    def test_rising_level_in_a_member_needs_a_new_approval(self):
+        a = self.member("a", level="S")
+        self.say("#spec-ok köteg ejjel")
+        self.assertFalse(self.edit_in(a))
+        with open(os.path.join(a, "Plans", "2026-11-22-a", "spec.md"), "w", encoding="utf-8") as fh:
+            fh.write("---\nszint: M\n---\n# grown\n")
+        self.assertTrue(self.edit_in(a))
+
+    def approved_level(self, branch):
+        path = os.path.join(self.dir, ".claude", ".sdd-approved-" + branch.replace("/", "_"))
+        if not os.path.exists(path):
+            return None
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+
+
 class PreCommitBase(Repo):
     def setUp(self):
         super().setUp()

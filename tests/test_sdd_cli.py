@@ -226,3 +226,41 @@ def test_preflight_lists_open_backlog_items(project):
     assert "specs/backlog/2026-11-01-open.md: Export gomb" in out
     assert "specs/backlog/2026-11-03-nostatus.md: Régi ötlet (no Állapot line)" in out
     assert "planned" not in out
+
+
+# --- batch ------------------------------------------------------------------
+
+def test_batch_new_and_add_create_worktrees_specs_and_rows(project):
+    r = sdd(project, "batch", "new", "ejjel")
+    assert r.returncode == 0, r.stdout + r.stderr
+    batch = project.path / f"Plans/kotegek/{TODAY}-ejjel.md"
+    assert "koteg: ejjel" in batch.read_text(encoding="utf-8")
+    r = sdd(project, "batch", "add", "ejjel", "feature/phase-1-hello", "--level", "M")
+    assert r.returncode == 0, r.stdout + r.stderr
+    wt = project.path / ".claude/worktrees/phase-1-hello"
+    assert (wt / f"Plans/{TODAY}-phase-1-hello/spec.md").is_file()
+    assert project.git("-C", str(wt), "symbolic-ref", "--short", "HEAD").strip() == "feature/phase-1-hello"
+    r = sdd(project, "batch", "add", "ejjel", "feature/phase-2-more", "--level", "S", "--after", "feature/phase-1-hello")
+    assert r.returncode == 0, r.stdout + r.stderr
+    text = batch.read_text(encoding="utf-8")
+    assert "| 1 | feature/phase-1-hello | M | - | .claude/worktrees/phase-1-hello |" in text
+    assert "| 2 | feature/phase-2-more | S | feature/phase-1-hello | .claude/worktrees/phase-2-more |" in text
+    # The dependent branch starts from the branch it builds on.
+    base = project.git("rev-parse", "feature/phase-1-hello").strip()
+    assert project.git("merge-base", "--is-ancestor", base, "feature/phase-2-more") == ""
+    assert branch(project) == "main"
+
+
+def test_batch_add_refuses_unknown_batch_and_dependency(project):
+    assert sdd(project, "batch", "add", "nincs", "feature/x", "--level", "M").returncode == 1
+    sdd(project, "batch", "new", "ejjel")
+    r = sdd(project, "batch", "add", "ejjel", "feature/x", "--level", "M", "--after", "feature/missing")
+    assert r.returncode == 1 and "not in the batch" in r.stderr
+
+
+def test_batch_status_shows_each_member(project):
+    sdd(project, "batch", "new", "ejjel")
+    sdd(project, "batch", "add", "ejjel", "feature/phase-1-hello", "--level", "M")
+    out = sdd(project, "batch", "status", "ejjel").stdout
+    assert "feature/phase-1-hello" in out
+    assert "not approved" in out

@@ -17,6 +17,11 @@ project; propose changes in the template's backlog/ instead.
   sdd archive [--no-validate]
                              move the spec folder to Plans/done/, fix the
                              paths that name it, rerun validate.sh, commit
+  sdd batch new NAME         a batch file Plans/kotegek/YYYY-MM-DD-NAME.md
+  sdd batch add NAME BRANCH --level S|M|L [--after BRANCH]
+                             a feature of the batch: its worktree under
+                             .claude/worktrees/, its spec folder, its row
+  sdd batch status NAME      each feature: approval, commits, spec
   sdd commit -m MSG [-- FILE...]
                              stage the named files, run .claude/check.sh
                              (the project's lint, type and test command) and
@@ -163,7 +168,7 @@ def readme_templates(root):
     else:
         raise Fail("Plans/README.md is missing; reinstall the template")
     out = {}
-    for m in re.finditer(r"^## (\S+\.md)[^\n]*\n+```markdown\n(.*?)\n```", text, re.S | re.M):
+    for m in re.finditer(r"^## (\S+\.md)[^\n]*\n(?:(?!## |```)[^\n]*\n)*?```markdown\n(.*?)\n```", text, re.S | re.M):
         out[m.group(1)] = m.group(2) + "\n"
     return out
 
@@ -213,28 +218,140 @@ def new(root, argv):
     if os.path.exists(os.path.join(root, folder)):
         raise Fail(folder + " already exists")
     templates = readme_templates(root)
-    names = ("spec.md",) if level in ("S", "M") else ("plan.md", "requirements.md", "validation.md")
+    names = spec_names(level)
     if any(n not in templates for n in names):
         raise Fail("Plans/README.md has no template for " + ", ".join(n for n in names if n not in templates))
     git(root, "switch", "-q", "-c", branch, check=True)
-    os.makedirs(os.path.join(root, folder))
-    roadmap = roadmap_line(root, branch)
-    for name in names:
-        text = fill(templates[name], branch, roadmap, level)
-        if level == "S":
-            text = keep_sections(text, S_SECTIONS)
-        with open(os.path.join(root, folder, name), "w", encoding="utf-8") as fh:
-            fh.write(text)
-        say("OK", "created " + folder + "/" + name)
-    if level == "L":
-        path = os.path.join(root, folder, "validate.sh")
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(VALIDATE_SKELETON)
-        os.chmod(path, 0o755)
-        say("OK", "created " + folder + "/validate.sh")
+    roadmap = write_spec(root, root, folder, branch, level, templates)
     say("OK", "on branch " + branch + (", " + roadmap if roadmap else ", no roadmap phase found: fill the Roadmap line"))
     print("Next: interview the owner, then fill the templates (no code until #spec-ok).")
     return 0
+
+
+def spec_names(level):
+    return ("spec.md",) if level in ("S", "M") else ("plan.md", "requirements.md", "validation.md")
+
+
+def write_spec(root, target, folder, branch, level, templates):
+    """Write the level's templates into target/folder; return the Roadmap line used (or None)."""
+    os.makedirs(os.path.join(target, folder))
+    roadmap = roadmap_line(root, branch)
+    for name in spec_names(level):
+        text = fill(templates[name], branch, roadmap, level)
+        if level == "S":
+            text = keep_sections(text, S_SECTIONS)
+        with open(os.path.join(target, folder, name), "w", encoding="utf-8") as fh:
+            fh.write(text)
+        say("OK", "created " + os.path.relpath(os.path.join(target, folder, name), root))
+    if level == "L":
+        path = os.path.join(target, folder, "validate.sh")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(VALIDATE_SKELETON)
+        os.chmod(path, 0o755)
+        say("OK", "created " + os.path.relpath(path, root))
+    return roadmap
+
+
+# --------------------------------------------------------------------- batch
+
+BATCH_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+BATCH_TEMPLATE = "köteg.md"
+
+
+def batch_file(root, name):
+    rel = guard.find_batch(root, name)
+    if not rel:
+        raise Fail("no batch file " + guard.BATCH_DIR + "/YYYY-MM-DD-" + name + ".md; start it with `sdd batch new " + name + "`")
+    return rel
+
+
+def on_main(root):
+    branch = guard.branch_of(root)
+    if branch not in guard.MAIN_BRANCHES:
+        raise Fail("run the batch commands in the main checkout on main, not on " + str(branch))
+
+
+def batch_new(root, argv):
+    if len(argv) != 1 or not BATCH_NAME.match(argv[0]):
+        raise Fail("usage: sdd batch new NAME (lower-case letters, digits, hyphens)")
+    on_main(root)
+    name = argv[0]
+    if guard.find_batch(root, name):
+        raise Fail("a batch named " + name + " exists already: " + guard.find_batch(root, name))
+    templates = readme_templates(root)
+    if BATCH_TEMPLATE not in templates:
+        raise Fail("Plans/README.md has no " + BATCH_TEMPLATE + " template; update the template files")
+    text = templates[BATCH_TEMPLATE].replace("<név>", name).replace("ÉÉÉÉ-HH-NN", datetime.date.today().isoformat())
+    rel = guard.BATCH_DIR + "/" + datetime.date.today().isoformat() + "-" + name + ".md"
+    os.makedirs(os.path.join(root, guard.BATCH_DIR), exist_ok=True)
+    with open(os.path.join(root, rel), "w", encoding="utf-8") as fh:
+        fh.write(text)
+    say("OK", "created " + rel + " (fill in idokeret and artifact)")
+    return 0
+
+
+def batch_add(root, argv):
+    usage = "usage: sdd batch add NAME BRANCH --level S|M|L [--after BRANCH]"
+    if len(argv) < 4 or argv[2] != "--level" or argv[3].upper() not in ("S", "M", "L"):
+        raise Fail(usage)
+    name, branch, level = argv[0], argv[1], argv[3].upper()
+    after = argv[argv.index("--after") + 1] if "--after" in argv and argv.index("--after") + 1 < len(argv) else None
+    rel = batch_file(root, name)
+    on_main(root)
+    if git(root, "check-ref-format", "--branch", branch).returncode != 0 or "/" not in branch:
+        raise Fail("invalid branch name " + branch + ": use feature/phase-<N>-<slug> or fix/<slug> (CLAUDE.md)")
+    if git(root, "show-ref", "--verify", "--quiet", "refs/heads/" + branch).returncode == 0:
+        raise Fail("branch " + branch + " already exists")
+    with open(os.path.join(root, rel), encoding="utf-8") as fh:
+        text = fh.read()
+    rows = guard.batch_rows(text)
+    if after and after not in {r.get("branch") for r in rows}:
+        raise Fail(after + " is not in the batch; add it first")
+    templates = readme_templates(root)
+    if any(n not in templates for n in spec_names(level)):
+        raise Fail("Plans/README.md lacks a spec template for level " + level)
+    slug = guard.branch_slug(branch)
+    wt = ".claude/worktrees/" + slug
+    if os.path.exists(os.path.join(root, wt)):
+        raise Fail(wt + " already exists")
+    git(root, "worktree", "add", "-q", "-b", branch, wt, after or "main", check=True)
+    say("OK", "worktree " + wt + " on " + branch + " (from " + (after or "main") + ")")
+    write_spec(root, os.path.join(root, wt), "Plans/" + datetime.date.today().isoformat() + "-" + slug, branch, level, templates)
+    row = "| %d | %s | %s | %s | %s | ? | ? | spec |" % (len(rows) + 1, branch, level, after or "-", wt)
+    lines = text.rstrip("\n").split("\n")
+    lines.append(row)
+    with open(os.path.join(root, rel), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+    say("OK", "added row " + str(len(rows) + 1) + " to " + rel + " (fill in Becslés and Auth/biztonság)")
+    return 0
+
+
+def batch_status(root, argv):
+    if len(argv) != 1:
+        raise Fail("usage: sdd batch status NAME")
+    rel = batch_file(root, argv[0])
+    with open(os.path.join(root, rel), encoding="utf-8") as fh:
+        rows = guard.batch_rows(fh.read())
+    print(rel + ": " + str(len(rows)) + " feature(s)")
+    for r in rows:
+        branch, wt = r.get("branch", ""), r.get("worktree", "")
+        path = os.path.join(root, wt)
+        approved = guard.approved_level(root, branch) is not None
+        base = r.get("függ") if r.get("függ") not in (None, "", "-") else "main"
+        ahead = git(root, "rev-list", "--count", base + ".." + branch).stdout.strip() or "?"
+        spec = guard.find_spec_dir(path, branch) if os.path.isdir(path) else None
+        print("  " + r.get("#", "?") + ". " + branch + " [" + r.get("állapot", "?") + "] "
+              + ("approved" if approved else "not approved") + ", "
+              + (ahead + " commit(s) on top of " + base if ahead != "?" else "no branch") + ", "
+              + ("spec " + spec if spec else "no spec in " + wt))
+    return 0
+
+
+def batch(root, argv):
+    handlers = {"new": batch_new, "add": batch_add, "status": batch_status}
+    if not argv or argv[0] not in handlers:
+        raise Fail("usage: sdd batch new|add|status ...")
+    return handlers[argv[0]](root, argv[1:])
 
 
 # ------------------------------------------------------------------ handover
@@ -411,7 +528,7 @@ def main(argv):
         root = repo_root()
         if cmd == "preflight":
             return 0 if preflight(root) else 1
-        handlers = {"new": new, "handover": handover, "archive": archive, "commit": commit}
+        handlers = {"new": new, "handover": handover, "archive": archive, "commit": commit, "batch": batch}
         if cmd not in handlers:
             print("sdd: unknown command " + cmd, file=sys.stderr)
             print(__doc__.split("\n\n")[1], file=sys.stderr)

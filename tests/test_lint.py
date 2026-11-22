@@ -339,3 +339,39 @@ def test_backlog_status_checked_on_commit(repo):
     repo.write("specs/backlog/2026-11-22-idea.md", "# Idea\n\nÁllapot: nyitott: a következő /replan dönt.\n")
     repo.git("add", "specs/backlog/2026-11-22-idea.md")
     assert lint(repo, "--staged").returncode == 0
+
+
+# --- batch file -------------------------------------------------------------
+
+BATCH = """---
+koteg: ejjel
+datum: 2026-11-22
+idokeret: 07:00
+artifact: nem
+---
+# Köteg: ejjel
+
+## Feature-ök
+| # | Branch | Fokozat | Függ | Worktree | Becslés | Auth/biztonság | Állapot |
+|---|---|---|---|---|---|---|---|
+| 1 | feature/a | M | - | .claude/worktrees/a | 1 óra | nem | spec |
+"""
+
+
+def test_good_batch_file_passes(repo):
+    repo.write("Plans/kotegek/2026-11-22-ejjel.md", BATCH)
+    repo.git("add", "Plans/kotegek/2026-11-22-ejjel.md")
+    r = lint(repo, "--staged")
+    assert r.returncode == 0, r.stdout
+
+
+def test_bad_batch_file(repo):
+    bad = BATCH.replace("artifact: nem", "artifact: talán").replace(
+        "| 1 | feature/a | M | - | .claude/worktrees/a | 1 óra | nem | spec |",
+        "| 1 | feature/a | X | feature/zz | ../outside | 1 óra | igen | kész |",
+    )
+    repo.write("Plans/kotegek/2026-11-22-ejjel.md", bad)
+    repo.git("add", "Plans/kotegek/2026-11-22-ejjel.md")
+    out = lint(repo, "--staged").stdout
+    for part in ("artifact", "Fokozat", "feature/zz", ".claude/worktrees/", "auth", "Állapot"):
+        assert part in out, part
