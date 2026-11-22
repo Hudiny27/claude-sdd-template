@@ -20,7 +20,7 @@ specs/                     # constitution: az owner kezeli, hookkal zárolt
 ├── roadmap.md             # kis fázisok, fázisonként egy "- [ ] Fázis N: cím" sor
 └── backlog/               # kutatás és ötletek, amelyek még nincsenek a roadmapen (nem zárolt)
 Plans/                     # feature specek: az agent írja, az owner hagyja jóvá
-├── YYYY-MM-DD-<slug>/     # S/M: spec.md; L: plan.md, requirements.md, validation.md, validate.sh
+├── YYYY-MM-DD-<slug>/     # S/M: spec.md (+ validate.sh); L: plan.md, requirements.md, validation.md, validate.sh
 └── done/                  # befejezett feature-ök
 .claude/hooks/sdd_guard.py # az őr (Claude Code hookok, pre-commit, CI)
 .claude/skills/            # constitution, feature-spec, validate-feature, replan, segédfájlaikkal
@@ -31,8 +31,9 @@ Plans/                     # feature specek: az agent írja, az owner hagyja jó
 ```
 
 Formátumok: `specs/README.md` és `Plans/README.md`. Branch `feature/phase-2-agents`
-↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a branchnév utolsó része, rövid
-angol kebab-case a fázis címéből; a dátum a spec megírásának napja).
+↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a branchnév utolsó része:
+`phase-<N>-` és rövid angol kebab-case a fázis címéből; a dátum a spec
+megírásának napja).
 Roadmapen kívüli S javítás branchneve `fix/<slug>`; ennek nincs fázisa.
 
 ## Munkafolyamat
@@ -46,9 +47,8 @@ Roadmapen kívüli S javítás branchneve `fix/<slug>`; ennek nincs fázisa.
 | 5. Validáció | `/validate-feature` | ellenőrzések lefutnak, eltérések javítva, roadmap kipipálva, merge |
 | 6. Újratervezés | `/replan` | roadmap, constitution és munkafolyamat frissítve |
 
-Minden session elején az őr kiírja az SDD státuszt: branch, a constitution
-állapota, az aktuális feature spec és jóváhagyása, a következő roadmap-fázis.
-Ennek megfelelően járj el.
+Az őr minden session elején kiírja az SDD státuszt (branch, constitution,
+aktuális spec és jóváhagyása, következő fázis); ennek megfelelően járj el.
 
 ## Kikényszerítés (hookok)
 
@@ -71,8 +71,7 @@ Ennek megfelelően járj el.
   régi -> új). Soha ne kerüld meg az őrt (más eszközzel, scripttel, más
   útvonallal, flagfájllal). Viselkedj úgy, mintha a szabályokban nem
   lennének rések.
-- A git pre-commit hook és az opcionális CI ellenőrzés (`sdd-check.yml`)
-  bármely agentre vagy szerkesztőre ugyanezt a kódszabályt kényszeríti ki.
+- A pre-commit hook és a CI (`sdd-check.yml`) ugyanezt minden szerkesztőre kényszeríti.
 
 ## Sablon és projekt
 
@@ -95,10 +94,11 @@ meg, bővítsd a specet, és kérj új `#spec-ok`-ot; az őr addig tilt.
 **Implementáció:** csak `#spec-ok` után. L-nél a `plan.md`-t kövesd
 feladatcsoportonként, S-nél és M-nél a `spec.md`-t; kezdés előtt olvasd el a
 `.claude/skills/feature-spec/implement.md`-t. Biztonság, auth, adat és
-migrációk esetén: egyszerre egy csoport, utána állj meg. Adatnál és
+migrációk esetén (L): egyszerre egy csoport, utána állj meg. Adatnál és
 migrációnál az owner a `#spec-ok`-kor vagy utána egy üzenetben előre
 engedélyezheti, hogy a többi csoport megállás nélkül készüljön;
-biztonságnál és authnál nem. Ne menj túl a `requirements.md`-n. Ha valami
+biztonságnál és authnál nem. Ne menj túl a hatókörön (`requirements.md`,
+S/M-nél a `spec.md` „Bele tartozik” része). Ha valami
 hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben. A
 következő csoport kódjához csak az előző csoport commitja után nyúlj. Így
 minden commit egy csoport.

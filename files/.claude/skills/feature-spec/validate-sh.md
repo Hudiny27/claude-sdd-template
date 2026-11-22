@@ -59,8 +59,8 @@ code and needs no `#spec-ok`. The owner can rerun it at any time.
   expected, but every tool it calls must accept its flags and every summary
   it greps must appear. A branch that cannot run before the new code exists
   (a server that does not start yet) is not faked with stub code; the spec
-  names it, and the step or task group that adds the code runs that check
-  once.
+  names it, and the task group that adds the code (S/M: the implementation,
+  before its commit) runs that check once.
 - Open every live URL it uses once (status and final host after
   redirects): a page behind a login otherwise fails only at validation.
 
