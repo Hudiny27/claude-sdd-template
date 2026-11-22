@@ -482,7 +482,7 @@ class SubagentPrompt(Repo):
         self.assertFalse(self.agent("Review Plans/x/spec.md."))
 
 
-class PreCommit(Repo):
+class PreCommitBase(Repo):
     def setUp(self):
         super().setUp()
         os.makedirs(os.path.join(self.dir, ".claude", "hooks"))
@@ -500,6 +500,8 @@ class PreCommit(Repo):
         self.git("add", "-A")
         return self.git("commit", "-q", "-m", "change", check=False)
 
+
+class PreCommit(PreCommitBase):
     def test_docs_on_main_ok(self):
         self.assertEqual(self.commit("specs/mission.md", "Plans/README.md").returncode, 0)
 
@@ -521,6 +523,42 @@ class PreCommit(Repo):
     def test_squash_merge_to_main_ok(self):
         self.feature()
         self.assertEqual(self.commit("src/app.ts").returncode, 0)
+        self.git("checkout", "-q", "main")
+        self.git("merge", "--squash", "feature/phase-1-hello")
+        self.assertEqual(self.git("commit", "-q", "-m", "feat: hello", check=False).returncode, 0)
+
+
+class PreCommitLint(PreCommitBase):
+    """With .claude/lib/sdd_lint.py installed, the pre-commit hook lints the staged files."""
+
+    def setUp(self):
+        super().setUp()
+        lint = os.path.join(HERE, "..", "lib", "sdd_lint.py")
+        os.makedirs(os.path.join(self.dir, ".claude", "lib"))
+        shutil.copy(lint, os.path.join(self.dir, ".claude", "lib", "sdd_lint.py"))
+        self.git("add", ".claude/lib/sdd_lint.py")
+        self.git("commit", "-q", "-m", "chore(sdd): add lint")
+
+    def test_lint_finding_blocks_the_commit(self):
+        self.feature("feature/quick-fix", spec=False)
+        self.write("Plans/2026-10-05-quick-fix/spec.md", "---\nszint: S\n---\n# x\n\n## Cél\nx\n")
+        result = self.commit("src/app.ts")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing section `## Kész, ha`", result.stdout + result.stderr)
+
+    def test_clean_spec_commits(self):
+        self.feature("feature/quick-fix", spec=False)
+        self.write(
+            "Plans/2026-10-05-quick-fix/spec.md",
+            "---\nszint: S\n---\n# x\n\n## Cél\nx\n\n## Kész, ha\n- x\n\n## Ellenőrzés\n- [ ] Owner: look\n",
+        )
+        result = self.commit("src/app.ts")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_merge_commit_is_not_linted(self):
+        self.feature()  # placeholder L files that would not pass the lint
+        self.git("add", "-A")
+        self.git("-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "spec")
         self.git("checkout", "-q", "main")
         self.git("merge", "--squash", "feature/phase-1-hello")
         self.assertEqual(self.git("commit", "-q", "-m", "feat: hello", check=False).returncode, 0)
