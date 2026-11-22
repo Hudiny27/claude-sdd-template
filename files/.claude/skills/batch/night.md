@@ -6,19 +6,26 @@ adds what a batch needs.
 
 ## Order
 
-- First set every approved feature to `Állapot: jóváhagyva` (the guard's
-  reply to `#spec-ok köteg` lists them; a refused one stays `spec`).
-- Run features from the batch file's order. At most two at the same time,
-  and never the two of a "nem egyszerre" pair from the shared decisions.
+- First set every feature the guard approved (its reply to `#spec-ok köteg`
+  lists them) to `jóváhagyva` with `sdd batch set`; a refused one stays
+  `spec`, with the guard's reason as the note.
+- Start what `.claude/bin/sdd batch next` prints, and ask it again whenever
+  a feature becomes merge-ready or parked. It keeps the order, at most two
+  running, a dependant after what it builds on, and the "nem egyszerre"
+  pairs apart. When it prints nothing and nothing is `épül`, the night is
+  done.
 - A dependant starts only when what it builds on is merge-ready; it builds
   in its own worktree on top of that branch (merge that branch's new
   commits into it first, never rebase, then rerun its checks).
 - Full test suites queue on the suite lock by themselves; do not start a
   third feature to fill the wait.
+- When `main` moved on since a feature branched (for example a template
+  update), merge `main` into the feature branch (never rebase), rerun its
+  checks and log it.
 
 ## Per feature, to merge-ready
 
-1. Set `Állapot: épül`. Build it with the `execute-plan` skill in its
+1. `sdd batch set … épül`. Build it with the `execute-plan` skill in its
    worktree (the plan: `plan.md` for L, `spec.md` for S and M), committing
    with `.claude/bin/sdd commit`.
 2. Validate it as the `validate-feature` skill says, steps 1–4, with no
@@ -30,7 +37,7 @@ adds what a batch needs.
 3. Finish it without merging (`validate-feature` step 6, items 2–3): tick
    the passed checks, commit, `.claude/bin/sdd archive` in the worktree. Do
    not tick the roadmap and do not merge: both wait for the morning.
-4. Set `Állapot: merge-kész`.
+4. `sdd batch set … merge-kész`.
 
 Merge-ready means: every automated check green, the `--final` lint clean,
 the review run as the risk fields say and its real findings fixed, the spec
@@ -48,16 +55,14 @@ worktree, resolve, rerun its checks, write the earlier branch into its
 
 ## Park, do not push through
 
-Set `Állapot: parkolva` with the reason in the log, and go on with the
-features that do not depend on it, when:
+Run `sdd batch set … parkolva "<reason>"` (it parks the dependants too)
+and go on with the rest, when:
 
 - the level rises, or the scope would grow beyond the spec;
 - a decision is the owner's (outside the spec and the shared decisions);
 - the same check fails after 3 different fix rounds;
 - the guard denies a step.
 
-Features that build on a parked one stop too (`parkolva`, reason: waits on
-the other).
 
 ## End
 

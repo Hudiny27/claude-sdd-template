@@ -4,14 +4,17 @@ The owner has 15–30 minutes. Everything is decided here; nothing is built.
 
 ## The report
 
-Written at the end of the night into the overnight folder's `jelentes.md`
+Written at the end of the night, from the batch file, the batch ledger
+(`~/.claude/execute/<projekt>/köteg-<név>/naplo.md`) and the overnight log,
+into the overnight folder's `jelentes.md`
 and given as the chat message; with `artifact: igen` also as a private
 artifact page with the same content. Plain Hungarian (the `plain` rules):
 
 1. **Egy mondatban:** how many features are merge-ready, parked, unfinished.
 2. **Feature-enként** (in the batch order): a status (zöld: merge-kész;
-   sárga: merge-kész, but a decision or a check needs the owner; piros:
-   parkolva), the evidence (the checks with their result line, a screenshot
+   sárga: merge-kész, but a night decision changed behaviour or scope, or a
+   check was flaky or skipped; a manual check alone does not make it
+   yellow; piros: parkolva), the evidence (the checks with their result line, a screenshot
    or command output for a visible change), and what it depends on.
 3. **Éjjeli döntések:** the `agent` decision lines added during the night,
    per feature.
@@ -35,12 +38,12 @@ Then, in this order:
 
 - **Merge:** in the main checkout, merge each chosen branch into `main` in
   dependency order (`--no-ff`), tick its roadmap phase with the Edit tool,
-  run the project's check once on `main`, remove its worktree, and set
-  `Állapot: mergelve`.
+  run the project's check once on `main`, remove its worktree, and
+  `sdd batch set … mergelve`.
 - **Javítás:** record the owner's request under the spec's "Döntések"
-  (`döntött: owner`), set `Állapot: javítás`; the feature becomes the first
+  (`döntött: owner`), `sdd batch set … javítás`; the feature becomes the first
   item of the next batch. Its worktree stays.
-- **Elvetés:** set `Állapot: elvetve`, note the reason in the batch file;
+- **Elvetés:** `sdd batch set … elvetve "<reason>"`;
   remove the worktree and the branch only if the owner ticked that too.
 - **Később:** nothing changes; the next report shows it again.
 - **Push:** only if ticked; a denied push is a stop sign.

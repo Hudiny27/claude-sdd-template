@@ -386,3 +386,17 @@ def test_batch_file_without_rows_yet_commits(repo):
     repo.write("Plans/kotegek/2026-11-22-ejjel.md", start.split("## Feature-ök")[0])
     repo.git("add", "Plans/kotegek/2026-11-22-ejjel.md")
     assert "no feature table" in lint(repo, "--staged").stdout
+
+
+def test_final_lint_measures_from_the_branch_point_not_from_a_moved_main(repo):
+    repo.write("docs/notes.md", "See `docs/decisions/` later.\n")
+    repo.commit("docs")
+    feature(repo, {"spec.md": SPEC_M, "validate.sh": VALIDATE})
+    repo.commit("spec")
+    # main moves on after the branch point: it edits a file the branch never touched
+    repo.git("checkout", "-q", "main")
+    repo.write("docs/notes.md", "See `docs/decisions/` later. (updated on main)\n")
+    repo.commit("main moves")
+    repo.git("checkout", "-q", "feature/phase-1-hello")
+    r = lint(repo, "--final")
+    assert "docs/notes.md" not in r.stdout, r.stdout
