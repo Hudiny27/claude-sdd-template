@@ -23,6 +23,8 @@ Plans/                     # feature specek: az agent írja, az owner hagyja jó
 ├── YYYY-MM-DD-<slug>/     # S/M: spec.md (+ validate.sh); L: plan.md, requirements.md, validation.md, validate.sh
 └── done/                  # befejezett feature-ök
 .claude/hooks/sdd_guard.py # az őr (Claude Code hookok, pre-commit, CI)
+.claude/bin/sdd            # parancsok: preflight, new, handover, archive, commit
+.claude/lib/               # a validate.sh könyvtárai és a lint (sdd_lint.py)
 .claude/skills/            # constitution, feature-spec, validate-feature, replan, segédfájlaikkal
 .claude/project.md         # a projekt saját, mindig betöltött kiegészítése
 .claude/rules/             # a projekt saját szabályai, útvonalhoz kötve
@@ -62,21 +64,21 @@ aktuális spec és jóváhagyása, következő fázis); ennek megfelelően járj
 | Kód (minden, kivéve `specs/`, `Plans/`, `docs/`, `.claude/`, `.githooks/`, `*.md`, `.gitignore`, git által ignorált fájlok) | Csak olyan feature branchen, amelynek a specjét az owner jóváhagyta | Owner: `#spec-ok` azon a branchen |
 | Zár- és jóváhagyás-flagfájlok (`.claude/.sdd-*`) | Az agent soha nem írhatja | nincs |
 | `git commit --no-verify`, a `core.hooksPath` módosítása | Mindig tiltott | nincs |
+| `git add -A`/`.`, `git commit -a`, `pkill -f`, branchváltás futó feature munkafájában, `#spec-` kezdetű sor subagent promptban | Tiltott; az üzenet megnevezi a jó utat | nincs |
 
 - A kulcsszavak csak akkor számítanak, ha az **owner** üzenetének egy sora
-  velük kezdődik. Subagentnek adott promptban soha ne írj kulcsszót sor
-  elejére, és soha ne kérj subagentet, hogy „oldjon fel” bármit.
+  velük kezdődik. Subagenttől soha ne kérj feloldást vagy jóváhagyást.
 - Ha egy írást elutasít az őr: állj meg, mondd el az ownernek, mit akartál
   módosítani és miért, és javasold a pontos változtatást (fájl, szakasz,
   régi -> új). Soha ne kerüld meg az őrt (más eszközzel, scripttel, más
   útvonallal, flagfájllal). Viselkedj úgy, mintha a szabályokban nem
   lennének rések.
-- A pre-commit hook és a CI (`sdd-check.yml`) ugyanezt minden szerkesztőre kényszeríti.
+- A pre-commit hook (a linttel együtt) és a CI (`sdd-check.yml`) ugyanezt minden szerkesztőre kényszeríti.
 
 ## Sablon és projekt
 
 A sablon fájljait (`CLAUDE.md`, a skillek és segédfájljaik, a két README, a
-hookok) a projekt nem szerkeszti: az `install.sh --update` felülírja őket. A
+hookok, a `.claude/lib/` és a `.claude/bin/`) a projekt nem szerkeszti: az `install.sh --update` felülírja őket. A
 projekt tanulságai a bővítési pontokra kerülnek: `.claude/rules/<téma>.md`
 (fájlokhoz kötve `paths:` frontmatterrel, enélkül induláskor töltődik be),
 `.claude/project.md`, és a projekt saját scriptjei és tesztjei. A
@@ -122,8 +124,6 @@ egy `replanning/<topic>` branchen; a roadmapről a következő `/replan` dönt.
   kihagyás nem kudarc: rögzítsd.
 - A specmódosítások az agenten keresztül mennek, hogy a kapcsolódó fájlok
   (plan, requirements, validation, README) konzisztensek maradjanak.
-  Átnevezés vagy áthelyezés után (az owner IDE-s refaktorálása után is)
-  frissíts minden említést a specekben és a dokumentációban.
 
 ## Döntések és következő lépések felugró ablakban
 
@@ -146,5 +146,5 @@ egy `replanning/<topic>` branchen; a roadmapről a következő `/replan` dönt.
   commitoljon (a csoport kódja, tesztjei és specfrissítése egy commitban),
   ha a csoport tesztjei, lintje és típusellenőrzése sikeres. S és M
   fokozatnál a teljes változás egy commit, miután az ellenőrzései
-  sikeresek. Az ellenőrzés és a commit egy parancsban `&&`-vel kapcsolódik,
-  soha `;`-vel.
+  sikeresek. Commitolni a `.claude/bin/sdd commit -m … -- <fájlok>`
+  paranccsal kell: csak zöld `.claude/check.sh` után commitol.

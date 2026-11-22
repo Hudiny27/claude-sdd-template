@@ -4,9 +4,8 @@ Read before the first task group. The gates (one group per commit, one
 group at a time for security, auth, data and migrations) are in
 `CLAUDE.md`.
 
-- When several subagents work in parallel in the same worktree, each
-  commits only its own files, by name (`git add <paths>`, never
-  `git add -A` or `git add .`); this goes into each subagent's prompt too.
+- Parallel subagents in one worktree each commit only their own files, by
+  name; say so in each subagent's prompt.
 - The "fails before the fix" check of a regression test: use `prove_red`
   from `.claude/lib/sdd_check.sh`.
 - When the feature has visible or audible output (style, layout), the owner
@@ -16,10 +15,6 @@ group at a time for security, auth, data and migrations) are in
   visible behaviour (for example "the button stays active instead of
   disabled"), so the owner can overrule them on the sample. The
   fresh-subagent probe runs only after this, so it tests the final guide.
-- One branch works in a worktree at a time. When work on another branch is
-  needed during a feature (for example a backlog proposal on a
-  `replanning/` branch), it happens in a separate git worktree
-  (`git worktree add ../<repo>-<topic> <branch>`); no branch switch in the
-  running feature's worktree. A switch replaces the files under the
-  running session and its subagents, and the guard judges by the other
-  branch's rules.
+- Work on another branch during a feature (for example a backlog proposal
+  on a `replanning/` branch) goes into its own worktree: `git worktree add
+  ../<repo>-<topic> <branch>`.

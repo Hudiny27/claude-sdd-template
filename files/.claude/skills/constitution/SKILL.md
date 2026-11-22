@@ -35,6 +35,9 @@ decides.
 ## 3. Write, review and commit
 
 - Write the three files in the formats of `specs/README.md`.
+- Write `.claude/check.sh` from the tech stack: the project's lint, type
+  check and tests, exit 0 when all pass. `sdd commit` runs it before every
+  commit; it is the project's own file.
 - Summarise the three files in a few lines and point out every assumption
   you made to fill a gap.
 - The owner reviews. Apply requested changes yourself, keeping the three files

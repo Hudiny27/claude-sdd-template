@@ -39,6 +39,8 @@ The level of the review: does it work, and does it match the spec.
 
 - Diff the branch against `main`. For each requirement: met, partly met, or
   not met.
+- Run `python3 .claude/lib/sdd_lint.py --final` and fix each finding
+  (paths left dangling by a rename, missing calibration results).
 - Anything the code does that the spec does not say is drift. For each case,
   either fix the code or update `requirements.md` (under "Döntések", with date,
   why, and who decided: `owner` or `agent`). If it is a real decision, ask the
@@ -74,15 +76,15 @@ as in `../feature-spec/probe.md` ("Setup").
 If the owner asks to merge before the manual checks are done, leave those
 checks open (`[ ]`) in `validation.md`, record the decision under
 "Döntések" (`döntött: owner`), and tell the owner that the next `/replan`
-will ask about them. Before steps 1 and 3, read `finish.md` in this
-skill's folder.
+will ask about them. Before step 3, read `finish.md` in this skill's
+folder.
 
-1. Tick the phase in `specs/roadmap.md`. Skip this when the work has no
-   roadmap phase (a `fix/` branch).
+1. Tick the phase in `specs/roadmap.md` with the Edit tool. Skip this when
+   the work has no roadmap phase (a `fix/` branch).
 2. Update `CHANGELOG.md` if the project keeps one.
 3. Tick every check in `validation.md` (S/M: in the "Ellenőrzés" section of
-   `spec.md`) that passed (`[ ]` → `[x]`), then move the spec directory to
-   `Plans/done/`.
+   `spec.md`) that passed (`[ ]` → `[x]`), commit, then archive the spec
+   with `.claude/bin/sdd archive`.
 4. Make the commit(s) and the merge into `main` (squash or merge, as the
    owner prefers) that the owner ticked in the step 5 popup; if the popup
    was skipped, ask in one now.
