@@ -185,6 +185,9 @@ artifact: igen | nem
 ## Feature-ök
 | # | Branch | Fokozat | Függ | Worktree | Becslés | Auth/biztonság | Állapot |
 |---|---|---|---|---|---|---|---|
+
+## Közös döntések
+- <döntés, amely több feature-re érvényes>: <miért> (döntött: owner | agent, ÉÉÉÉ-HH-NN)
 ```
 
 - `Függ`: annak a feature-nek a branche, amelyre ez épül, vagy `-`.
