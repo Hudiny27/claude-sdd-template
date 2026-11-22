@@ -136,8 +136,10 @@ skill), a `validation.md` friss subagent-próbát is tartalmaz:
 
 A `validation.md` minden automatikus ellenőrzése egy bash scriptben, amelyet
 az agent a speccel együtt ír meg; a spec-mappában él, ezért nem kódnak
-számít, és nem kell hozzá `#spec-ok`. A szabályai:
-`.claude/skills/feature-spec/validate-sh.md`.
+számít, és nem kell hozzá `#spec-ok`. A sablon közös könyvtárát
+(`.claude/lib/sdd_check.sh`) forrásolja be, és annak függvényeivel
+ellenőriz; ha valami hiányzik belőle, a könyvtár a sablonban bővül. Minta
+és szabályok: `.claude/skills/feature-spec/validate-sh.md`.
 
 ## Részletesség
 

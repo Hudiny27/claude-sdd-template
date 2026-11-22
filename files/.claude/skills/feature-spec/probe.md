@@ -23,23 +23,20 @@ parallel.
 
 ## Setup
 
-- Each round and each probe gets its own fresh, throwaway copy of the
-  project in the session scratchpad. The copy is the whole project, no
-  folder left out (the build output too), or the probe sees a false state
-  (for example "missing build"). Generated documents (for example a writing
-  guide) are regenerated on the copy, so the latest fixes are in them.
-- If the sample project is in an older version's state (an old approval,
-  output in an old format), bring it up to date once in a base copy in the
-  scratchpad, with no paid step, and copy every round from it.
-- `prepare-probe.sh` does this: the base copy once, then before every round
-  the fresh copy and the regenerated documents, with the copy's own path.
-  So no round starts with an old path or an outdated guide.
-- If the script copies only files git tracks (because untracked ones may
-  hold real data), stage the new files before the probe (`git add`, no
-  commit); otherwise the copy lacks the guide and the tool.
+`prepare-probe.sh` sources the template library `.claude/lib/sdd_probe.sh`
+(contracts in its comments) and defines only the project hooks. If the
+library lacks something, extend it in the template (a proposal in the
+template's `backlog/`), not with a local workaround.
+
+- A sample project in an older version's state: use `probe_base`, with the
+  update in a `probe_upgrade` hook (no paid step).
+- Each round and each probe: use `probe_copy`; rebuild generated documents
+  (for example a writing guide) and ignored build output in a
+  `probe_regen` hook.
 - The probe's prompt names a scratch folder outside the repo for every file
-  it writes; after the round, `git status` shows no file it left. The same
-  holds for deep-review subagents in `/validate-feature`.
+  it writes; use `snapshot_status` before and `assert_no_new_files` after
+  the round. The same holds for deep-review subagents in
+  `/validate-feature`.
 
 ## Evaluating a round
 

@@ -7,8 +7,8 @@ group at a time for security, auth, data and migrations) are in
 - When several subagents work in parallel in the same worktree, each
   commits only its own files, by name (`git add <paths>`, never
   `git add -A` or `git add .`); this goes into each subagent's prompt too.
-- The "fails before the fix" check of a regression test runs only the new
-  test, with a time limit: the old code may start other tests too.
+- The "fails before the fix" check of a regression test: use `prove_red`
+  from `.claude/lib/sdd_check.sh`.
 - When the feature has visible or audible output (style, layout), the owner
   looks at a live sample in the task group that introduces it (for S/M,
   during the implementation), not only at the final manual check. The
