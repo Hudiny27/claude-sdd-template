@@ -23,6 +23,9 @@
 # from the environment or the key store named in specs/tech-stack.md.
 #
 # File descriptor 9 is reserved for suite_lock. Do not set your own EXIT trap.
+# A script that exits before sdd_finish (errexit outside check, an explicit
+# exit, a signal, or no sdd_finish at all) still prints a FAIL line and the
+# SUMMARY, and exits non-zero.
 
 SDD_PASSED=0
 SDD_FAILED=0
@@ -35,6 +38,7 @@ SDD_LIVE=0
 SDD_QUICK=0
 SDD_ARGS=()
 SDD_TMP=""
+SDD_FINISHED=0
 
 # Print an error to stderr, prefixed with the library name.
 _sdd_err() { printf 'sdd_check: %s\n' "$*" >&2; }
@@ -48,16 +52,36 @@ _sdd_evidence() {
   printf '%s' "${line:-no output}"
 }
 
+_sdd_summary() {
+  echo "----"
+  printf 'SUMMARY: %d passed, %d failed, %d skipped\n' "$SDD_PASSED" "$SDD_FAILED" "$SDD_SKIPPED"
+  [ "$SDD_FAILED" -gt 0 ] && printf 'FAILED: %s\n' "${SDD_FAILED_IDS[*]}"
+  return 0
+}
+
 _sdd_cleanup() {
-  local rc=$? i pid
+  local rc=$? cmd="$BASH_COMMAND" i pid
+  if [ "$SDD_FINISHED" -eq 0 ]; then
+    SDD_FAILED=$((SDD_FAILED + 1))
+    SDD_FAILED_IDS+=("EXIT")
+    if [ "$rc" -eq 0 ]; then
+      printf 'FAIL  EXIT  script ended without sdd_finish\n'
+      rc=1
+    else
+      printf 'FAIL  EXIT  script stopped early (exit %s at: %s)\n' "$rc" "${cmd:0:120}"
+    fi
+    _sdd_summary
+  fi
   for ((i = ${#SDD_BG_PIDS[@]} - 1; i >= 0; i--)); do
     pid="${SDD_BG_PIDS[$i]}"
+    [ -n "$pid" ] || continue
     kill -0 "$pid" 2>/dev/null || continue
     # start_bg puts each process in its own process group: stop the group.
     kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
   done
   for ((i = ${#SDD_BG_PIDS[@]} - 1; i >= 0; i--)); do
     pid="${SDD_BG_PIDS[$i]}"
+    [ -n "$pid" ] || continue
     local n=0
     while kill -0 "$pid" 2>/dev/null && [ "$n" -lt 50 ]; do
       sleep 0.1
@@ -161,12 +185,9 @@ live_only() {
 # sdd_finish: print the summary; exit non-zero on any failure or if no check ran.
 sdd_finish() {
   local total=$((SDD_PASSED + SDD_FAILED + SDD_SKIPPED))
-  echo "----"
-  printf 'SUMMARY: %d passed, %d failed, %d skipped\n' "$SDD_PASSED" "$SDD_FAILED" "$SDD_SKIPPED"
-  if [ "$SDD_FAILED" -gt 0 ]; then
-    printf 'FAILED: %s\n' "${SDD_FAILED_IDS[*]}"
-    exit 1
-  fi
+  SDD_FINISHED=1
+  _sdd_summary
+  [ "$SDD_FAILED" -gt 0 ] && exit 1
   if [ "$total" -eq 0 ]; then
     echo "FAILED: no check ran"
     exit 1
@@ -174,9 +195,10 @@ sdd_finish() {
   exit 0
 }
 
-# start_bg NAME CMD...: start CMD in the background in its own process group,
-# output to $SDD_TMP/NAME.log; sets SDD_BG_PID. The EXIT trap stops it by PID
-# (process group), failed runs included. Call it in the main shell only.
+# start_bg NAME CMD...: start CMD in the background in its own process group;
+# its stdout and stderr both go to $SDD_TMP/NAME.log. Sets SDD_BG_PID. The
+# EXIT trap stops it by PID (process group), failed runs included; stop_bg
+# stops it earlier. Call it in the main shell only.
 start_bg() {
   if [ "$#" -lt 2 ]; then
     _sdd_err "usage: start_bg NAME CMD..."
@@ -195,6 +217,38 @@ start_bg() {
   SDD_BG_PIDS+=("$SDD_BG_PID")
   SDD_BG_NAMES+=("$name")
   echo "sdd: started $name (pid $SDD_BG_PID, log \$SDD_TMP/$name.log)"
+}
+
+# stop_bg NAME: stop the process start_bg started as NAME (SIGTERM to its
+# process group, SIGKILL after 5s) and wait for it, so NAME.log is complete
+# before you check it. A process that buffers stdout loses the unflushed part
+# on SIGTERM: run it unbuffered (python3 -u). Call it in the main shell only.
+stop_bg() {
+  local name="${1:-}" i pid n=0 rc=0
+  if [ "${BASHPID:-$$}" != "$$" ]; then
+    _sdd_err "stop_bg must run in the main shell, not inside \$(...), a pipe or check"
+    return 2
+  fi
+  for ((i = ${#SDD_BG_NAMES[@]} - 1; i >= 0; i--)); do
+    [ "${SDD_BG_NAMES[$i]}" = "$name" ] && [ -n "${SDD_BG_PIDS[$i]}" ] && break
+  done
+  if [ -z "$name" ] || [ "$i" -lt 0 ]; then
+    _sdd_err "stop_bg: no background process named $name"
+    return 2
+  fi
+  pid="${SDD_BG_PIDS[$i]}"
+  kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+  while kill -0 "$pid" 2>/dev/null && [ "$n" -lt 50 ]; do
+    sleep 0.1
+    n=$((n + 1))
+  done
+  if kill -0 "$pid" 2>/dev/null; then
+    _sdd_err "background '$name' (pid $pid) ignored SIGTERM; sending SIGKILL"
+    kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
+  fi
+  wait "$pid" 2>/dev/null || rc=$?
+  SDD_BG_PIDS[i]=""
+  echo "sdd: stopped $name (pid $pid, exit status $rc)"
 }
 
 # free_port: print a TCP port that is free on 127.0.0.1 right now.
@@ -334,28 +388,94 @@ check_url() {
   fi
 }
 
-# assert_absent PATTERN TARGET --proof SAMPLE | --proof-file FILE:
+# check_http URL [--status N] [--body-contains TEXT] [--body-equals TEXT]:
+# one GET without following redirects; fails unless the status is N (default:
+# any 2xx) and the body contains TEXT / equals TEXT (trailing newlines
+# ignored). Prints the status, body size and the first 80 characters of the
+# body. For a live URL's status and final host after redirects: check_url.
+check_http() {
+  local url="${1:-}" want="" contains="" equals="" has_c=0 has_e=0 file code body preview
+  if [ -z "$url" ]; then
+    echo "usage: check_http URL [--status N] [--body-contains TEXT] [--body-equals TEXT]"
+    return 2
+  fi
+  shift
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --status) want="${2:-}"; shift 2 || shift ;;
+      --body-contains) contains="${2:-}"; has_c=1; shift 2 || shift ;;
+      --body-equals) equals="${2:-}"; has_e=1; shift 2 || shift ;;
+      *) echo "check_http: unknown option $1"; return 2 ;;
+    esac
+  done
+  file="$(mktemp "${SDD_TMP:-${TMPDIR:-/tmp}}/http.XXXXXX")"
+  code="$(curl -sS -o "$file" --max-time 20 -w '%{http_code}' "$url")" || {
+    rm -f -- "$file"
+    echo "check_http: curl failed for $url"
+    return 1
+  }
+  body="$(tr -d '\000' <"$file")"
+  preview="${body:0:80}"
+  preview="${preview//[$'\n\r\t']/ }"
+  echo "GET $url -> $code, $(wc -c <"$file" | tr -d ' ') bytes: ${preview:-(empty body)}"
+  rm -f -- "$file"
+  if [ -n "$want" ]; then
+    [ "$code" = "$want" ] || { echo "expected status $want, got $code"; return 1; }
+  else
+    case "$code" in 2??) ;; *) echo "expected a 2xx status, got $code"; return 1 ;; esac
+  fi
+  if [ "$has_c" -eq 1 ] && [[ "$body" != *"$contains"* ]]; then
+    echo "body does not contain: $contains"
+    return 1
+  fi
+  if [ "$has_e" -eq 1 ] && [ "$body" != "$equals" ]; then
+    echo "body is not equal to: $equals"
+    return 1
+  fi
+  return 0
+}
+
+# assert_absent PATTERN TARGET --proof SAMPLE | --proof-file FILE [--allow-empty]:
 # "there is no PATTERN in TARGET" (file or folder, grep -E), valid only if
-# PATTERN first matches the known positive SAMPLE.
+# PATTERN first matches the known positive SAMPLE. Fails on a missing TARGET,
+# and on an empty one (a file of 0 bytes, a folder without a non-empty file)
+# unless --allow-empty is given. A log of a start_bg process: stop_bg first.
 assert_absent() {
-  local pattern="$1" target="$2" hit
-  case "${3:-}" in
+  local usage="usage: assert_absent PATTERN TARGET --proof SAMPLE | --proof-file FILE [--allow-empty]"
+  local pattern="${1:-}" target="${2:-}" hit mode="" proof="" allow_empty=0
+  if [ "$#" -lt 2 ]; then
+    echo "$usage"
+    return 2
+  fi
+  shift 2
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --proof|--proof-file) mode="$1"; proof="${2:-}"; shift 2 || shift ;;
+      --allow-empty) allow_empty=1; shift ;;
+      *) echo "$usage"; return 2 ;;
+    esac
+  done
+  case "$mode" in
     --proof)
-      printf '%s\n' "${4:-}" | grep -qE -- "$pattern" || {
+      printf '%s\n' "$proof" | grep -qE -- "$pattern" || {
         echo "proof sample does not match /$pattern/: the absence would prove nothing"
         return 1
       } ;;
     --proof-file)
-      grep -qE -- "$pattern" "${4:-/dev/null}" || {
-        echo "proof file ${4:-} does not match /$pattern/: the absence would prove nothing"
+      grep -qE -- "$pattern" "${proof:-/dev/null}" || {
+        echo "proof file $proof does not match /$pattern/: the absence would prove nothing"
         return 1
       } ;;
     *)
-      echo "usage: assert_absent PATTERN TARGET --proof SAMPLE | --proof-file FILE"
+      echo "$usage"
       return 2 ;;
   esac
   if [ ! -e "$target" ]; then
     echo "target $target does not exist"
+    return 1
+  fi
+  if [ "$allow_empty" -eq 0 ] && [ -z "$(find "$target" -type f -size +0c -print -quit 2>/dev/null)" ]; then
+    echo "target $target is empty: the absence would prove nothing (--allow-empty if expected)"
     return 1
   fi
   hit="$(grep -rnE -- "$pattern" "$target" | head -n 1 || true)"

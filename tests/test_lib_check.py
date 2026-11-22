@@ -56,6 +56,27 @@ def test_temp_dir_removed_on_error_exit(repo):
     assert repo.leftovers() == []
 
 
+def test_early_errexit_exit_prints_fail_and_summary(repo):
+    body = (
+        "P=$(free_port)\n"
+        "start_bg web bash -c 'echo cannot bind; exit 1'\n"
+        'wait_port "$P" 1\n'
+        'check T1 "server answers" check_url "http://127.0.0.1:$P/"\n'
+        "sdd_finish\n"
+    )
+    r = repo.run(body, timeout=30)
+    assert r.returncode != 0
+    assert "FAIL  EXIT" in r.stdout, r.stdout + r.stderr
+    assert "SUMMARY: 0 passed, 1 failed, 0 skipped" in r.stdout
+
+
+def test_exit_without_finish_fails_with_summary(repo):
+    r = repo.run("check T1 ok true\n")
+    assert r.returncode == 1
+    assert "without sdd_finish" in r.stdout
+    assert "SUMMARY: 1 passed, 1 failed, 0 skipped" in r.stdout
+
+
 # --- live_only and local.env -----------------------------------------------
 
 LIVE_BODY = "live_only check L1 live bash -c 'echo host=$SAMPLE_HOST'\nsdd_finish\n"
@@ -116,6 +137,29 @@ def test_start_bg_refuses_command_substitution(repo):
     assert "must run in the main shell" in r.stderr
 
 
+def test_stop_bg_stops_process_and_flushes_log(repo):
+    body = (
+        "start_bg writer bash -c 'trap \"echo bye; exit 0\" TERM; echo hello; "
+        "while :; do sleep 0.1; done'\n"
+        "pid=$SDD_BG_PID\n"
+        "sleep 0.3\n"
+        "stop_bg writer\n"
+        'kill -0 "$pid" 2>/dev/null && echo "state=alive" || echo "state=gone"\n'
+        'check T1 "log complete" grep -q bye "$SDD_TMP/writer.log"\n'
+        "sdd_finish\n"
+    )
+    r = repo.run(body, timeout=30)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "state=gone" in r.stdout
+    assert "PASS  T1" in r.stdout
+
+
+def test_stop_bg_unknown_name_fails(repo):
+    r = repo.run("stop_bg nosuch || echo refused\ncheck T1 ok true\nsdd_finish\n")
+    assert "refused" in r.stdout
+    assert "no background process named nosuch" in r.stderr
+
+
 # --- free_port and wait_port -------------------------------------------------
 
 def test_free_port_is_bindable(repo):
@@ -158,6 +202,36 @@ def test_check_url_status_and_host(repo):
     assert "FAIL  U2" in r.stdout and "-> 404" in r.stdout
     assert "PASS  U3" in r.stdout
     assert "FAIL  U4" in r.stdout
+    assert r.returncode == 1
+
+
+HTTP_BODY = (
+    "P=$(free_port)\n"
+    'printf "hello world\\n" > hello.txt\n'
+    'start_bg web python3 -m http.server "$P" --bind 127.0.0.1\n'
+    'check H0 starts wait_port "$P"\n'
+    'U="http://127.0.0.1:$P"\n'
+    'check H1 equals check_http "$U/hello.txt" --status 200 --body-equals "hello world"\n'
+    'check H2 contains check_http "$U/hello.txt" --body-contains "lo wo"\n'
+    'check H3 notfound check_http "$U/nope" --status 404\n'
+    'check H4 badstatus check_http "$U/hello.txt" --status 201\n'
+    'check H5 badbody check_http "$U/hello.txt" --body-contains "absent text"\n'
+    'check H6 badequals check_http "$U/hello.txt" --body-equals "hello"\n'
+    'check H7 default2xx check_http "$U/nope"\n'
+    "sdd_finish\n"
+)
+
+
+def test_check_http_status_and_body(repo):
+    r = repo.run(HTTP_BODY, timeout=60)
+    out = r.stdout
+    assert "PASS  H1  equals  (exit 0: GET " in out and "-> 200, 12 bytes: hello world" in out, out
+    assert "PASS  H2" in out
+    assert "PASS  H3" in out
+    assert "FAIL  H4" in out and "expected status 201, got 200" in out
+    assert "FAIL  H5" in out and "body does not contain: absent text" in out
+    assert "FAIL  H6" in out and "body is not equal to: hello" in out
+    assert "FAIL  H7" in out and "expected a 2xx status, got 404" in out
     assert r.returncode == 1
 
 
@@ -276,6 +350,20 @@ def test_assert_absent_proof_file(repo):
     r = repo.run("check A1 key assert_absent 'sk-[a-z]+' app.log --proof-file sample.txt\n"
                  "check A2 key assert_absent 'zz' app.log --proof-file sample.txt\nsdd_finish\n")
     assert "PASS  A1" in r.stdout and "FAIL  A2" in r.stdout
+
+
+def test_assert_absent_fails_on_empty_target_unless_allowed(repo):
+    repo.write("empty.log", "")
+    (repo.path / "emptydir").mkdir()
+    r = repo.run("check A1 file assert_absent 'Traceback' empty.log --proof 'Traceback'\n"
+                 "check A2 dir assert_absent 'Traceback' emptydir --proof 'Traceback'\n"
+                 "check A3 allowed assert_absent 'Traceback' empty.log --proof 'Traceback' "
+                 "--allow-empty\n"
+                 "sdd_finish\n")
+    assert "FAIL  A1" in r.stdout and "is empty" in r.stdout, r.stdout
+    assert "FAIL  A2" in r.stdout
+    assert "PASS  A3" in r.stdout
+    assert r.returncode == 1
 
 
 # --- prove_red ---------------------------------------------------------------
