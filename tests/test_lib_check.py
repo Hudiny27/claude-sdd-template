@@ -434,7 +434,9 @@ def test_skill_example_validate_sh_runs(repo):
     first = run()
     assert first.returncode == 0, first.stdout + first.stderr
     assert "PASS  T1  test suite  (exit 0: green on code tree" in first.stdout
-    assert "PASS  T3" in first.stdout
+    for cid in ("T2", "T3", "T4", "T5"):
+        assert f"PASS  {cid}" in first.stdout, first.stdout
+    assert "sdd: stopped web" in first.stdout
     assert "SKIP  L1" in first.stdout
     second = run()
     assert "skipped: already green" in second.stdout
