@@ -137,3 +137,6 @@ lib-re állítása csak új specekben.
 - 2. szakasz: a korai kilépés (errexit `check`-en kívül, `exit`, jel) mellett az is `FAIL  EXIT` sor, összegzés és nem nulla kilépési kód, ha a script `sdd_finish` nélkül, 0-val ér véget (döntött: agent, 2026-11-22).
 - 2. szakasz: a `stop_bg` SIGTERM után 5 másodperccel SIGKILL-t küld, mint az EXIT trap; a minta szerver `python3 -u`-val fut, mert a SIGTERM a pufferelt stdout-ot elveszíti (döntött: agent, 2026-11-22).
 - 2. szakasz: a `Plans/README.md` döntéssor-formátuma mindenhol `(döntött: owner | agent, ÉÉÉÉ-HH-NN)`; ugyanígy a `felváltva` jelölés dátuma is `ÉÉÉÉ-HH-NN` lett (döntött: agent, 2026-11-22).
+- 2. szakasz, friss subagent-próba (M fokozatú spec és `validate.sh` a könyvtárral, egy HTTP-végpont feature-re), két kör (döntött: agent, 2026-11-22):
+  - 1. kör: 3 lényeges hiány (nem volt törzs- és pontos státusz-ellenőrzés; a mintában a `wait_port` korai kilépése néma volt; az `assert_absent` üres vagy még író naplón is átment); regressziós tesztekkel javítva (`ed58fa2`, `817127c`).
+  - 2. kör: nincs lényeges hiány; a két körben is előjött apróságok (Roadmap- és Branch-sor a `spec.md` sablonban, a check azonosítójának megnevezése) javítva.

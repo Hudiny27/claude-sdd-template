@@ -23,6 +23,9 @@ szint: S | M
 ---
 # <cím>
 
+Roadmap: Fázis <n>: <cím> (vagy: nincs, `fix/` javítás)
+Branch: <branch>
+
 ## Cél
 <1–3 mondat: mit akar elérni az owner, és miért.>
 
@@ -39,7 +42,7 @@ szint: S | M
 - <ellenőrizhető állítás>
 
 ## Ellenőrzés
-- [ ] Agent: <parancs vagy teszt> → <várt eredmény> (validate.sh esetén: `bash Plans/<dir>/validate.sh`, check-név: <név>)
+- [ ] Agent: <parancs vagy teszt> → <várt eredmény> (validate.sh esetén: `bash Plans/<dir>/validate.sh`, a check azonosítója: <ID>; ami a kód előtt csak bukhat, itt jelölve)
 - [ ] Owner: <1–3 lépés, amit ő maga megnéz>
 
 ## Kockázat és visszaút
