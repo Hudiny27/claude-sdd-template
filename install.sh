@@ -9,7 +9,8 @@
 # --update also overwrites the template-owned files that differ from the
 # template, after printing a diff of each. It never touches the project's
 # extension points (.claude/project.md, .claude/rules/, the workflow log,
-# specs/ and Plans/ content) or the project-merged .claude/settings.json.
+# .claude/check.sh, specs/ and Plans/ content) or the project-merged
+# .claude/settings.json.
 set -euo pipefail
 
 usage() {
@@ -68,7 +69,7 @@ MERGED=()    # project-merged files that differ; never overwritten
 # overwritten, not even by --update.
 project_owned() {
   case "$1" in
-    .claude/project.md|.claude/rules/*|.claude/workflow-log.md) return 0 ;;
+    .claude/project.md|.claude/rules/*|.claude/workflow-log.md|.claude/check.sh) return 0 ;;
     specs/*) [ "$1" != "specs/README.md" ] ;;
     Plans/*) [ "$1" != "Plans/README.md" ] ;;
     *) return 1 ;;
@@ -147,7 +148,7 @@ if [ "$UPDATE" -eq 1 ]; then
   fi
 fi
 
-chmod +x "$TARGET/.githooks/pre-commit" "$TARGET/.claude/hooks/sdd_guard.py" 2>/dev/null || true
+chmod +x "$TARGET/.githooks/pre-commit" "$TARGET/.claude/hooks/sdd_guard.py" "$TARGET/.claude/bin/sdd" 2>/dev/null || true
 
 # --- .gitignore: append missing lines only
 touch "$TARGET/.gitignore"

@@ -1,0 +1,420 @@
+#!/usr/bin/env python3
+"""sdd: the workflow steps that used to be text rules, as commands.
+
+Template-owned: `install.sh --update` overwrites it. Do not edit it in a
+project; propose changes in the template's backlog/ instead.
+
+  sdd preflight              clean start for /feature-spec and /replan: clean
+                             working tree, an up-to-date main, the constitution,
+                             unmerged branches and open manual checks
+  sdd new BRANCH --level S|M|L
+                             preflight, then the branch and the dated spec
+                             folder with the templates of Plans/README.md
+  sdd handover               before the spec goes to the owner: lint, shell
+                             checks, one offline run of validate.sh, the live
+                             URLs it uses, the locked files the spec names
+  sdd archive [--no-validate]
+                             move the spec folder to Plans/done/, fix the
+                             paths that name it, rerun validate.sh, commit
+  sdd commit -m MSG [-- FILE...]
+                             stage the named files, run .claude/check.sh
+                             (the project's lint, type and test command) and
+                             commit only if it passes
+
+Run from anywhere inside the repository. Exit status 0 on success, 1 when a
+check fails, 2 on a usage error.
+"""
+
+import datetime
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(HERE, "..", "hooks"))
+sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+import sdd_guard as guard  # noqa: E402
+import sdd_lint  # noqa: E402
+
+CHECK_SCRIPT = ".claude/check.sh"
+LOCAL_HOSTS = re.compile(r"^https?://(localhost|127\.|0\.0\.0\.0|\[::1\]|[^/]*example\.(com|org|invalid))")
+URL = re.compile(r"https?://[^\s\"'<>()`]+")
+VALIDATE_SKELETON = """#!/usr/bin/env bash
+# shellcheck source=/dev/null
+source "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/.claude/lib/sdd_check.sh"
+sdd_init "$@"
+# One `check ID NAME CMD...` per automated check: .claude/skills/feature-spec/validate-sh.md
+sdd_finish
+"""
+S_SECTIONS = ("Cél", "Kész, ha", "Ellenőrzés")
+
+
+class Fail(Exception):
+    pass
+
+
+def git(root, *args, check=False):
+    out = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True)
+    if check and out.returncode != 0:
+        raise Fail("git " + " ".join(args) + ": " + (out.stderr.strip() or out.stdout.strip()))
+    return out
+
+
+def repo_root():
+    out = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    if out.returncode != 0:
+        raise Fail("not inside a git repository")
+    return out.stdout.strip()
+
+
+def say(status, text):
+    print(status.ljust(5) + " " + text)
+
+
+# ----------------------------------------------------------------- preflight
+
+
+def preflight(root):
+    """Print each clean-start check; return False if any fails."""
+    ok = True
+    dirty = git(root, "status", "--porcelain").stdout.strip()
+    if dirty:
+        ok = False
+        say("FAIL", "working tree not clean: " + ", ".join(ln[3:] for ln in dirty.splitlines()[:8]))
+    else:
+        say("OK", "working tree clean")
+    branch = guard.branch_of(root)
+    if branch not in guard.MAIN_BRANCHES:
+        ok = False
+        say("FAIL", "on " + (branch or "a detached HEAD") + ", not main: merge or park the previous branch, then switch to main")
+    else:
+        say("OK", "on " + branch)
+        upstream = git(root, "rev-parse", "--abbrev-ref", branch + "@{upstream}")
+        if upstream.returncode != 0:
+            say("OK", "no upstream for " + branch + ": fetch skipped")
+        else:
+            fetch = git(root, "fetch", "-q")
+            behind = git(root, "rev-list", "--count", branch + ".." + upstream.stdout.strip()).stdout.strip()
+            if fetch.returncode != 0:
+                ok = False
+                say("FAIL", "git fetch failed: " + fetch.stderr.strip())
+            elif behind not in ("", "0"):
+                ok = False
+                say("FAIL", branch + " is " + behind + " commit(s) behind " + upstream.stdout.strip() + ": pull first")
+            else:
+                say("OK", branch + " is up to date with " + upstream.stdout.strip())
+    missing = guard.missing_constitution(root)
+    if missing:
+        ok = False
+        say("FAIL", "constitution incomplete (missing " + ", ".join(missing) + "): run /constitution first")
+    else:
+        say("OK", "constitution present")
+    main = branch if branch in guard.MAIN_BRANCHES else "main"
+    unmerged = git(root, "branch", "--no-merged", main, "--format=%(refname:short)").stdout.split()
+    if unmerged:
+        say("NOTE", "branches not merged into " + main + ": " + ", ".join(unmerged) + " (the previous feature should be merged)")
+    manual = guard.open_manual_checks(root)
+    if manual:
+        say("NOTE", str(manual) + " open manual check(s) in Plans/done/ (/replan asks the owner about them):")
+        for rel, line, text in open_manual_lines(root):
+            print("      " + rel + ":" + str(line) + ": " + text)
+    return ok
+
+
+def open_manual_lines(root):
+    out = []
+    done = os.path.join(root, "Plans", "done")
+    for name in sorted(os.listdir(done)) if os.path.isdir(done) else []:
+        for fname in ("validation.md", guard.LIGHT_SPEC):
+            rel = "Plans/done/" + name + "/" + fname
+            try:
+                with open(os.path.join(root, rel), encoding="utf-8") as fh:
+                    lines = fh.read().splitlines()
+            except OSError:
+                continue
+            manual = False
+            for i, ln in enumerate(lines, 1):
+                if ln.startswith("## "):
+                    manual = ln[3:].strip().lower().startswith("kézi")
+                elif re.match(r"^\s*- \[ \] ", ln) and ((fname == "validation.md" and manual) or "Owner:" in ln):
+                    out.append((rel, i, ln.strip()[6:]))
+    return out
+
+
+# ----------------------------------------------------------------------- new
+
+
+def readme_templates(root):
+    """The fenced Markdown templates of Plans/README.md, by file name."""
+    for path in (os.path.join(root, "Plans", "README.md"), os.path.join(HERE, "..", "..", "Plans", "README.md")):
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                text = fh.read()
+            break
+    else:
+        raise Fail("Plans/README.md is missing; reinstall the template")
+    out = {}
+    for m in re.finditer(r"^## (\S+\.md)[^\n]*\n+```markdown\n(.*?)\n```", text, re.S | re.M):
+        out[m.group(1)] = m.group(2) + "\n"
+    return out
+
+
+def roadmap_line(root, branch):
+    m = re.match(r"^phase-(\d+)-", guard.branch_slug(branch))
+    if branch.startswith("fix/"):
+        return "Roadmap: nincs, `fix/` javítás"
+    if not m:
+        return None
+    try:
+        with open(os.path.join(root, guard.ROADMAP), encoding="utf-8") as fh:
+            for line in fh:
+                p = re.match(r"^\s*- \[[ xX]\] (Fázis " + m.group(1) + r"\b.*)$", line)
+                if p:
+                    return "Roadmap: " + p.group(1).strip()
+    except OSError:
+        pass
+    return None
+
+
+def fill(template, branch, roadmap, level):
+    text = re.sub(r"^szint: S \| M$", "szint: " + level, template, flags=re.M)
+    text = re.sub(r"^Branch: .*$", "Branch: " + branch, text, flags=re.M)
+    if roadmap:
+        text = re.sub(r"^Roadmap: .*$", roadmap, text, flags=re.M)
+    return text
+
+
+def keep_sections(text, names):
+    """Drop the `## ` sections not in names (level S keeps only its three)."""
+    parts = re.split(r"(?m)^(?=## )", text)
+    return "".join(p for p in parts if not p.startswith("## ") or any(p[3:].startswith(n) for n in names))
+
+
+def new(root, argv):
+    if len(argv) != 3 or argv[1] != "--level" or argv[2].upper() not in ("S", "M", "L"):
+        raise Fail("usage: sdd new BRANCH --level S|M|L")
+    branch, level = argv[0], argv[2].upper()
+    if git(root, "check-ref-format", "--branch", branch).returncode != 0 or "/" not in branch:
+        raise Fail("invalid branch name " + branch + ": use feature/phase-<N>-<slug> or fix/<slug> (CLAUDE.md)")
+    if git(root, "show-ref", "--verify", "--quiet", "refs/heads/" + branch).returncode == 0:
+        raise Fail("branch " + branch + " already exists")
+    if not preflight(root):
+        raise Fail("the clean start failed; fix the FAIL lines above first")
+    folder = "Plans/" + datetime.date.today().isoformat() + "-" + guard.branch_slug(branch)
+    if os.path.exists(os.path.join(root, folder)):
+        raise Fail(folder + " already exists")
+    templates = readme_templates(root)
+    names = ("spec.md",) if level in ("S", "M") else ("plan.md", "requirements.md", "validation.md")
+    if any(n not in templates for n in names):
+        raise Fail("Plans/README.md has no template for " + ", ".join(n for n in names if n not in templates))
+    git(root, "switch", "-q", "-c", branch, check=True)
+    os.makedirs(os.path.join(root, folder))
+    roadmap = roadmap_line(root, branch)
+    for name in names:
+        text = fill(templates[name], branch, roadmap, level)
+        if level == "S":
+            text = keep_sections(text, S_SECTIONS)
+        with open(os.path.join(root, folder, name), "w", encoding="utf-8") as fh:
+            fh.write(text)
+        say("OK", "created " + folder + "/" + name)
+    if level == "L":
+        path = os.path.join(root, folder, "validate.sh")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(VALIDATE_SKELETON)
+        os.chmod(path, 0o755)
+        say("OK", "created " + folder + "/validate.sh")
+    say("OK", "on branch " + branch + (", " + roadmap if roadmap else ", no roadmap phase found: fill the Roadmap line"))
+    print("Next: interview the owner, then fill the templates (no code until #spec-ok).")
+    return 0
+
+
+# ------------------------------------------------------------------ handover
+
+
+def current_spec(root):
+    folder = sdd_lint.Lint(root).branch_spec_dir()
+    if not folder:
+        branch = guard.branch_of(root)
+        raise Fail("branch " + str(branch) + " has no spec folder (Plans/YYYY-MM-DD-<slug>/); start with `sdd new`")
+    return folder
+
+
+def handover(root, argv):
+    timeout = int(argv[argv.index("--timeout") + 1]) if "--timeout" in argv else 600
+    folder = current_spec(root)
+    ok = True
+    print("== lint")
+    lint = subprocess.run([sys.executable, os.path.join(HERE, "..", "lib", "sdd_lint.py")], cwd=root, capture_output=True, text=True)
+    print(lint.stdout.strip() or "no findings")
+    notes = [ln for ln in lint.stderr.splitlines() if "finding(s)" not in ln]
+    if notes:
+        print("\n".join(notes))
+    ok = ok and lint.returncode == 0
+    scripts = sorted(f for f in os.listdir(os.path.join(root, folder)) if f.endswith(".sh"))
+    if scripts and not shutil.which("shellcheck"):
+        print("== shellcheck (docker)")
+        if shutil.which("docker") and os.environ.get("SDD_SHELLCHECK_DOCKER", "1") != "0":
+            for name in scripts:
+                rel = folder + "/" + name
+                out = subprocess.run(
+                    ["docker", "run", "--rm", "-v", root + ":/mnt", "-w", "/mnt", "koalaman/shellcheck:stable", rel],
+                    capture_output=True, text=True,
+                )
+                if out.returncode == 0:
+                    print(rel + ": clean")
+                elif out.returncode == 1:  # shellcheck's own exit code for findings
+                    ok = False
+                    print(rel + ":\n" + out.stdout.strip())
+                else:
+                    print(rel + ": shellcheck could not run in docker (exit " + str(out.returncode) + "): "
+                          + (out.stderr.strip().splitlines() or ["no output"])[-1])
+        else:
+            print("no shellcheck and no docker: only `bash -n` ran (in the lint)")
+    validate = os.path.join(root, folder, "validate.sh")
+    if os.path.isfile(validate):
+        print("== validate.sh, offline, once")
+        try:
+            out = subprocess.run(["bash", validate], cwd=root, capture_output=True, text=True, timeout=timeout)
+            lines = (out.stdout + out.stderr).strip().splitlines()
+            print("\n".join(lines[-40:]))
+            print("exit " + str(out.returncode) + ". A FAIL because the new code is missing is expected; any other"
+                  " FAIL (a tool rejecting a flag, a grep for a summary that never appears) is a spec bug.")
+        except subprocess.TimeoutExpired:
+            ok = False
+            print("timed out after " + str(timeout) + " s (--timeout N to change)")
+        print("== live URLs in validate.sh")
+        with open(validate, encoding="utf-8") as fh:
+            urls = sorted({u.rstrip(".,;") for u in URL.findall(fh.read()) if "$" not in u and not LOCAL_HOSTS.match(u)})
+        for url in urls:
+            out = subprocess.run(
+                ["curl", "-sS", "-L", "-o", "/dev/null", "--max-time", "20", "-w", "%{http_code} %{url_effective}", url],
+                capture_output=True, text=True,
+            )
+            good = out.returncode == 0 and out.stdout[:1] == "2"
+            ok = ok and good
+            print(("OK   " if good else "FAIL ") + url + " -> " + (out.stdout or out.stderr.strip()))
+        if not urls:
+            print("none")
+    locked = locked_mentions(root, folder)
+    if locked:
+        print("== locked files the spec names")
+        print(", ".join(locked) + ": say so in the handover; the implementation asks the owner for"
+              " #spec-szerkesztes at its start, not during the validation.")
+    print("== " + ("handover checks passed" if ok else "handover checks FAILED: fix the spec before handing it over"))
+    return 0 if ok else 1
+
+
+def locked_mentions(root, folder):
+    text = ""
+    for name in os.listdir(os.path.join(root, folder)):
+        if name.endswith(".md"):
+            with open(os.path.join(root, folder, name), encoding="utf-8") as fh:
+                text += fh.read()
+    return [p for p in guard.CONSTITUTION + guard.SELF_FILES + guard.SELF_DIRS
+            if p not in (".git/MERGE_HEAD", ".git/SQUASH_MSG") and re.search(r"`" + re.escape(p) + r"[`/]", text)]
+
+
+# ------------------------------------------------------------------- archive
+
+
+def archive(root, argv):
+    folder = current_spec(root)
+    if folder.startswith("Plans/done/"):
+        raise Fail(folder + " is already archived")
+    if git(root, "status", "--porcelain").stdout.strip():
+        raise Fail("the working tree is not clean: commit the ticked checks first; the archive is a commit of its own")
+    dest = "Plans/done/" + os.path.basename(folder)
+    if os.path.exists(os.path.join(root, dest)):
+        raise Fail(dest + " already exists")
+    os.makedirs(os.path.join(root, "Plans", "done"), exist_ok=True)
+    git(root, "mv", folder, dest, check=True)
+    say("OK", "moved " + folder + " -> " + dest)
+    changed, skipped = [], []
+    tracked = git(root, "ls-files", "-z").stdout.split("\0")
+    for rel in tracked:
+        if not rel or not (rel.endswith(".md") or rel.startswith(dest + "/")):
+            continue
+        path = os.path.join(root, rel)
+        try:
+            with open(path, encoding="utf-8") as fh:
+                text = fh.read()
+        except (OSError, UnicodeDecodeError):
+            continue
+        if folder not in text:
+            continue
+        if rel in guard.CONSTITUTION or guard.is_self(rel):
+            skipped.append(rel)
+            continue
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(re.sub(re.escape(folder) + r"(?=[/`\s)]|$)", dest, text))
+        changed.append(rel)
+        say("OK", "fixed the path in " + rel)
+    for rel in skipped:
+        say("NOTE", rel + " names " + folder + " but is locked: propose the fix to the owner")
+    validate = os.path.join(root, dest, "validate.sh")
+    if os.path.isfile(validate) and "--no-validate" not in argv:
+        out = subprocess.run(["bash", validate], cwd=root, capture_output=True, text=True)
+        print("\n".join((out.stdout + out.stderr).strip().splitlines()[-15:]))
+        if out.returncode != 0:
+            raise Fail("validate.sh failed from its new place; the move is staged but not committed."
+                       " Fix the path it relies on, or undo with `git mv " + dest + " " + folder + "` and `git checkout -- .`")
+        say("OK", "validate.sh passes from " + dest)
+    if changed:
+        git(root, "add", "--", *changed, check=True)
+    git(root, "commit", "-q", "-m", "docs(plans): archive " + os.path.basename(folder), check=True)
+    say("OK", "committed: docs(plans): archive " + os.path.basename(folder))
+    return 0
+
+
+# -------------------------------------------------------------------- commit
+
+
+def commit(root, argv):
+    if "-m" not in argv or argv.index("-m") + 1 >= len(argv):
+        raise Fail("usage: sdd commit -m MSG [-- FILE...]")
+    message = argv[argv.index("-m") + 1]
+    files = argv[argv.index("--") + 1 :] if "--" in argv else []
+    check = os.path.join(root, CHECK_SCRIPT)
+    if not os.path.isfile(check):
+        raise Fail(CHECK_SCRIPT + " is missing: write it once (the project's lint, type check and tests from"
+                   " specs/tech-stack.md, exit 0 when all pass); then `sdd commit` runs it before every commit")
+    if files:
+        git(root, "add", "--", *files, check=True)
+    if git(root, "diff", "--cached", "--quiet").returncode == 0:
+        raise Fail("nothing staged: name the files after `--`")
+    say("RUN", CHECK_SCRIPT)
+    result = subprocess.run(["bash", check], cwd=root)
+    if result.returncode != 0:
+        raise Fail(CHECK_SCRIPT + " failed (exit " + str(result.returncode) + "); nothing committed, the files stay staged")
+    out = git(root, "commit", "-q", "-m", message)
+    if out.returncode != 0:
+        raise Fail("git commit failed:\n" + (out.stdout + out.stderr).strip())
+    say("OK", "committed: " + message.splitlines()[0])
+    return 0
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__.split("\n\n")[1])
+        return 0 if argv else 2
+    cmd, rest = argv[0], argv[1:]
+    try:
+        root = repo_root()
+        if cmd == "preflight":
+            return 0 if preflight(root) else 1
+        handlers = {"new": new, "handover": handover, "archive": archive, "commit": commit}
+        if cmd not in handlers:
+            print("sdd: unknown command " + cmd, file=sys.stderr)
+            print(__doc__.split("\n\n")[1], file=sys.stderr)
+            return 2
+        return handlers[cmd](root, rest)
+    except Fail as e:
+        print("sdd " + cmd + ": " + str(e), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
