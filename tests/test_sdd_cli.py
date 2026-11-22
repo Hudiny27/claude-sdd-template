@@ -279,3 +279,45 @@ def test_batch_status_without_a_name_uses_the_newest_batch(project):
     sdd(project, "batch", "new", "ejjel")
     out = sdd(project, "batch", "status").stdout
     assert f"Plans/kotegek/{TODAY}-ejjel.md: 0 feature(s)" in out
+
+
+# --- batch: set and next ----------------------------------------------------
+
+def batch_of_four(project):
+    sdd(project, "batch", "new", "ejjel")
+    for args in (("feature/a", "M"), ("feature/b", "S"), ("feature/c", "S", "--after", "feature/a"), ("feature/d", "S")):
+        r = sdd(project, "batch", "add", "ejjel", args[0], "--level", *args[1:])
+        assert r.returncode == 0, r.stderr
+    batch = project.path / f"Plans/kotegek/{TODAY}-ejjel.md"
+    text = batch.read_text(encoding="utf-8").replace("| ? | ? | spec |", "| 1 óra | nem | jóváhagyva |")
+    text = text.replace("## Közös döntések\n", "## Közös döntések\n- nem egyszerre: `feature/b` és `feature/d` (döntött: agent, 2026-11-23)\n")
+    batch.write_text(text, encoding="utf-8")
+    return batch
+
+
+def test_batch_next_respects_limit_dependencies_and_pairs(project):
+    batch_of_four(project)
+    out = sdd(project, "batch", "next").stdout
+    assert out.splitlines()[:2] == ["feature/a", "feature/b"]
+    sdd(project, "batch", "set", "ejjel", "feature/a", "épül")
+    sdd(project, "batch", "set", "ejjel", "feature/b", "épül")
+    assert sdd(project, "batch", "next").stdout.strip() == ""  # two are running
+    sdd(project, "batch", "set", "ejjel", "feature/b", "merge-kész")
+    # c waits for a, d may not run beside b's pair... b is done, so d can start
+    assert sdd(project, "batch", "next").stdout.split() == ["feature/d"]
+    sdd(project, "batch", "set", "ejjel", "feature/a", "merge-kész")
+    assert "feature/c" in sdd(project, "batch", "next").stdout
+
+
+def test_batch_set_parks_dependants_and_logs_outside_the_repo(project):
+    batch = batch_of_four(project)
+    r = sdd(project, "batch", "set", "ejjel", "feature/a", "parkolva", "3 sikertelen javítási kör")
+    assert r.returncode == 0, r.stderr
+    text = batch.read_text(encoding="utf-8")
+    assert "| feature/a | M | - |" in text and text.count("| parkolva |") == 2
+    logs = list((project.tmp.parent / ".claude" / "execute").rglob("naplo.md"))
+    assert logs, "no ledger written"
+    entries = logs[0].read_text(encoding="utf-8")
+    assert "feature/a | parkolva | 3 sikertelen javítási kör" in entries
+    assert "feature/c | parkolva | vár: feature/a" in entries
+    assert sdd(project, "batch", "set", "ejjel", "feature/a", "kész").returncode == 2

@@ -23,6 +23,12 @@ project; propose changes in the template's backlog/ instead.
                              .claude/worktrees/, its spec folder, its row
   sdd batch status [NAME]    each feature (of the newest batch without NAME):
                              approval, commits, spec
+  sdd batch set NAME BRANCH STATE [NOTE]
+                             a feature's Állapot in the batch file, logged
+                             outside the repo; parking parks its dependants
+  sdd batch next [NAME]      the features that may start now (at most two
+                             running, dependencies merge-ready, "nem
+                             egyszerre" pairs apart)
   sdd commit -m MSG [-- FILE...]
                              stage the named files, run .claude/check.sh
                              (the project's lint, type and test command) and
@@ -371,10 +377,103 @@ def batch_status(root, argv):
     return 0
 
 
+BATCH_STATES = ("spec", "jóváhagyva", "épül", "merge-kész", "parkolva", "mergelve", "javítás", "elvetve")
+PAIR = re.compile(r"nem egyszerre:\s*`?([^\s`]+)`?\s+és\s+`?([^\s`]+)`?")
+MAX_RUNNING = 2
+
+
+def read_batch(root, argv, usage):
+    """(relative path, text, rows) of the named batch, or of the newest one without a name."""
+    if len(argv) > 1:
+        raise Fail(usage)
+    rel = batch_file(root, argv[0]) if argv else newest_batch(root)
+    with open(os.path.join(root, rel), encoding="utf-8") as fh:
+        text = fh.read()
+    return rel, text, guard.batch_rows(text)
+
+
+def ledger_path(root, rel):
+    common = git(root, "rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()
+    project = os.path.basename(os.path.dirname(common)) if common else os.path.basename(root)
+    name = re.sub(r"^\d{4}-\d{2}-\d{2}-", "", os.path.basename(rel)[:-3])
+    return os.path.join(os.path.expanduser("~"), ".claude", "execute", project, "köteg-" + name, "naplo.md")
+
+
+def set_state(text, branch, state):
+    out = []
+    for line in text.split("\n"):
+        cells = line.split("|")
+        if len(cells) > 3 and cells[2].strip() == branch:
+            cells[-2] = " " + state + " "
+            line = "|".join(cells)
+        out.append(line)
+    return "\n".join(out)
+
+
+def batch_set(root, argv):
+    usage = "usage: sdd batch set NAME BRANCH STATE [NOTE]"
+    if len(argv) < 3:
+        raise Fail(usage)
+    name, branch, state, note = argv[0], argv[1], argv[2], " ".join(argv[3:])
+    if state not in BATCH_STATES:
+        raise Fail("usage: STATE is one of " + ", ".join(BATCH_STATES))
+    rel, text, rows = read_batch(root, [name], usage)
+    if branch not in {r.get("branch") for r in rows}:
+        raise Fail(branch + " is not in the batch")
+    changes = [(branch, state, note)]
+    if state == "parkolva":  # whatever builds on it, directly or not, waits too
+        waiting, todo = set(), [branch]
+        while todo:
+            b = todo.pop()
+            for r in rows:
+                dep = r.get("branch")
+                if r.get("függ") == b and dep not in waiting and r.get("állapot") not in ("mergelve", "elvetve"):
+                    waiting.add(dep)
+                    todo.append(dep)
+                    changes.append((dep, "parkolva", "vár: " + branch))
+    for b, st, _ in changes:
+        text = set_state(text, b, st)
+    with open(os.path.join(root, rel), "w", encoding="utf-8") as fh:
+        fh.write(text)
+    log = ledger_path(root, rel)
+    os.makedirs(os.path.dirname(log), exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    with open(log, "a", encoding="utf-8") as fh:
+        for b, st, nt in changes:
+            fh.write("- " + stamp + " | " + b + " | " + st + " | " + (nt or "-") + "\n")
+            say("OK", b + ": " + st + ((" (" + nt + ")") if nt else ""))
+    return 0
+
+
+def batch_next(root, argv):
+    """Print the features that may start now, one per line (empty: none now)."""
+    rel, text, rows = read_batch(root, argv, "usage: sdd batch next [NAME]")
+    state = {r.get("branch"): r.get("állapot") for r in rows}
+    pairs = PAIR.findall(text)
+    running = [b for b, st in state.items() if st == "épül"]
+    free = MAX_RUNNING - len(running)
+    for r in rows:
+        if free <= 0:
+            break
+        b = r.get("branch")
+        if state.get(b) != "jóváhagyva":
+            continue
+        dep = r.get("függ", "-")
+        if dep not in ("-", "") and state.get(dep) not in ("merge-kész", "mergelve"):
+            continue
+        partners = {x if y == b else y for x, y in pairs if b in (x, y)}
+        if partners & set(running):
+            continue
+        print(b)
+        running.append(b)
+        free -= 1
+    return 0
+
+
 def batch(root, argv):
-    handlers = {"new": batch_new, "add": batch_add, "status": batch_status}
+    handlers = {"new": batch_new, "add": batch_add, "status": batch_status, "set": batch_set, "next": batch_next}
     if not argv or argv[0] not in handlers:
-        raise Fail("usage: sdd batch new|add|status ...")
+        raise Fail("usage: sdd batch new|add|status|set|next ...")
     return handlers[argv[0]](root, argv[1:])
 
 
