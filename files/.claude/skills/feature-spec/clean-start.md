@@ -3,7 +3,8 @@
 Used by `/feature-spec` and `/replan`. Report each check; stop if any fails.
 
 - The working tree is clean (`git status --short` is empty).
-- The previous feature branch is merged and you are on an up-to-date `main`.
+- The previous feature branch is merged and you are on an up-to-date `main`
+  (with a remote: `git fetch` and no commits behind; without one, skip).
 - The constitution exists (`specs/mission.md`, `specs/tech-stack.md`,
   `specs/roadmap.md`). If not, run `/constitution` first.
 

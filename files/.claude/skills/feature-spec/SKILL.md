@@ -83,5 +83,6 @@ scripting. **L:** `plan.md`, `requirements.md`, `validation.md` and
   open choice of this step.
 - Tell the owner at the end of the message, in the chat: when the spec is
   right, start a line of the message with `#spec-ok`. Then start a fresh
-  context (`/clear`) and implement: "Implement the task groups in
-  Plans/<dir>/plan.md."
+  context (`/clear`) and give the implementation prompt for the level. L:
+  "Implement the task groups in Plans/<dir>/plan.md." S and M: "Implement
+  Plans/<dir>/spec.md, then run its Ellenőrzés checks."

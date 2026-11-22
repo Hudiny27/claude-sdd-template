@@ -39,7 +39,7 @@ szint: S | M
 - <ellenőrizhető állítás>
 
 ## Ellenőrzés
-- [ ] Agent: <parancs vagy teszt> → <várt eredmény>
+- [ ] Agent: <parancs vagy teszt> → <várt eredmény> (validate.sh esetén: `bash Plans/<dir>/validate.sh`, check-név: <név>)
 - [ ] Owner: <1–3 lépés, amit ő maga megnéz>
 
 ## Kockázat és visszaút
@@ -144,4 +144,7 @@ számít, és nem kell hozzá `#spec-ok`. A szabályai:
 Írd le a célokat, korlátokat, sikerkritériumokat, felhasználói folyamatokat és
 a fontos technikai döntéseket (rögzített verziók, szigorúság, adatmodell).
 Hagyd ki a változóneveket, CSS-osztályokat és a fájlok belső szerkezetét: ezekről
-az agent dönt.
+az agent dönt. Kivétel a nyilvános felület, amelyet a `validate.sh` vagy egy
+teszt hív (függvény és paraméterei, végpont, parancssori kapcsoló): ez
+`agent` döntésként a „Döntések” alá kerül. A `validate.sh` lehetőleg csak
+ezen a felületen és a látható viselkedésen át ellenőriz.

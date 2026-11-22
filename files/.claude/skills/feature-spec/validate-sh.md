@@ -1,6 +1,8 @@
 # validate.sh
 
-Every automated check from `validation.md` as one bash script, written with
+Every automated check from `validation.md` (S and M: the agent lines of the
+`spec.md` "Ellenőrzés" section, which also name the command
+`bash Plans/<dir>/validate.sh`) as one bash script, written with
 the spec and approved with it. It lives in the spec folder, so it is not
 code and needs no `#spec-ok`. The owner can rerun it at any time.
 
@@ -55,7 +57,10 @@ code and needs no `#spec-ok`. The owner can rerun it at any time.
   it.
 - Run its offline part once: a `FAIL` because the new code is missing is
   expected, but every tool it calls must accept its flags and every summary
-  it greps must appear.
+  it greps must appear. A branch that cannot run before the new code exists
+  (a server that does not start yet) is not faked with stub code; the spec
+  names it, and the step or task group that adds the code runs that check
+  once.
 - Open every live URL it uses once (status and final host after
   redirects): a page behind a login otherwise fails only at validation.
 

@@ -31,7 +31,8 @@ Plans/                     # feature specek: az agent írja, az owner hagyja jó
 ```
 
 Formátumok: `specs/README.md` és `Plans/README.md`. Branch `feature/phase-2-agents`
-↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a branchnév utolsó része).
+↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a branchnév utolsó része, rövid
+angol kebab-case a fázis címéből; a dátum a spec megírásának napja).
 Roadmapen kívüli S javítás branchneve `fix/<slug>`; ennek nincs fázisa.
 
 ## Munkafolyamat
@@ -91,8 +92,8 @@ API, deploy, jogi szöveg, éles levél, adattörlés, a felhasználók meglév�
 fájljaitól függő formátum) legalább M. Ha a fokozat menet közben nő, állj
 meg, bővítsd a specet, és kérj új `#spec-ok`-ot; az őr addig tilt.
 
-**Implementáció:** csak `#spec-ok` után. Kövesd a `plan.md`-t
-feladatcsoportonként; az első csoport előtt olvasd el a
+**Implementáció:** csak `#spec-ok` után. L-nél a `plan.md`-t kövesd
+feladatcsoportonként, S-nél és M-nél a `spec.md`-t; kezdés előtt olvasd el a
 `.claude/skills/feature-spec/implement.md`-t. Biztonság, auth, adat és
 migrációk esetén: egyszerre egy csoport, utána állj meg. Adatnál és
 migrációnál az owner a `#spec-ok`-kor vagy utána egy üzenetben előre
