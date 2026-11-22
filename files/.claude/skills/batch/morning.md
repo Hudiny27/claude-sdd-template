@@ -4,9 +4,10 @@ The owner has 15–30 minutes. Everything is decided here; nothing is built.
 
 ## The report
 
-Written at the end of the night, from the batch file, the batch ledger
-(`~/.claude/execute/<projekt>/köteg-<név>/naplo.md`) and the overnight log,
-into the overnight folder's `jelentes.md`
+Written at the end of the night from `.claude/bin/sdd batch report` (per
+feature: state, commits, spec, the night's agent decisions, manual checks,
+ledger lines) and the overnight log, into the overnight folder's
+`jelentes.md`
 and given as the chat message; with `artifact: igen` also as a private
 artifact page with the same content. Plain Hungarian (the `plain` rules):
 
@@ -36,10 +37,12 @@ On the owner's next message, one popup round:
 
 Then, in this order:
 
-- **Merge:** in the main checkout, merge each chosen branch into `main` in
-  dependency order (`--no-ff`), tick its roadmap phase with the Edit tool,
-  run the project's check once on `main`, remove its worktree, and
-  `sdd batch set … mergelve`.
+- **Merge:** `.claude/bin/sdd batch merge <név> <branch>...` with every
+  chosen feature: it refuses a dependant without its base, merges in
+  dependency order (`--no-ff`), runs `.claude/check.sh` once on `main`, and
+  only then removes the worktrees and branches and sets `mergelve`. If it
+  stops, report what it says; undo nothing without the owner. Then tick
+  each merged feature's roadmap phase with the Edit tool.
 - **Javítás:** record the owner's request under the spec's "Döntések"
   (`döntött: owner`), `sdd batch set … javítás`; the feature becomes the first
   item of the next batch. Its worktree stays.
