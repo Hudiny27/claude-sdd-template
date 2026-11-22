@@ -106,7 +106,7 @@ megoldja az ütközéseket, és felajánlja a kezdő commitot.
 Claude nélkül, shellből is működik:
 
 ```bash
-bash ~/.claude/templates/sdd/install.sh [CÉLKÖNYVTÁR] [--with-ci]
+bash ~/.claude/templates/sdd/install.sh [CÉLKÖNYVTÁR] [--with-ci] [--update]
 ```
 
 ### 3. Újraindítás és indulás
@@ -125,8 +125,15 @@ bash ~/.claude/templates/sdd/install.sh [CÉLKÖNYVTÁR] [--with-ci]
   repón belül** van, nem fut le.
 - Beállítja a `core.hooksPath=.githooks` értéket, és a `.gitignore` végére
   hozzáfűzi a helyi állapotfájlokat.
-- A végén lefuttatja a guard 26 tesztjét a célprojektben.
+- A végén lefuttatja a guard tesztjeit a célprojektben.
 - Újrafuttatva csak a hiányzó fájlokat pótolja.
+- `--update`: a sablon saját fájljait (`CLAUDE.md`, a skillek és
+  segédfájljaik, a `Plans/` és `specs/` README-je, a hookok) felülírja, ha
+  eltérnek; előtte fájlonként diffet mutat. A bővítési pontokhoz (lásd
+  lent), a workflow-naplóhoz, a `specs/` és `Plans/` tartalmához soha nem
+  nyúl. A projektenként összefésült `.claude/settings.json`-t nem írja
+  felül, csak a diffjét mutatja. Az őr fájljai a projektben zároltak: ha
+  agent futtatja, előbb az ownernek fel kell oldania őket.
 - Ha már létezett `.claude/settings.json`, a hookokat **nem köti be
   automatikusan**. Ezt jelzi, és a `/sdd-init` felajánlja az összefésülést.
 
@@ -144,9 +151,11 @@ Plans/                             # feature spec-ek
 └── done/                          # lezárt feature-ök
 .claude/
 ├── settings.json                  # hookok bekötése
+├── project.md                     # bővítési pont: a projekt mindig betöltött kiegészítése
+├── rules/                         # bővítési pont: a projekt útvonalhoz kötött szabályai
 ├── hooks/sdd_guard.py             # a guard
 ├── hooks/test_sdd_guard.py        # regressziós tesztek
-└── skills/                        # constitution, feature-spec, validate-feature, replan
+└── skills/                        # constitution, feature-spec, validate-feature, replan, segédfájlokkal
 .githooks/pre-commit               # agent-független védőháló
 .github/workflows/sdd-check.yml    # csak --with-ci esetén
 ```
@@ -157,7 +166,7 @@ CI is a branchnév utolsó tagja alapján találja meg.
 
 Nyelv: a projekt Markdown-dokumentumai (`CLAUDE.md`, `specs/`, `Plans/`)
 magyarul készülnek. A skillek, a kód, a kódkommentek és a commit üzenetek
-angolul maradnak. A roadmap sorai `- [ ] Fázis N — <cím>` alakúak; a guard csak
+angolul maradnak. A roadmap sorai `- [ ] Fázis N: <cím>` alakúak; a guard csak
 a `- [ ] ` előtagot olvassa, így a fázisok elnevezése nyelvfüggetlen.
 
 ## A repó tartalma
@@ -205,20 +214,37 @@ A `files/` alatti fájlokat szerkeszd, utána futtasd a teszteket:
 cd ~/.claude/templates/sdd/files && python3 -m unittest discover -s .claude/hooks -p 'test_*.py'
 ```
 
+A sablon tesztjei (méretkeret, telepítő) a repó gyökeréből:
+
+```bash
+cd ~/.claude/templates/sdd && python3 -m pytest -q files/.claude/hooks/test_sdd_guard.py tests/
+```
+
+A sablon egy kicsi mag: a `CLAUDE.md` legfeljebb 150, egy `SKILL.md`
+legfeljebb 100 sor (a `tests/test_template_size.py` őrzi); a lépések
+részletei a skill mappájában, segédfájlban vannak.
+
 A már telepített projektek **nem frissülnek maguktól**. A session eleji
 *„SDD status”* egy `Template:` sorban felsorolja, mely munkafolyamat-fájlok
 (`CLAUDE.md`, skillek, a `Plans/` és `specs/` README-je, az őr, a pre-commit
 hook) térnek el a `~/.claude/templates/sdd/files` változatától; a
-`settings.json` kimarad, mert projektenként összefésült. Az áthozatal a
-`/replan` dolga. Egy módosított `sdd_guard.py` a projektben zárolt, ezért
-előtte oldd fel a `#spec-szerkesztes` kulcsszóval. Más sablonhelyet a
-`SDD_TEMPLATE_DIR` környezeti változó ad meg.
+`settings.json` kimarad, mert projektenként összefésült. A frissítés:
+`install.sh --update`, a `/replan` ajánlja fel. Egy módosított
+`sdd_guard.py` a projektben zárolt, ezért előtte oldd fel a kulcsszóval
+(`#spec-szerkesztes`). Más sablonhelyet a `SDD_TEMPLATE_DIR` környezeti
+változó ad meg.
 
-A másik irány: a munkafolyamat-javítások először a projektben készülnek, és
-soronként a projekt `.claude/workflow-log.md` naplójába kerülnek. A
-session-státusz számolja az utolsó `review:` sor óta felvett tételeket, és
-10-nél review-t kér a `/replan`-ben: minden tétel a sablonba kerül, helyi
-marad, vagy törlődik. A sablon változása itt, külön commitban történik.
+A sablon fájljait a projekt nem szerkeszti. A projekt saját tanulságai a
+bővítési pontokra kerülnek: `.claude/rules/<téma>.md` (fájlokhoz kötve
+`paths:` frontmatterrel), `.claude/project.md` (rövid, mindig betöltött
+kiegészítés, a `CLAUDE.md` importálja), és a projekt saját scriptjei és
+tesztjei. Minden javítás egy sort kap a projekt `.claude/workflow-log.md`
+naplójában. A session-státusz 10 tétel után review-t kér a `/replan`-ben:
+ennek célja helyben rendet tenni (kóddá alakítani, összevonni, törölni). A
+sablonba csak szigorú kapun át kerül valami: mechanizmus vagy a szemléletet
+érinti, legalább két projektben egymástól függetlenül előjött, és a
+bővítési pontokon nem oldható meg. Ilyenkor egy javaslatfájl kerül e repó
+`backlog/` mappájába, és az owner hagyja jóvá.
 
 ## Licenc
 
