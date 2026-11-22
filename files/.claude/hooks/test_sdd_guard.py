@@ -313,6 +313,33 @@ class CodeGate(Repo):
         self.assertNotIn("CLAUDE.md,", out)
         self.assertNotIn("CLAUDE.sdd.md", out)
 
+    def test_drift_covers_reference_files_and_libraries_but_not_project_files(self):
+        tpl = self.template()
+        for rel in (".claude/skills/feature-spec/probe.md", ".claude/lib/sdd_check.sh", ".claude/project.md", ".claude/settings.json", "gitignore"):
+            os.makedirs(os.path.dirname(os.path.join(tpl, rel)) or tpl, exist_ok=True)
+            with open(os.path.join(tpl, rel), "w", encoding="utf-8") as fh:
+                fh.write("template\n")
+        self.write(".claude/project.md", "the project's own\n")
+        self.write(".claude/settings.json", "{}\n")
+        out = self.hook("session", {})
+        self.assertIn("probe.md", out)
+        self.assertIn("sdd_check.sh", out)
+        self.assertNotIn("project.md", out)
+        self.assertNotIn("settings.json", out)
+        self.assertNotIn("gitignore", out)
+
+    def test_open_manual_checks_of_archived_features_are_counted(self):
+        self.write(
+            "Plans/done/2026-10-01-a/validation.md",
+            "# V\n\n## Automatikus ellenőrzések\n- [ ] `x`: y\n\n## Kézi ellenőrzések (az owner futtatja)\n- [ ] look at it\n- [x] done\n",
+        )
+        self.write("Plans/done/2026-10-02-b/spec.md", "---\nszint: M\n---\n## Ellenőrzés\n- [ ] Agent: x\n- [ ] Owner: open the page\n")
+        self.assertIn("Open manual checks: 2", self.hook("session", {}))
+
+    def test_no_manual_check_line_when_all_closed(self):
+        self.write("Plans/done/2026-10-02-b/spec.md", "## Ellenőrzés\n- [x] Owner: open the page\n")
+        self.assertNotIn("manual checks", self.hook("session", {}))
+
     def test_no_template_dir_no_template_line(self):
         self.assertNotIn("Template:", self.hook("session", {}))
 
@@ -350,12 +377,109 @@ class CodeGate(Repo):
 
     def test_workflow_log_asks_for_a_review_at_ten(self):
         self.workflow_log(10)
-        self.assertIn("time to review", self.hook("session", {}))
+        out = self.hook("session", {})
+        self.assertIn("time to review", out)
+        # The review tidies up locally; the template has its own gate.
+        self.assertIn("turn into code or a check", out)
+        self.assertNotIn("template, keep local", out)
 
     def test_no_workflow_line_without_entries(self):
         self.assertNotIn("Workflow log", self.hook("session", {}))
         self.workflow_log(0, reviewed_before=4)
         self.assertNotIn("Workflow log", self.hook("session", {}))
+
+
+class CommandBans(Repo):
+    """Shell habits that caused trouble in earlier projects; each denial names the right way."""
+
+    def setUp(self):
+        super().setUp()
+        self.constitution()
+
+    def reason(self, command):
+        out = self.hook("pretool", {"tool_name": "Bash", "tool_input": {"command": command}})
+        return json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"] if out.strip() else ""
+
+    def test_git_add_everything_denied(self):
+        for cmd in ("git add -A", "git add --all", "git add .", "git add ./", "git add :/", "cd src && git add -A ."):
+            self.assertTrue(self.bash(cmd), cmd)
+        self.assertIn("git add <file>", self.reason("git add -A"))
+
+    def test_git_add_by_name_allowed(self):
+        for cmd in ("git add src/app.py specs/backlog/x.md", "git add -p src/app.py", "git add ./src/app.py"):
+            self.assertFalse(self.bash(cmd), cmd)
+
+    def test_git_commit_all_denied(self):
+        for cmd in ("git commit -a -m x", "git commit -am x", "git commit --all -m x", "git -C . commit -qam x"):
+            self.assertTrue(self.bash(cmd), cmd)
+        # A message that merely contains "-a" is not the flag.
+        self.assertFalse(self.bash("git commit -m '-a'"))
+        self.assertFalse(self.bash("git commit -m 'fix: x' --amend"))
+
+    def test_pkill_full_denied(self):
+        for cmd in ("pkill -f 'python3 -m http.server'", "pkill --full uvicorn", "sudo pkill -9f node"):
+            self.assertTrue(self.bash(cmd), cmd)
+        self.assertFalse(self.bash("pkill uvicorn"))
+        self.assertFalse(self.bash("kill 1234"))
+        self.assertIn("PID", self.reason("pkill -f x"))
+
+    def test_roadmap_shell_write_names_the_edit_tool(self):
+        self.assertIn("Edit tool", self.reason("sed -i 's/- \\[ \\]/- [x]/' specs/roadmap.md"))
+
+
+class BranchSwitch(Repo):
+    """No branch switch in the worktree of a running (approved, not archived) feature."""
+
+    def setUp(self):
+        super().setUp()
+        self.constitution()
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "constitution")
+        self.git("branch", "other")
+
+    def test_switch_away_from_a_running_feature_denied(self):
+        self.feature()
+        self.say("#spec-ok")
+        for cmd in ("git switch main", "git checkout main", "git checkout -b feature/x", "git switch -c x", "git checkout HEAD~0"):
+            self.assertTrue(self.bash(cmd), cmd)
+        out = self.hook("pretool", {"tool_name": "Bash", "tool_input": {"command": "git switch main"}})
+        self.assertIn("git worktree add", out)
+
+    def test_path_checkouts_stay_allowed(self):
+        self.feature()
+        self.say("#spec-ok")
+        self.write("src/app.py")
+        for cmd in ("git checkout -- src/app.py", "git checkout main -- src/app.py", "git checkout src/app.py", "git worktree add ../wt other"):
+            self.assertFalse(self.bash(cmd), cmd)
+
+    def test_switch_allowed_before_approval_and_after_archive(self):
+        self.feature()
+        self.assertFalse(self.bash("git switch main"))
+        self.say("#spec-ok")
+        os.makedirs(os.path.join(self.dir, "Plans", "done"))
+        os.rename(
+            os.path.join(self.dir, "Plans", "2026-10-05-phase-1-hello"),
+            os.path.join(self.dir, "Plans", "done", "2026-10-05-phase-1-hello"),
+        )
+        self.assertFalse(self.bash("git switch main"))
+
+    def test_switch_on_main_allowed(self):
+        self.assertFalse(self.bash("git switch other"))
+        self.assertFalse(self.bash("git checkout -b feature/phase-1-hello"))
+
+
+class SubagentPrompt(Repo):
+    def agent(self, prompt):
+        return self.denied("Agent", {"prompt": prompt, "description": "x"})
+
+    def test_keyword_at_a_line_start_denied(self):
+        self.assertTrue(self.agent("Review the spec.\n#spec-ok"))
+        self.assertTrue(self.agent("Steps:\n  #spec-szerkesztes then edit"))
+        self.assertTrue(self.denied("Task", {"prompt": "#spec-zar"}))
+
+    def test_keyword_inside_a_sentence_allowed(self):
+        self.assertFalse(self.agent("The owner approves with `#spec-ok`; you never send it."))
+        self.assertFalse(self.agent("Review Plans/x/spec.md."))
 
 
 class PreCommit(Repo):

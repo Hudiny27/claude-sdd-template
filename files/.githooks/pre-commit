@@ -3,9 +3,10 @@
 
 Code (anything that is not specs/, Plans/, docs/, .claude/, .githooks/ or
 Markdown) may be committed only on a feature branch that has a feature spec:
-Plans[/done]/YYYY-MM-DD-<last part of the branch name>/ with plan.md,
-requirements.md and validation.md. Merge and squash-merge commits are allowed,
-because the merged branch already went through this check.
+Plans[/done]/YYYY-MM-DD-<last part of the branch name>/ with spec.md (levels
+S and M) or plan.md, requirements.md and validation.md (level L). Merge and
+squash-merge commits are allowed, because the merged branch already went
+through this check.
 
 Activated by `git config core.hooksPath .githooks` (install.sh does this).
 The path rules are imported from .claude/hooks/sdd_guard.py.
