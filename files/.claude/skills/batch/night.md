@@ -6,8 +6,10 @@ adds what a batch needs.
 
 ## Order
 
+- First set every approved feature to `Állapot: jóváhagyva` (the guard's
+  reply to `#spec-ok köteg` lists them; a refused one stays `spec`).
 - Run features from the batch file's order. At most two at the same time,
-  and never two that the shared round marked as touching the same files.
+  and never the two of a "nem egyszerre" pair from the shared decisions.
 - A dependant starts only when what it builds on is merge-ready; it builds
   in its own worktree on top of that branch (merge that branch's new
   commits into it first, never rebase, then rerun its checks).
@@ -20,7 +22,8 @@ adds what a batch needs.
    worktree (the plan: `plan.md` for L, `spec.md` for S and M), committing
    with `.claude/bin/sdd commit`.
 2. Validate it as the `validate-feature` skill says, steps 1–4, with no
-   popup: run `validate.sh` and `python3 .claude/lib/sdd_lint.py --final`,
+   popup: run its `validate.sh` if the spec has one (else the commands of
+   its "Ellenőrzés" section) and `python3 .claude/lib/sdd_lint.py --final`,
    compare the code with the spec, and run the deep review when the spec's
    `ajtó` and `hatósugár` call for it. Fix real findings; record every
    decision you make as an `agent` line under the spec's "Döntések".
@@ -33,6 +36,15 @@ Merge-ready means: every automated check green, the `--final` lint clean,
 the review run as the risk fields say and its real findings fixed, the spec
 archived, the branch one merge away from `main`; the manual checks listed
 for the morning.
+
+## A "nem egyszerre" pair
+
+When both features of a pair are merge-ready, check that they merge one
+after the other: in a scratch worktree from `main`, merge the earlier, then
+the later, and run the project's check. If that is clean, nothing changes.
+If they conflict, merge the earlier branch into the later one in its
+worktree, resolve, rerun its checks, write the earlier branch into its
+`Függ` cell, and log why: now it merges only together with the earlier.
 
 ## Park, do not push through
 

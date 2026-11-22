@@ -7,7 +7,8 @@ owner happens here, so the night needs nobody.
 
 - Run `.claude/bin/sdd preflight` in the main checkout; stop on a `FAIL`.
 - Offer the candidates in a multi-select popup: the open backlog items it
-  lists, the next open roadmap phases, and features the owner names. Leave
+  lists, the next open phases of `specs/roadmap.md`, and features the owner
+  names. Leave
   out (and say why) anything that touches authentication, permissions or
   security.
 - Pick a short batch name (lower case, hyphens) and run
@@ -21,17 +22,19 @@ owner happens here, so the night needs nobody.
 Before any single feature, run the `grill` skill on the batch as a whole
 (its critical pass included):
 
-- the order, and which feature builds on which (a dependant gets
-  `--after <branch>` in step 3);
-- the files or modules two features would both change: the later one builds
-  on the earlier (`--after`), so they never meet at the merge;
+- the order, and which feature really builds on which (uses its code or its
+  data): only that dependant gets `--after <branch>` in step 3;
+- the files or modules two features would both change: note the pair under
+  `## Közös döntések` ("nem egyszerre: <a> és <b>"); both still start from
+  `main`, the night keeps them apart and checks that they merge cleanly;
 - the shared words (`docs/szotar.md`) and the decisions that hold for
   several features.
 
 Record the shared decisions in the batch file under `## Közös döntések`, in
-the decision line format of `Plans/README.md`. Then commit the batch file
-and the shared words or decision records (`docs/szotar.md`,
-`docs/decisions/`) on `main` (`docs(plans): start batch <név>`) before the
+the decision line format of `Plans/README.md`. Then commit the batch file,
+the shared words and decision records (`docs/szotar.md`, `docs/decisions/`)
+and any backlog item the round produced, on `main` with
+`.claude/bin/sdd commit` (`docs(plans): start batch <név>`), before the
 first feature: every worktree starts from that commit and sees them.
 
 ## 3. Per feature
@@ -47,8 +50,9 @@ For each feature, in the agreed order:
    the batch file.
 3. Commit the spec in the worktree (`docs(plans): add spec for <feature>`);
    the guard refuses to approve an uncommitted spec.
-4. Fill its row: `Becslés` (hours for the build and the validation) and
-   `Auth/biztonság: nem`.
+4. Fill its row: `Becslés` (hours for the build and the validation, as
+   `1,5 óra`) and `Auth/biztonság: nem`. An assumption an S spec needs
+   goes under a `## Döntések` section you add to it.
 
 ## 4. Estimate and approval
 
@@ -59,7 +63,8 @@ For each feature, in the agreed order:
 - Commit the batch file on `main` (`docs(plans): add batch <név>`); the
   pre-commit lint checks it.
 - Write the overnight brief (the `overnight` skill, step 1) for the batch:
-  the features, the time box, the budget (0 unless the owner names one), no
+  every feature with its branch and worktree, the main checkout for the
+  batch file, the time box, the budget (0 unless the owner names one), no
   push, no merge.
 - End the window by telling the owner what to type, as two lines at the
   start of one message:

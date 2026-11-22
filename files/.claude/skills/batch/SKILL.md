@@ -25,8 +25,8 @@ stopping after each group). Nothing reaches `main` or the remote at night.
 
 ## Which window
 
-Find the newest `Plans/kotegek/*.md` and run `.claude/bin/sdd batch status
-<név>`:
+Run `.claude/bin/sdd batch status` (the newest batch; "no batch yet" when
+there is none):
 
 - no batch for today, or the owner asks for a new one: the **active
   window**;
@@ -63,7 +63,9 @@ merges and the push the owner ticks.
 - The batch file (`Plans/kotegek/ÉÉÉÉ-HH-NN-<név>.md`, format in
   `Plans/README.md`) is the batch's state: update its `Állapot` column at
   each change (spec, jóváhagyva, épül, merge-kész, parkolva, mergelve,
-  javítás, elvetve).
+  javítás, elvetve). Edit it only in the main checkout (the guard refuses
+  the copies in the worktrees); at night edit without committing, the
+  morning commits it.
 - Each feature works only in its own worktree (`.claude/worktrees/<slug>`):
   run its commands with `git -C <worktree>` or from that folder. The main
   checkout stays on `main` and holds only the batch file and the shared
