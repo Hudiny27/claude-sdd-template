@@ -38,6 +38,9 @@ Checks:
                shell scripts.
   backlog      every specs/backlog/*.md item has `Állapot: nyitott | ütemezve
                | kész | elvetve` near the top.
+  batch        a staged Plans/kotegek/*.md: front matter, the feature table,
+               worktrees under .claude/worktrees/, no auth or security
+               feature, filled estimates, known states.
   size         CLAUDE.md (or CLAUDE.sdd.md) at most 150 lines, SKILL.md at
                most 100, .claude/project.md at most 60.
   dangling     --final: backticked paths in the Markdown changed on this
@@ -85,6 +88,9 @@ PLACEHOLDER = re.compile(r"<[^!<>\s][^<>\n]* [^<>\n]*>")
 BACKTICK = re.compile(r"`([^`\s]+)`")
 NOT_A_PATH = re.compile(r"[<>*{}$…|?\[\]()'\"=,;:@~^]")
 DANGLING_SKIP = ("Plans/done/", "specs/backlog/")
+BATCH_ITEM = re.compile(r"^Plans/kotegek/\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md$")
+BATCH_STATES = ("spec", "jóváhagyva", "épül", "merge-kész", "parkolva", "mergelve", "javítás", "elvetve")
+BATCH_COLUMNS = ("#", "branch", "fokozat", "függ", "worktree", "becslés", "auth/biztonság", "állapot")
 BACKLOG_STATES = ("nyitott", "ütemezve", "kész", "elvetve")
 BACKLOG_ITEM = re.compile(r"^specs/backlog/[^/]+\.md$")
 
@@ -296,6 +302,40 @@ class Lint:
             self.add(rel, line, "backlog", "needs a status line near the top: `Állapot: "
                      + " | ".join(BACKLOG_STATES) + "` (then free text), so /replan can list the open items")
 
+    def batch(self, rel, text):
+        m = re.match(r"^---\n(.*?)\n---", text, re.S)
+        meta = dict(re.findall(r"^(\w+):\s*(.*?)\s*$", m.group(1), re.M)) if m else {}
+        checks = (
+            ("koteg", r"[a-z0-9-]+"), ("datum", r"\d{4}-\d{2}-\d{2}"),
+            ("idokeret", r"\d{1,2}:\d{2}"), ("artifact", r"igen|nem"),
+        )
+        for key, pattern in checks:
+            if not re.fullmatch(pattern, meta.get(key, "")):
+                self.add(rel, 1, "batch", "front matter needs `" + key + ": " + pattern.replace("\\", "") + "`")
+        rows = guard.batch_rows(text)
+        if not rows:
+            self.add(rel, 0, "batch", "no feature table under `## " + guard.BATCH_SECTION + "`")
+            return
+        missing = [c for c in BATCH_COLUMNS if c not in rows[0]]
+        if missing:
+            self.add(rel, 0, "batch", "the feature table lacks the column(s) " + ", ".join(missing))
+            return
+        branches = {r["branch"] for r in rows}
+        for r in rows:
+            who = r["branch"] + ": "
+            if r["fokozat"] not in ("S", "M", "L"):
+                self.add(rel, 0, "batch", who + "Fokozat is S, M or L")
+            if r["függ"] != "-" and r["függ"] not in branches:
+                self.add(rel, 0, "batch", who + "depends on " + r["függ"] + ", which is not in the batch")
+            if not r["worktree"].startswith(".claude/worktrees/"):
+                self.add(rel, 0, "batch", who + "the worktree must be under .claude/worktrees/ (the guard sees only the project)")
+            if r["auth/biztonság"] != "nem":
+                self.add(rel, 0, "batch", who + "Auth/biztonság must be `nem`: an auth or security feature is never part of a batch")
+            if r["becslés"] in ("", "?"):
+                self.add(rel, 0, "batch", who + "fill in Becslés (the time estimate)")
+            if r["állapot"] not in BATCH_STATES:
+                self.add(rel, 0, "batch", who + "Állapot is one of " + ", ".join(BATCH_STATES))
+
     def size(self, rel):
         text = self.read(rel)
         if text is None:
@@ -413,7 +453,7 @@ class Lint:
         for rel in staged:
             parts = rel.split("/")
             if parts[0] == "Plans" and len(parts) >= 3:
-                if parts[1] != "done":
+                if parts[1] not in ("done", "kotegek"):
                     spec_dirs.add("Plans/" + parts[1])
                 if parts[-1] in (guard.LIGHT_SPEC, "requirements.md"):
                     self.decisions(rel, self.read(rel) or "")
@@ -422,6 +462,8 @@ class Lint:
                 self.paths(rel, self.read(rel) or "", in_spec=False)
             if is_backlog_item(rel):
                 self.backlog(rel, self.read(rel) or "")
+            if BATCH_ITEM.match(rel):
+                self.batch(rel, self.read(rel) or "")
             if rel in dict(SIZE_LIMITS) or re.match(r"^\.claude/skills/[^/]+/SKILL\.md$", rel):
                 self.size(rel)
         for spec_dir in sorted(spec_dirs):
