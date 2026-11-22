@@ -499,7 +499,7 @@ class BatchApproval(Repo):
         self.git("commit", "-q", "-m", "constitution")
         self.rows = []
 
-    def member(self, name, level="M", auth="nem", outside=False):
+    def member(self, name, level="M", auth="nem", outside=False, commit=True):
         branch = "feature/" + name
         if outside:
             wt = os.path.realpath(tempfile.mkdtemp(prefix="sdd-wt-"))
@@ -514,6 +514,9 @@ class BatchApproval(Repo):
         os.makedirs(os.path.dirname(spec))
         with open(spec, "w", encoding="utf-8") as fh:
             fh.write("---\nszint: " + level + "\n---\n# " + name + "\n")
+        if commit:
+            self.git("-C", wt, "add", "Plans")
+            self.git("-C", wt, "-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "spec")
         self.rows.append("| %d | %s | %s | - | %s | 1 óra | %s | spec |" % (len(self.rows) + 1, branch, level, rel, auth))
         self.write("Plans/kotegek/2026-11-22-ejjel.md", BATCH_HEAD + "\n".join(self.rows) + "\n")
         return wt
@@ -544,6 +547,20 @@ class BatchApproval(Repo):
         out = self.say("#spec-ok köteg ejjel")
         self.assertIn("auth", out)
         self.assertIsNone(self.approved_level("feature/login"))
+
+    def test_uncommitted_spec_is_refused(self):
+        a = self.member("a", commit=False)
+        out = self.say("#spec-ok köteg ejjel")
+        self.assertIn("commit the spec", out)
+        self.assertIsNone(self.approved_level("feature/a"))
+        self.assertTrue(self.edit_in(a))
+
+    def test_batch_file_is_written_only_in_the_main_checkout(self):
+        a = self.member("a")
+        self.say("#spec-ok köteg ejjel")
+        self.assertTrue(self.edit_in(a, "Plans/kotegek/2026-11-22-ejjel.md"))
+        self.assertTrue(self.bash("echo x >> " + os.path.join(a, "Plans/kotegek/2026-11-22-ejjel.md")))
+        self.assertFalse(self.edit("Plans/kotegek/2026-11-22-ejjel.md"))
 
     def test_unknown_batch_approves_nothing(self):
         self.member("a")

@@ -313,10 +313,11 @@ class Lint:
             if not re.fullmatch(pattern, meta.get(key, "")):
                 self.add(rel, 1, "batch", "front matter needs `" + key + ": " + pattern.replace("\\", "") + "`")
         rows = guard.batch_rows(text)
-        if not rows:
+        header = batch_header(text)
+        if header is None:
             self.add(rel, 0, "batch", "no feature table under `## " + guard.BATCH_SECTION + "`")
             return
-        missing = [c for c in BATCH_COLUMNS if c not in rows[0]]
+        missing = [c for c in BATCH_COLUMNS if c not in header]
         if missing:
             self.add(rel, 0, "batch", "the feature table lacks the column(s) " + ", ".join(missing))
             return
@@ -474,6 +475,15 @@ class Lint:
                     if text is not None:
                         self.calibration(spec_dir + "/" + name, text, False)
                 self.coverage(spec_dir)
+
+
+def batch_header(text):
+    """The lower-cased column names of the batch file's feature table, or None (rows may come later)."""
+    section = section_lines(text, guard.BATCH_SECTION) or []
+    for _, line in section:
+        if line.strip().startswith("|"):
+            return [c.strip().lower() for c in line.strip().strip("|").split("|")]
+    return None
 
 
 # -- backlog

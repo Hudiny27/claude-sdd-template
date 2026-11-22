@@ -21,7 +21,8 @@ project; propose changes in the template's backlog/ instead.
   sdd batch add NAME BRANCH --level S|M|L [--after BRANCH]
                              a feature of the batch: its worktree under
                              .claude/worktrees/, its spec folder, its row
-  sdd batch status NAME      each feature: approval, commits, spec
+  sdd batch status [NAME]    each feature (of the newest batch without NAME):
+                             approval, commits, spec
   sdd commit -m MSG [-- FILE...]
                              stage the named files, run .claude/check.sh
                              (the project's lint, type and test command) and
@@ -319,17 +320,40 @@ def batch_add(root, argv):
     write_spec(root, os.path.join(root, wt), "Plans/" + datetime.date.today().isoformat() + "-" + slug, branch, level, templates)
     row = "| %d | %s | %s | %s | %s | ? | ? | spec |" % (len(rows) + 1, branch, level, after or "-", wt)
     lines = text.rstrip("\n").split("\n")
-    lines.append(row)
+    lines.insert(table_end(lines), row)
     with open(os.path.join(root, rel), "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
     say("OK", "added row " + str(len(rows) + 1) + " to " + rel + " (fill in Becslés and Auth/biztonság)")
     return 0
 
 
+def table_end(lines):
+    """The index just after the last table line of the batch file's feature section."""
+    inside, end = False, None
+    for i, line in enumerate(lines):
+        if line.startswith("## "):
+            inside = line[3:].strip() == guard.BATCH_SECTION
+        elif inside and line.strip().startswith("|"):
+            end = i + 1
+    if end is None:
+        raise Fail("the batch file has no feature table under `## " + guard.BATCH_SECTION + "`")
+    return end
+
+
+def newest_batch(root):
+    try:
+        names = sorted(n for n in os.listdir(os.path.join(root, guard.BATCH_DIR)) if n.endswith(".md"))
+    except OSError:
+        names = []
+    if not names:
+        raise Fail("no batch yet; start one with `sdd batch new NAME`")
+    return guard.BATCH_DIR + "/" + names[-1]
+
+
 def batch_status(root, argv):
-    if len(argv) != 1:
-        raise Fail("usage: sdd batch status NAME")
-    rel = batch_file(root, argv[0])
+    if len(argv) > 1:
+        raise Fail("usage: sdd batch status [NAME]")
+    rel = batch_file(root, argv[0]) if argv else newest_batch(root)
     with open(os.path.join(root, rel), encoding="utf-8") as fh:
         rows = guard.batch_rows(fh.read())
     print(rel + ": " + str(len(rows)) + " feature(s)")
@@ -521,7 +545,7 @@ def commit(root, argv):
 
 def main(argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print(__doc__.split("\n\n")[1])
+        print(__doc__.strip())
         return 0 if argv else 2
     cmd, rest = argv[0], argv[1:]
     try:
@@ -531,12 +555,12 @@ def main(argv):
         handlers = {"new": new, "handover": handover, "archive": archive, "commit": commit, "batch": batch}
         if cmd not in handlers:
             print("sdd: unknown command " + cmd, file=sys.stderr)
-            print(__doc__.split("\n\n")[1], file=sys.stderr)
+            print(__doc__.strip(), file=sys.stderr)
             return 2
         return handlers[cmd](root, rest)
     except Fail as e:
         print("sdd " + cmd + ": " + str(e), file=sys.stderr)
-        return 1
+        return 2 if str(e).startswith("usage:") else 1
 
 
 if __name__ == "__main__":

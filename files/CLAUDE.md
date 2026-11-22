@@ -25,7 +25,7 @@ Plans/                     # feature specek: az agent írja, az owner hagyja jó
 .claude/hooks/sdd_guard.py # az őr (Claude Code hookok, pre-commit, CI)
 .claude/bin/sdd            # parancsok: preflight, new, handover, archive, commit
 .claude/lib/               # a validate.sh könyvtárai és a lint (sdd_lint.py)
-.claude/skills/            # constitution, feature-spec, validate-feature, replan, segédfájlaikkal
+.claude/skills/            # constitution, feature-spec, validate-feature, replan, batch, segédfájlaikkal
 .claude/project.md         # a projekt saját, mindig betöltött kiegészítése
 .claude/rules/             # a projekt saját szabályai, útvonalhoz kötve
 .claude/workflow-log.md    # helyi munkafolyamat-javítások naplója (10 tételenként review)
