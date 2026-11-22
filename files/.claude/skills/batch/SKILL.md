@@ -66,7 +66,8 @@ merges and the push the owner ticks.
   javítás, elvetve).
 - Each feature works only in its own worktree (`.claude/worktrees/<slug>`):
   run its commands with `git -C <worktree>` or from that folder. The main
-  checkout stays on `main` and holds only the batch file.
+  checkout stays on `main` and holds only the batch file and the shared
+  documents (`docs/szotar.md`, `docs/decisions/`).
 - Commit with `.claude/bin/sdd commit` in the feature's worktree; name the
   files.
 - The approval keywords are typed by the owner at the start of a line; never

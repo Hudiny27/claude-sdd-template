@@ -23,24 +23,30 @@ Before any single feature, run the `grill` skill on the batch as a whole
 
 - the order, and which feature builds on which (a dependant gets
   `--after <branch>` in step 3);
-- the files or modules two features would both change: they go in order,
-  never at the same time;
+- the files or modules two features would both change: the later one builds
+  on the earlier (`--after`), so they never meet at the merge;
 - the shared words (`docs/szotar.md`) and the decisions that hold for
   several features.
 
 Record the shared decisions in the batch file under `## Közös döntések`, in
-the decision line format of `Plans/README.md`.
+the decision line format of `Plans/README.md`. Then commit the batch file
+and the shared words or decision records (`docs/szotar.md`,
+`docs/decisions/`) on `main` (`docs(plans): start batch <név>`) before the
+first feature: every worktree starts from that commit and sees them.
 
 ## 3. Per feature
 
 For each feature, in the agreed order:
 
 1. `.claude/bin/sdd batch add <név> <branch> --level S|M|L [--after <branch>]`.
-2. In its worktree, do steps 3–5 of the `feature-spec` skill: the interview
-   (the full `grill`), the spec, and `.claude/bin/sdd handover` (run from
-   the worktree). Do not repeat what the shared round settled; refer to it.
-3. Commit the spec in the worktree (`docs(plans): add spec for <feature>`),
-   so the approval covers a committed spec.
+2. In its worktree, do the `feature-spec` steps 3 and 4 and the handover
+   check of step 5 (`.claude/bin/sdd handover`, run from the worktree), as
+   the level says: no interview for S, the full `grill` for M and L. Skip
+   the closing of step 5 (a per-feature `#spec-ok` and `/clear`): the batch
+   has one approval. Do not repeat what the shared round settled; refer to
+   the batch file.
+3. Commit the spec in the worktree (`docs(plans): add spec for <feature>`);
+   the guard refuses to approve an uncommitted spec.
 4. Fill its row: `Becslés` (hours for the build and the validation) and
    `Auth/biztonság: nem`.
 
