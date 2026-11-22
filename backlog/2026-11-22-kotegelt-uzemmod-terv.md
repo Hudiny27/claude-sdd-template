@@ -1,0 +1,117 @@
+---
+szint: L
+allapot: tervezet
+---
+# Terv: kötegelt üzemmód
+
+Állapot: nyitott: a terv kész, az építésről az owner dönt.
+
+Cél: az owner napi részvétele három rövid ablakba sűrűsödjön. Aktív ablak:
+több feature kikérdezése és specje, egy köteg-jóváhagyás. Építő ablak:
+felügyelet nélkül (éjjel) építés és validálás merge-kész állapotig. Döntési
+ablak: reggel egy döntés feature-enként a mergéről. Az állomások (spec,
+jóváhagyás, kapuk, review, merge-döntés) a mostani SDD-é maradnak; a mostani,
+egyenkénti folyamat változatlanul megmarad mellette.
+
+## Napi ritmus
+
+1. **Aktív ablak** (az owner jelen van, kb. 1–2 óra): köteg-fájl, közös
+   kikérdező kör, feature-enként `grill` és spec a saját worktree-jében,
+   időbecslés, `#spec-ok köteg <név>`, az éjszakai megbízás (benne: kér-e
+   artifact jelentést), majd `#éjszaka`.
+2. **Építő ablak** (felügyelet nélkül): feature-enként `execute-plan`,
+   egyszerre legfeljebb kettő, a függők egymásra épülve; minden feature
+   merge-kész állapotig (lásd Döntések), éjjel se merge, se push.
+3. **Döntési ablak** (reggel, kb. 15–30 perc): jelentés feature-enként
+   (zöld, sárga, piros, bizonyíték, éjjeli agent-döntések felülbírálásra, a
+   kézi ellenőrzések), majd egy többválasztós ablak: merge, javítás (a
+   következő köteg elejére), elvetés. A merge és a push a kattintás után.
+
+## 1. szakasz: köteg-fájl és őr
+
+1. Köteg-fájl formátum a `Plans/README.md`-ben: `Plans/kotegek/ÉÉÉÉ-HH-NN-<név>.md`
+   (feature-ök, branch, spec-mappa, sorrend, függés, időbecslés, időkeret,
+   artifact-kérés, állapot feature-enként).
+2. `sdd batch new <név>`, `sdd batch add <branch> --level S|M|L` (branch és
+   spec-mappa egy `.claude/worktrees/<slug>` worktree-ben, a `main`-ről vagy
+   a függés branchéről), `sdd batch status`.
+3. Őr: a `#spec-ok köteg <név>` a köteg-fájlban felsorolt minden branchet
+   jóváhagy, a specet a saját worktree-jében keresve; a fokozat-emelkedés
+   szabálya feature-enként él. A worktree a projektmappán kívül nem
+   használható a kötegben.
+4. Lint: a köteg-fájl formátuma; auth- vagy biztonsági feature (a spec
+   kockázati területei szerint) nem lehet a kötegben.
+
+Ellenőrzés: az őr regressziós tesztjei (jóváhagyás kötegre, worktree-ben,
+fokozat-emelkedés egy köteg-tagban), a lint és az `sdd batch` tesztjei.
+
+## 2. szakasz: az aktív ablak (`/batch` skill)
+
+1. A közös kör: sorrend, függések, közös fájlok, közös fogalmak, időbecslés.
+2. Feature-enként a `feature-spec` lépései, a teljes `grill`-lel.
+3. A jóváhagyás előtt a futásidő-becslés és a kimaradók kérdése; utána az
+   `overnight` megbízása a köteg egészére (artifact: igen vagy nem).
+
+## 3. szakasz: az építő ablak
+
+1. Köteg-napló a repón kívül (`~/.claude/execute/<projekt>/köteg-<név>/`),
+   amelyből egy megszakadt futás folytatható.
+2. Feature-enként az `execute-plan`, egyszerre legfeljebb kettő; a
+   `validate-feature` ablakok nélküli, merge-kész módja (archiválással,
+   merge nélkül).
+3. Parkolás: fokozat-emelkedés, a specen túli döntés, 3 sikertelen javítási
+   kör, őr-elutasítás; csak az érintett feature és a ráépülők állnak meg.
+
+## 4. szakasz: a döntési ablak
+
+1. `sdd batch report`: a jelentés váza a köteg-fájlból és a naplókból.
+2. A reggeli jelentés (chat, `jelentes.md`, opcionálisan artifact), majd a
+   merge-ablak; a függő párok együtt mergelhetők.
+3. A javítás kérése a spec „Döntések” szakaszába, a feature a következő
+   köteg első tétele; az el nem döntött feature branche vár.
+
+Ellenőrzés: egy próba-köteg egy mintaprojekten (két független feature és
+egy függő pár) egy felügyelet nélküli futással; az owner értékeli a
+jelentést és a merge-ablakot.
+
+Kockázat: egy rossz éjszaka több feature-t visz rossz irányba. Ellenszer:
+alapos aktív ablak, a parkolási szabályok, a reggeli felülbírálás, és hogy
+éjjel semmi nem kerül a `main`-be. Visszaút: a köteg csak brancheket hoz
+létre; az egyenkénti folyamat változatlan.
+
+## Tények (kritikus kör, 2026-11-22)
+
+- Az építő ablak nagy része megvan: az `overnight` skill (megbízás,
+  döntésnapló, reggeli jelentés, éjjel tiltott merge) és az `execute-plan`
+  (feladatonként friss subagent, folytatható napló a repón kívül).
+- A `#spec-ok` csak a session aktuális branchét hagyja jóvá
+  (`sdd_guard.py`, `approve`); a jóváhagyás-flag a projekt `.claude/`
+  mappájában, branchnév szerint él.
+- Az őr csak a projektmappán belüli worktree-ket látja (`locate`); egy
+  testvérmappában futó építést nem gátol. A köteg worktree-i ezért a
+  `.claude/worktrees/` alatt legyenek (a sablon `gitignore`-ja már ignorálja).
+- A `suite_lock` a közös git-mappában zárol, így a teljes tesztkörök a
+  worktree-k között is sorban futnak; a `.claude/check.sh` nem zárol.
+- A sablon `CLAUDE.md`-je: biztonsági és auth feature-nél minden csoport után
+  megállás, előre nem engedélyezhető.
+
+## Döntések
+
+- Éjjel a független feature-ök egyszerre épülnek, egyszerre legfeljebb kettő; a közös fájlt érintők sorban (döntött: owner, 2026-11-22).
+- Ha B az A-ra épül, B az A branchére épül ugyanabban az éjjelben; reggel együtt mergelhetők, A elvetésekor B újraépítendő, ezt a jelentés jelzi (döntött: owner, 2026-11-22).
+- Biztonsági és auth feature nem kerülhet kötegbe; nappal, a mostani módon megy (döntött: owner, 2026-11-22).
+- A köteget egy kulcsszó hagyja jóvá: `#spec-ok köteg <név>` sor elején; az őr a köteg minden specét jóváhagyja (döntött: owner, 2026-11-22).
+- Eltörő subagent nem fut a kikérdezésben: a változás a munkafolyamatot érinti, nem adatot, és visszavonható (döntött: agent, 2026-11-22).
+- Az aktív ablak egy közös körrel kezd az egész kötegre (sorrend, függések, közös fájlok, közös fogalmak), utána minden feature a teljes `grill`-t kapja (döntött: owner, 2026-11-22).
+- A kötegnek nincs fix mérete: az agent a specek alapján megbecsli a futásidőt, és a jóváhagyás előtt szól, ha nem fér bele az éjszakába; a kimaradókról az owner dönt (döntött: owner, 2026-11-22).
+- Ha reggel egy feature javítást kér, a kérés a specje „Döntések” szakaszába kerül, és a feature a következő köteg első tétele lesz (döntött: owner, 2026-11-22).
+- A reggeli jelentés a chatben és a `jelentes.md`-ben jön (ahogy az `overnight` skillben); egy artifact oldal opcionális: a köteg indításakor az agent megkérdezi, kér-e az owner a végén artifactot (döntött: owner, 2026-11-22).
+- Egy feature elakadása (fokozat-emelkedés, a specen túli döntés, 3 sikertelen javítási kör) csak azt és a ráépülőket parkolja, a többi folytatódik (döntött: agent, 2026-11-22).
+- Éjjel nincs push, a feature branchek sem mennek fel; a merge és a push reggel, az owner kattintása után (döntött: agent, 2026-11-22).
+- A párhuzamos worktree-k a `.claude/worktrees/` alatt vannak, mert az őr csak a projektmappán belül gátol (döntött: agent, 2026-11-22).
+- Az építés az `overnight` és az `execute-plan` skillre épül; új a `/batch` skill (aktív és döntési ablak) és az `sdd batch` parancsok (döntött: agent, 2026-11-22).
+- A köteg-fájl helye `Plans/kotegek/ÉÉÉÉ-HH-NN-<név>.md`; a kulcsszó az ott felsorolt brancheket hagyja jóvá (döntött: agent, 2026-11-22).
+- Merge-kész: minden gépi ellenőrzés zöld, a `--final` lint tiszta, a review a kockázat szerint lefutott és a valós találatok javítva, a spec archiválva, a branch egy mergére a `main`-től; a kézi ellenőrzések listázva (döntött: agent, 2026-11-22).
+- Éjjel a spec „Döntések” szakasza új agent-döntéssel bővülhet (reggel felülbírálható); a fokozat vagy a hatókör növekedése parkolás (döntött: agent, 2026-11-22).
+- A reggel el nem döntött feature branche vár, a következő köteg nem nyúl hozzá, és a jelentés újra elé teszi (döntött: agent, 2026-11-22).
+- Az owner a 8 agent-döntést a felülbíráló ablakban változtatás nélkül elfogadta (döntött: owner, 2026-11-22).
