@@ -41,8 +41,9 @@ hold the details; each step says when to read one.
 
 **S:** no interview. Restate the goal, "kész, ha" and how the owner checks
 it in `spec.md`, and go to step 4. **M and L:** run the `grill` skill when it
-is installed (popup rounds, the recommended answer first, facts looked up by
-you, never asked); otherwise follow the rules below.
+is installed, with its critical pass even when the request looks complete,
+and its break-it subagent when the change is likely `ajtó: egyirányú` or
+`hatósugár: nagy`; otherwise follow the rules below.
 
 Read `specs/mission.md`, `specs/tech-stack.md` and, if relevant, earlier specs
 in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
@@ -54,7 +55,11 @@ in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
 3. **Context / validation:** constraints, stakeholder notes, and how we will
    know it works (commands the agent can run, manual checks for the owner).
 
-Point out conflicts with the constitution. Do not resolve them silently.
+Before the first popup, read the request as a sceptic: check its claims
+against the code, walk 3–5 edge cases through it, and ask "it shipped and
+went wrong: what happened?"; each gap becomes a question. Ask round after
+round until no decision is open. Point out conflicts with the constitution.
+Do not resolve them silently.
 A name the interview fixes goes to `docs/szotar.md`; a decision that is
 hard to reverse, surprising without context and a real trade-off is offered
 as `docs/decisions/NNNN-<slug>.md` (formats: `specs/README.md`; create them

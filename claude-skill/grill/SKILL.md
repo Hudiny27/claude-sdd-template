@@ -29,17 +29,27 @@ Reach a shared understanding of the plan before building. Treat the plan as a
 - **The owner decides** product, scope, wording users see, priorities,
   cost, anything irreversible, and anything under "Ask first".
 - **Someone else decides** legal, a colleague's system, a client's needs:
-  write a questionnaire (below) instead of guessing.
+  write a questionnaire instead of guessing (`questionnaire.md` in this
+  skill's folder), note in the plan that it waits on them, and go on.
 - **A conflict with the project's baseline document** (a PRD, a
   constitution) is always an owner question. Never settle it in
   "Döntések"; follow the project's rule for it (for example a written
   change proposal instead of an edit).
 
+## Critical pass
+
+Before the first round, read the plan as a sceptic, even when it looks
+complete: check its claims against the code and the data, walk 3–5 edge
+scenarios through it, run a pre-mortem, and pin fuzzy words. When the plan
+is hard to reverse or reaches far, a fresh break-it subagent attacks it
+too. How: `critical-pass.md` in this skill's folder. What it finds enters
+the frontier; facts you record, decisions you ask.
+
 ## Rounds
 
 1. **Build the frontier:** the open owner-decisions whose prerequisites are
-   already settled. A question that depends on an answer still open waits
-   for a later round.
+   already settled, including what the critical pass found. A question that
+   depends on an answer still open waits for a later round.
 2. **Ask the frontier with AskUserQuestion** (up to 4 questions per popup;
    more popups if needed). For each question:
    - the header: a 1-2 word topic;
@@ -57,14 +67,20 @@ Reach a shared understanding of the plan before building. Treat the plan as a
    "döntött: owner" and the date.
 4. **Recompute the frontier** and ask the next round. Facts you looked up
    meanwhile may close questions; say so in one line instead of asking.
-5. **Finish** when the frontier is empty. Show the decisions in a short list
-   and confirm with one popup ("Ez így rendben?" / "Van még, amit
-   tisztázni kell"). When the caller (size-up, feature-spec) asks for its
-   own approval right after, skip this popup: the caller's approval covers
-   it. Do not start building until it is confirmed.
+5. **Finish** when the frontier is empty **and** a second critical pass, over
+   the settled plan, finds no new branch. Then:
+   - **Your own decisions:** list every "döntött: agent" choice made so far
+     in one popup, as multi-select questions of up to 4 decisions each
+     ("Melyiket módosítanád?"). A ticked one becomes an owner question in
+     one more round.
+   - Show the decisions in a short list and confirm with one popup ("Ez így
+     rendben?" / "Van még, amit tisztázni kell"). When the caller (size-up,
+     feature-spec) asks for its own approval right after, skip this popup:
+     the caller's approval covers it. Do not start building until it is
+     confirmed.
 
-Keep it short: most M-level work needs one or two rounds. If a third round
-is needed, say why in one line.
+There is no round limit. Most M-level plans take 2–4 rounds; start each
+round with one line on what opened it (which answer, which scenario).
 
 ## Terms
 
@@ -77,26 +93,6 @@ term per answer, not batched at the end:
 - a project with its own glossary (a `/szotar` page, a glossary file): there;
 - otherwise: offer once to start `docs/szotar.md`.
 
-A word used in two meanings is an owner question, not a silent choice.
 Decisions live in the plan's "Döntések". Offer a decision record
 (`docs/decisions/NNNN-<slug>.md`, the project's format) only when all three
-hold: hard to reverse, surprising without context, the result of a real
-trade-off.
-
-## Questionnaire for someone else
-
-When a question needs another person, write `kerdoiv-<kinek>.md` next to
-the plan, following the project's file naming (or in the project's folder
-for that audience, e.g. `docs/legal/` for the lawyer):
-
-- formal Hungarian (magázás), for a reader who has not seen the chat;
-- 2-4 sentences of context: what we are building and why their answer
-  matters;
-- numbered questions; for each, the options we see, our recommendation and
-  why, and a blank "Válasz:" line;
-- what we do until they answer (the default we will assume);
-- if the project has a Markdown-to-Word helper (for example
-  `scripts/legal_docx.py`), produce the .docx copy with it.
-
-Record in the plan that the question is waiting on that person, and keep
-going with the rest of the frontier.
+hold: hard to reverse, surprising without context, a real trade-off.

@@ -89,6 +89,7 @@ git clone git@github.com:Hudiny27/claude-sdd-template.git ~/.claude/templates/sd
 mkdir -p ~/.claude/skills
 cp -r ~/.claude/templates/sdd/claude-skill/sdd-init ~/.claude/skills/
 cp -r ~/.claude/templates/sdd/claude-skill/architecture-review ~/.claude/skills/
+cp -r ~/.claude/templates/sdd/claude-skill/grill ~/.claude/skills/
 ```
 
 Az `architecture-review` a kódszerkezet-felmérés (a `/replan` ajánlja fel
@@ -188,6 +189,7 @@ a `- [ ] ` előtagot olvassa, így a fázisok elnevezése nyelvfüggetlen.
 | `tests/` | A sablon tesztjei: telepítő, méretkeret, a `.claude/lib/` könyvtárak, a lint és az `sdd` parancs (`python3 -m pytest -q tests/`) |
 | `claude-skill/sdd-init/` | A globális `/sdd-init` skill (a `~/.claude/skills/` alá kell másolni) |
 | `claude-skill/architecture-review/` | A globális kódszerkezet-felmérő skill (szintén a `~/.claude/skills/` alá) |
+| `claude-skill/grill/` | A globális kikérdező skill, amelyet a `/feature-spec` M és L fokozatnál hív |
 
 ---
 
