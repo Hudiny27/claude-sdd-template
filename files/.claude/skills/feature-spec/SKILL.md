@@ -14,57 +14,32 @@ description: >-
 
 # Feature spec
 
-Writes the spec for one feature. **No production code in this skill.** The SDD
-guard blocks code until the owner approves the spec with `#spec-ok`.
+Writes the spec for one feature. Reference files in this skill's folder
+hold the details; each step says when to read one.
 
-## 1. Preconditions (report each one; stop if any fails)
+## 1. Preconditions
 
-- The working tree is clean (`git status --short` is empty).
-- The previous feature branch is merged and you are on an up-to-date `main`.
-- The constitution exists (`specs/mission.md`, `specs/tech-stack.md`,
-  `specs/roadmap.md`). If not, run `/constitution` first.
+- Read `clean-start.md` in this skill's folder and run its checks.
 - Recommend `/clear` if this session already worked on something else, so the
   spec, not chat memory, carries the intent.
 
-## 2. Pick the feature and branch
+## 2. Pick the feature, the branch and the level
 
-- Default: the first open phase in `specs/roadmap.md` (`- [ ] Fázis N — ...`).
-  If the owner named something else: an S-level fix goes ahead without a
-  phase; anything bigger that is not on the roadmap goes through `/replan`
-  first.
-- Branch: `feature/phase-<n>-<short-name>` (for replanning changes:
-  `replanning/<topic>`; for an off-roadmap S fix: `fix/<slug>`). The spec directory is
-  `Plans/<today, YYYY-MM-DD>-<last part of the branch name>/`. The guard,
-  the pre-commit hook and CI find the spec by this rule.
+- Default: the first open phase in `specs/roadmap.md`. If the owner named
+  something else: an S-level fix goes ahead without a phase; anything bigger
+  that is not on the roadmap goes through `/replan` first.
+- Branch and spec folder follow the naming rule in `CLAUDE.md`.
 - Before the spec, check read-only whether the goal is already met (the
   live setting, the current code, the deployed instance). If it is, the
   phase shrinks to an S-level check that records the evidence.
-
-## 2b. Pick the level
-
-Pick how much spec the work needs (the `size-up` skill has the full rules;
-use them when it is installed):
-
-- **S:** one session, low risk, clear goal (a fix, a small tweak).
-- **M:** 1-3 sessions, or it touches one risky area.
-- **L:** many sessions, several risky areas, or hard to reverse.
-- Risk (schema or data migration, auth, payments or paid APIs, deploy,
-  legal or privacy, mail to real users, deleting data, formats existing
-  users depend on) makes it at least M. A big foggy idea is not a spec yet:
-  map it first (`wayfinder`), with no feature branch.
-- **The level rises mid-work** (a new risk, more sessions): stop coding,
-  say so, write the larger spec (with its interview) and ask for a new
-  `#spec-ok`. The guard blocks code edits until then.
-
-Propose the level with one AskUserQuestion popup, the recommended one first,
-marked "(Javasolt)", each with what the owner gets and how long the review
-takes. For an obvious S, state it in one line instead. Record it as `szint:`
-at the top of `spec.md` (S, M); L uses the three files.
+- Level: S, M or L as in `CLAUDE.md` ("Szabályok lépésenként"); the
+  `size-up` skill has the full rules when it is installed. A big foggy idea
+  is not a spec yet: map it first (`wayfinder`), with no feature branch.
 
 ## 3. Interview before writing
 
 **S:** no interview. Restate the goal, "kész, ha" and how the owner checks
-it in `spec.md`, and go to step 5. **M and L:** run the `grill` skill when it
+it in `spec.md`, and go to step 4. **M and L:** run the `grill` skill when it
 is installed (popup rounds, the recommended answer first, facts looked up by
 you, never asked); otherwise follow the rules below.
 
@@ -80,126 +55,21 @@ in `Plans/done/`. Then use the AskUserQuestion tool, grouped on these three,
 
 Point out conflicts with the constitution. Do not resolve them silently.
 
-When the feature copies an existing interface (another product, a sister
-project, a screenshot the owner sent), write down its behaviour before the
-interview, not only its look: the states an item can be in, and what each
-click does to it (toggles it, moves it, removes it from the list). Put the
-choices that differ from the reference into the interview.
-
-A scope line that leaves something out because "it does not exist today"
-(no such action, no such field) is checked in the code or the running
-interface first.
-
-When the feature calls an external API or SDK, read the installed SDK's
-signature and docstrings for every parameter the spec will use, before the
-interview: mutually exclusive parameters, ranges, defaults and plan limits.
-Note them in the `requirements.md` context; a constraint that rules out an
-option the owner wants goes into the interview, not into the code later.
-
-When the feature depends on metered CI or cloud usage (GitHub Actions
-minutes, a cloud bill), check before the interview that the quota or budget
-allows the planned runs (for GitHub: the account's Actions usage and budget),
-and note the result in the context. A used-up quota blocks every run
-without any error in the code.
-
-When the feature adds a GitHub workflow that is started by hand
-(`workflow_dispatch`), plan for GitHub's rule that such a workflow can only be
-dispatched once its file is on the default branch, or after it has run once:
-either an early merge of the workflow files, or a first run triggered by a
-push. Put the chosen way into the plan.
-
 ## 4. Write the spec files
 
 Use the formats in `Plans/README.md`. **S and M:** one `spec.md` in the spec
-directory (format "spec.md (S és M fokozat)"); a `validate.sh` only for an M
-with automated checks worth scripting. **L:** the files below.
+directory; a `validate.sh` only for an M with automated checks worth
+scripting. **L:** `plan.md`, `requirements.md`, `validation.md` and
+`validate.sh`.
 
 - `plan.md`: numbered task groups, small enough to review one by one; the
   last group runs `validation.md`.
-- `requirements.md`: scope, out of scope, decisions (with date, why, and who
-  decided: `owner` or `agent`; one decider per line, split mixed decisions),
-  context. No variable names or CSS-level detail. A number you pick that
-  depends on real data (a threshold, a loudness, a rate) is marked
-  „kalibrálandó” in its decision, and `plan.md` measures it on live samples
-  in the task group that introduces it, not only in the final manual check;
-  the results go to a "Kalibrálás" section in the format of
-  `Plans/README.md`.
-  A measured value the spec pins (a hash, a cache key, a count "measured on
-  main") names the exact input it was measured from (the request, the file,
-  the command), so the implementation can reproduce it.
-- `validation.md`: automated checks the agent runs (exact commands and
-  expected results), manual checks for the owner, definition of done. If the
-  feature ships a document or skill that an LLM follows (a guide, a prompt, a
-  skill), add a fresh-subagent probe: a subagent that gets only that document
-  does the task with it and reports where it got stuck or had to guess. Name
-  the probes (one per mode), what each gets, and its success criterion; the
-  setup, the prompt skeleton and the rounds are in `Plans/README.md` ("Friss
-  subagent-próba"). Write each probe's task from the sample project's real
-  content (look at the sample while writing: its segments, scenes, what it
-  shows), so the request makes sense on it and its success can be checked;
-  write the probe setup as `prepare-probe.sh` in the spec folder (base copy
-  brought up to date once, a fresh copy per round with its generated
-  documents regenerated). The agent runs the probe during validation and fixes the
-  gaps it finds, then repeats it with a new fresh subagent until a round
-  finds no new significant gap (at most 3 rounds, then stop and tell the
-  owner what remains; the measure is in
-  `Plans/README.md`, minor gaps start no new round). If checks call a paid API, state the expected cost of
-  the live and the manual checks (characters, minutes, calls). A test that
-  checks a time upper bound (a wait, a delay, a duration) measures again a
-  few times before it fails: a loaded or virtualized machine stalls now and
-  then, while a real timing bug fails every try. A promise that something
-  does not happen (no plaintext on disk, no network call, no file outside a
-  folder) gets a check that watches the operating system (a system-call
-  trace of the real function), not only a test of the code path: a library
-  may do it behind the code's back. The same run also triggers one allowed
-  event and checks that the trace shows it: "0 events" alone may mean a
-  broken trace.
-- `validate.sh`: every automated check from `validation.md` as one bash
-  script, run from the repo root; before handing over, go through the
-  automated bullets of `validation.md` one by one and name the `validate.sh`
-  check (or the test module it runs) that covers each. A test never names
-  the spec folder (`Plans/<dir>/...`): the archive move to `Plans/done/`
-  breaks it. A helper script in the spec folder (a measurement, a probe)
-  takes the repo root from the working directory or `git rev-parse
-  --show-toplevel`, never from its own place (`parents[n]`), for the same
-  reason. One `PASS`/`FAIL` line per check with short
-  evidence, non-zero exit if any check fails, its own temp dir cleaned up.
-  Background processes it starts (servers, stub APIs) are stopped at exit,
-  failed runs included; start them in the main shell, never inside `$(...)`,
-  where the PID is lost and the process outlives the script.
-  A failed test run's evidence names the failed tests (pytest: the `FAILED`
-  lines of `-rf`), so finding them needs no second full run.
-  A check that compares with `main`'s code exports it from the repo
-  (`git -C "$ROOT" archive main`, never from a temp dir) and first checks
-  that the copy is not empty, so the comparison cannot silently match the
-  branch with itself.
-  It takes a `--quick` switch that skips the full test suite and the
-  repeated or load runs, for the rerun after the archive move when the code
-  has not changed since the last full pass.
-  It is approved with the spec: the implementation reads it before touching
-  it and extends it instead of rewriting it; changes go under "Döntések".
-  Live, paid or networked checks only behind an opt-in switch: `--live`
-  loads the project's documented local settings itself (and runs the heavy
-  steps under the memory limit when the tech stack asks for one). It lives
-  in the spec folder, so it is written now, with the spec. It finds its own folder
-  with `$(dirname "$0")` and never hard-codes `Plans/<dir>`, so it still runs
-  after the spec moves to `Plans/done/`. Local, git-ignored settings it needs
-  (such as live sample paths, never secrets) come from a file the project
-  documents. Before handing over, run `bash -n` and `shellcheck` on it (via
-  `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable` when
-  shellcheck is not installed) and fix what they report: an error such as an
-  unset variable under `set -u` otherwise stays hidden until the first check
-  that reaches it. Then run its offline part once: a `FAIL` because the new
-  code is missing is expected, but every tool it calls must accept its flags
-  and every summary it greps must appear. Run its `--live` part once as
-  well when it only reads the deployed instance: the tools there may differ
-  from the local ones. Open every live URL it uses once now (status and
-  final host after redirects): a page behind a login otherwise fails only
-  at validation. A check that calls an endpoint or command the feature adds
-  runs once in the task group that adds it (`plan.md` says so), so a wrong
-  path or body surfaces there. A check that compares two outputs compares only
-  their stable part (counts, states), never a file name, timestamp or age
-  that differs by design.
+- A number you pick that depends on real data: before writing its decision,
+  read `calibration.md` in this skill's folder.
+- If the feature ships a document or skill that an LLM follows: before
+  writing `validation.md`, read `probe.md` in this skill's folder.
+- Before writing `validate.sh`, read `validate-sh.md` in this skill's
+  folder, and do its "Before handing over the spec" part before step 5.
 
 ## 5. Hand over for review
 
@@ -208,16 +78,10 @@ with automated checks worth scripting. **L:** the files below.
 - If the spec changes a locked file (the constitution, the guard's files),
   name it in the summary: the implementation asks for `#spec-szerkesztes`
   at its start, not during the validation.
-- Apply review changes yourself and keep the spec files (including
-  `validate.sh`) consistent.
-- Ask about the commit `docs(plans): add spec for <feature>` in a popup
-  (CLAUDE.md, "Döntések és következő lépések felugró ablakban"), together
-  with any other open choice of this step (for example cleaning up a
-  scratch worktree), and make only what the owner ticks.
-- Tell the owner at the end of the message, in the chat, not in the popup:
-  when the spec is right, start a line of the message with `#spec-ok`
-  (keywords are typed, never clicked). Then start a fresh context (`/clear`) and implement:
-  "Implement the task groups in Plans/<dir>/plan.md." For security, auth, data
-  or migrations: one task group at a time. `#spec-ok` also approves one
-  commit per task group once its tests, lint and type checks pass; pushing
-  and merging still need the owner.
+- Close with the popup (`CLAUDE.md`, "Döntések és következő lépések felugró
+  ablakban"): the commit `docs(plans): add spec for <feature>` and any other
+  open choice of this step.
+- Tell the owner at the end of the message, in the chat: when the spec is
+  right, start a line of the message with `#spec-ok`. Then start a fresh
+  context (`/clear`) and implement: "Implement the task groups in
+  Plans/<dir>/plan.md."

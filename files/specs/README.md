@@ -2,9 +2,7 @@
 
 A constitution azokat a döntéseket tartalmazza, amelyekre minden feature
 épül. Az owner és az agent közötti interjúban készül (`/constitution`), és az
-owner kezeli: amint mindhárom fájl létezik, az SDD őr blokkolja az agent
-írásait, amíg az owner fel nem oldja őket a `#spec-szerkesztes` kulcsszóval
-(lásd `CLAUDE.md`).
+owner kezeli.
 
 | Fájl | Mire válaszol | Mikor változik |
 |---|---|---|
@@ -22,7 +20,7 @@ owner kezeli: amint mindhárom fájl létezik, az SDD őr blokkolja az agent
 <egy bekezdés: a probléma és a változás, amit a projekt hoz>
 
 ## Célközönség
-- <ki> — <mire van szüksége tőle>
+- <ki>: <mire van szüksége tőle>
 
 ## Hatókör
 - <hatókörben>
@@ -31,7 +29,7 @@ owner kezeli: amint mindhárom fájl létezik, az SDD őr blokkolja az agent
 - <kifejezetten hatókörön kívül>
 
 ## Érintettek igényei
-- <név / szerep> — <mit kért>
+- <név / szerep>: <mit kért>
 ```
 
 ## tech-stack.md
@@ -69,10 +67,10 @@ egyetlen roadmap-módosítás, amelyet az agent feloldás nélkül elvégezhet.
 A fázisok szándékosan kicsik: mindegyik szállítható szelet, önállóan
 review-zható és tesztelhető.
 
-- [ ] Fázis 1 — <cím>
+- [ ] Fázis 1: <cím>
   - <mi készül el>
   - <honnan tudjuk, hogy működik>
-- [ ] Fázis 2 — <cím>
+- [ ] Fázis 2: <cím>
   - ...
 ```
 

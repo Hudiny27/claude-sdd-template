@@ -32,24 +32,14 @@ Use the AskUserQuestion tool, grouped on these three, **before writing to disk**
 Bring your own recommendations and trade-offs into the options. The owner
 decides.
 
-## 3. Write
+## 3. Write, review and commit
 
-- While any of the three files is missing, the guard lets you write all of
-  them (bootstrap).
-- Once all three exist they are locked. If a write is denied, stop: show the
-  exact change you propose (file, section, old -> new, why) and ask the owner
-  to send `#spec-szerkesztes`. Never work around the guard.
-- The roadmap uses one checkbox line per phase: `- [ ] Fázis N — <cím>`.
-
-## 4. Review and commit
-
+- Write the three files in the formats of `specs/README.md`.
 - Summarise the three files in a few lines and point out every assumption
   you made to fill a gap.
 - The owner reviews. Apply requested changes yourself, keeping the three files
   consistent with each other.
-- Ask in one popup (CLAUDE.md, "Döntések és következő lépések felugró
+- Ask in one popup (`CLAUDE.md`, "Döntések és következő lépések felugró
   ablakban"), a multi-select of the next steps: the commit
   `docs(specs): <summary>`, then `/feature-spec` for the first open roadmap
   phase. Do only what the owner ticks.
-- If the owner still has to send `#spec-zar`, say so at the end of the
-  message: keywords are typed, never clicked.

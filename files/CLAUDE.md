@@ -6,14 +6,6 @@ kérdést, a kód a **hogyan**. Az alábbi szabályok a globális
 ezek érvényesek. Az alapszabályokat hookok kényszerítik ki (lásd
 „Kikényszerítés”), ezért egy elutasítás stoptábla, nem akadály.
 
-## Nyelv
-
-A projekt Markdown-fájljai (`specs/`, `Plans/`, README-k, `CLAUDE.md`)
-magyarul készülnek. Kivételek, amelyek angolul maradnak: kód, kódkommentek,
-commit üzenetek és a skillek (`.claude/skills/`).
-Fájlnevek, útvonalak, kulcsszavak, parancsok, env változók és modell-ID-k nem
-fordítandók.
-
 ## Az igazság forrása
 
 Elsőbbség: `specs/` (constitution) > az aktuális feature spec a `Plans/`
@@ -21,24 +13,26 @@ alatt > a chat előzményei. Soha ne támaszkodj korábbi sessionök emlékére;
 olvasd a fájlokat.
 
 ```
-CLAUDE.md                  # ezek a szabályok
+CLAUDE.md                  # ezek a szabályok (sablonfájl)
 specs/                     # constitution: az owner kezeli, hookkal zárolt
 ├── mission.md             # miért: vízió, célközönség, hatókör, nem célok
 ├── tech-stack.md          # stack, verziók, korlátok, tesztelés
-├── roadmap.md             # kis fázisok, fázisonként egy "- [ ] Fázis N — cím" sor
+├── roadmap.md             # kis fázisok, fázisonként egy "- [ ] Fázis N: cím" sor
 └── backlog/               # kutatás és ötletek, amelyek még nincsenek a roadmapen (nem zárolt)
 Plans/                     # feature specek: az agent írja, az owner hagyja jóvá
-├── YYYY-MM-DD-<slug>/     # plan.md, requirements.md, validation.md, validate.sh
+├── YYYY-MM-DD-<slug>/     # S/M: spec.md; L: plan.md, requirements.md, validation.md, validate.sh
 └── done/                  # befejezett feature-ök
 .claude/hooks/sdd_guard.py # az őr (Claude Code hookok, pre-commit, CI)
-.claude/skills/            # constitution, feature-spec, validate-feature, replan
+.claude/skills/            # constitution, feature-spec, validate-feature, replan, segédfájlaikkal
+.claude/project.md         # a projekt saját, mindig betöltött kiegészítése
+.claude/rules/             # a projekt saját szabályai, útvonalhoz kötve
 .claude/workflow-log.md    # helyi munkafolyamat-javítások naplója (10 tételenként review)
 .githooks/pre-commit       # agenttől független védővonal
 ```
 
-Formátumok: `specs/README.md` és `Plans/README.md`. Branch
-`feature/phase-2-agents` ↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a
-branchnév utolsó része).
+Formátumok: `specs/README.md` és `Plans/README.md`. Branch `feature/phase-2-agents`
+↔ `Plans/YYYY-MM-DD-phase-2-agents/` (a slug a branchnév utolsó része).
+Roadmapen kívüli S javítás branchneve `fix/<slug>`; ennek nincs fázisa.
 
 ## Munkafolyamat
 
@@ -74,176 +68,82 @@ Ennek megfelelően járj el.
 - Ha egy írást elutasít az őr: állj meg, mondd el az ownernek, mit akartál
   módosítani és miért, és javasold a pontos változtatást (fájl, szakasz,
   régi -> új). Soha ne kerüld meg az őrt (más eszközzel, scripttel, más
-  útvonallal, flagfájllal).
-- A git pre-commit hook ugyanezt a kódszabályt kényszeríti ki bármely agentre
-  vagy szerkesztőre: nincs kódcommit `main`-en, és nincs olyan branchen, ahol
-  nincs spec (merge és squash-merge commit engedélyezett). Az opcionális CI
-  ellenőrzés (`.github/workflows/sdd-check.yml`) elbuktat minden PR-t, amely
-  kódot módosít spec módosítása nélkül, kivéve ha `no-spec-change` címkéje
-  van.
-- Ismert rések: az önmaguk által fájlt író programokat (csomagkezelők,
-  generátorok, formázók) a hook nem látja. Az ugyanabban a parancsban
-  megadott változókat (`P=...; cat > "$P/x"`) behelyettesíti; a máshonnan
-  jövő változót a munkakönyvtárhoz viszonyított útvonalnak veszi, ezért egy
-  repón kívüli írást is megtagadhat. Ezeket a pre-commit hook commitkor
-  elkapja. Viselkedj úgy, mintha a szabályokban nem lennének rések.
+  útvonallal, flagfájllal). Viselkedj úgy, mintha a szabályokban nem
+  lennének rések.
+- A git pre-commit hook és az opcionális CI ellenőrzés (`sdd-check.yml`)
+  bármely agentre vagy szerkesztőre ugyanezt a kódszabályt kényszeríti ki.
+
+## Sablon és projekt
+
+A sablon fájljait (`CLAUDE.md`, a skillek és segédfájljaik, a két README, a
+hookok) a projekt nem szerkeszti: az `install.sh --update` felülírja őket. A
+projekt tanulságai a bővítési pontokra kerülnek: `.claude/rules/<téma>.md`
+(fájlokhoz kötve `paths:` frontmatterrel, enélkül induláskor töltődik be),
+`.claude/project.md`, és a projekt saját scriptjei és tesztjei. A
+szabályhely sorrendje: `/replan`. A projekt kiegészítése: @.claude/project.md
 
 ## Szabályok lépésenként
 
-**Constitution:** előbb interjú (AskUserQuestion, mission / tech stack /
-roadmap szerint csoportosítva), utána írás. Brownfield: előbb a meglévő
-kódból, README-ből, TODO-ból és commitokból vezesd le, utána kérdezz a
-hiányokról. A roadmap-fázisok kicsik, szállíthatók és önállóan
-review-zhatók.
-
-**Feature spec:** tiszta állapotból indulj (nincs commitolatlan munka, az
-előző branch mergelve, `main`-en vagy), lehetőleg friss kontextussal
-(`/clear`). Először fokozat: **S** (egy session, kis kockázat), **M** (1–3
-session vagy egy kockázatos terület), **L** (nagy vagy nehezen
+**Feature spec:** először fokozat: **S** (egy session, kis kockázat), **M**
+(1–3 session vagy egy kockázatos terület), **L** (nagy vagy nehezen
 visszafordítható); kockázatos terület (migráció, auth, fizetés vagy fizetős
 API, deploy, jogi szöveg, éles levél, adattörlés, a felhasználók meglévő
 fájljaitól függő formátum) legalább M. Ha a fokozat menet közben nő, állj
-meg, bővítsd a specet, és kérj új `#spec-ok`-ot; az őr addig tilt. S és M egyetlen `spec.md`-t kap
-(formátum: `Plans/README.md`), L a három fájlt. S-nél nincs interjú; M-nél és
-L-nél írás előtt interjú felugró kérdésekkel (`grill` skill, ha telepítve van),
-a javasolt válasz az első. A `validation.md` tartalmazzon olyan parancsokat, amelyeket
-magad is lefuttatsz, és az owner kézi ellenőrzéseit. Ha a feature LLM által
-követett dokumentumot vagy skillt szállít (útmutató, prompt, skill), a
-`validation.md`-be kerüljön friss subagent-próba is: egy subagent csak a
-dokumentumot kapja meg, elvégzi vele a feladatot, és jelenti, hol akadt el.
-A javítások után a próbát egy újabb friss subagenttel meg kell ismételni,
-amíg egy kör nem talál új lényeges hiányt (legfeljebb 3 kör, utána
-megállás és jelzés az ownernek; a mércét lásd `Plans/README.md`). Ha a feature
-fizetős API-t hív, a `validation.md` megbecsüli az élő és a kézi
-ellenőrzések költségét. Az agent által választott, valódi adattól függő
-számértékek (küszöbök, időkorlátok, sebesség) „kalibrálandó” jelölést
-kapnak. Ebben a lépésben nincs kód.
+meg, bővítsd a specet, és kérj új `#spec-ok`-ot; az őr addig tilt.
 
 **Implementáció:** csak `#spec-ok` után. Kövesd a `plan.md`-t
-feladatcsoportonként. Biztonság, auth, adat és migrációk esetén: egyszerre
-egy csoport, utána állj meg. Adatnál és migrációnál az owner a `#spec-ok`-kor
-vagy utána egy üzenetben előre engedélyezheti, hogy a többi csoport megállás
-nélkül készüljön; biztonságnál és authnál nem. Ne menj túl a `requirements.md`-n. Ha valami
+feladatcsoportonként; az első csoport előtt olvasd el a
+`.claude/skills/feature-spec/implement.md`-t. Biztonság, auth, adat és
+migrációk esetén: egyszerre egy csoport, utána állj meg. Adatnál és
+migrációnál az owner a `#spec-ok`-kor vagy utána egy üzenetben előre
+engedélyezheti, hogy a többi csoport megállás nélkül készüljön;
+biztonságnál és authnál nem. Ne menj túl a `requirements.md`-n. Ha valami
 hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben. A
-„kalibrálandó” értékeket abban a csoportban kell az élő mintákon megmérni,
-amelyik bevezeti őket, nem csak a végső kézi ellenőrzésnél. A következő
-csoport kódjához csak az előző csoport commitja után nyúlj; amíg a
-tesztkör a háttérben fut, legfeljebb olvass és tervezz. Így minden commit
-egy csoport. A regressziós teszt „a javítás előtt bukik” próbája csak az új
-tesztet futtatja, időkorláttal: a régi kód más teszteket is elindíthat.
-Ha a feature látható vagy hallható kimenetet ad (stílus, elrendezés,
-hangszint), az owner egy élő mintát már abban a csoportban megnéz,
-amelyik bevezeti (S/M-nél az implementáció közben), nem csak a végső kézi
-ellenőrzésnél. A subagent-próba csak ezután fut, hogy a végleges
-útmutatót próbálja.
+következő csoport kódjához csak az előző csoport commitja után nyúlj. Így
+minden commit egy csoport.
 
-**Validáció:** futtasd le a `validation.md` minden ellenőrzését, és jelentsd
-az eredményt (sikeres/sikertelen) bizonyítékkal. Fizetős API-nál a
-tényleges felhasználást is, a becsléshez képest. A `validate.sh` és a teljes
-tesztkör alatt ne fusson párhuzamosan nehéz build, élő teszt vagy
-subagent-próba: a terhelés az időfüggő teszteket elbuktathatja. A review szintje: „működik-e
-és megfelel-e a specnek”. Nem triviális feature-nél ajánlj fel mély review-t
-párhuzamos subagentekkel. Kész akkor van, ha minden ellenőrzés sikeres, a
-spec és a kód szinkronban van, a roadmap-fázis ki van pipálva (ha van), és a spec a
-`Plans/done/` alá került. Ha az owner kéri, a merge nyitott kézi
-ellenőrzéssel is megtörténhet: ezek a `validation.md`-ben nyitottak maradnak,
-a döntés a `requirements.md` „Döntések” szakaszába kerül (`döntött: owner`),
-és a következő `/replan` visszakérdez rájuk.
+**Ötletek:** a feature közben felmerülő ötletek a `specs/backlog/` alá
+kerülnek, nem a branchre és nem a roadmapre; ezt a subagent promptjába is írd.
 
-**Újratervezés:** feature-ök között, `replanning/<topic>` branchen. Kis
-kódjavításhoz is kell spec és `#spec-ok`, de elég egy S fokozatú, három
-soros `spec.md`; nagyobb új munka új roadmap-fázis
-lesz. A feature közben felmerülő ötletek a `specs/backlog/YYYY-MM-DD-<topic>.md`
-alá kerülnek, nem az aktuális branchre és nem a roadmapre; ezt a
-subagentnek adott promptba is írd bele.
-
-**Párhuzamos munka:** egy munkafában egyszerre egy branch dolgozik. Ha egy
-feature közben más branchen kell dolgozni (például egy backlog-javaslat egy
-`replanning/` branchen), az külön git worktree-ben történik
-(`git worktree add ../<repó>-<topic> <branch>`); a futó feature munkafájában
-nincs branchváltás. Egy váltás a futó session és subagentjei alatt
-kicseréli a fájlokat, és az őr a másik branch szabályaival ítél.
-
-**Prototípus:** az owner kérésére készülhet eldobható prototípus egy
-feltételezés gyors kipróbálására. Feltételei:
-- a session scratchpadjében fut, a repón kívül, és nem kerül commitba;
-- nem érinti a projektkódot és a projekt függőségeit (saját, ideiglenes
-  környezetet használ);
-- a kódja nem kerül át a projektkódba; a rendes megvalósítás spec és
-  `#spec-ok` után készül. Az owner kérésére a prototípus scriptjei
-  referenciaként a `specs/backlog/prototype/` alá menthetők (a lint alól
-  fájlszinten kivéve), hogy a scratchpad törlése után is meglegyenek.
-
-A tanulságokat ugyanabban a sessionben a `specs/backlog/YYYY-MM-DD-<topic>.md`
-alá kell írni egy `replanning/<topic>` branchen; a roadmapre vételükről a
-következő `/replan` dönt.
+**Prototípus:** az owner kérésére, eldobhatóan: a session scratchpadjében,
+a repón kívül, saját ideiglenes környezettel, commit nélkül; a kódja nem
+kerül át a projektkódba, a rendes megvalósítás spec és `#spec-ok` után
+készül. Tanulságai ugyanabban a sessionben a `specs/backlog/` alá kerülnek
+egy `replanning/<topic>` branchen; a roadmapről a következő `/replan` dönt.
 
 ## A spec és a kód szinkronban marad
 
 - Minden viselkedés- vagy döntésváltozás ugyanabban a változtatásban
   frissíti a vonatkozó specfájlt. Ha egy hiba a specre vezethető vissza, a
   specet és a kódot együtt javítsd.
-- A review során feltárt döntések a `requirements.md` „Döntések” szakaszába
-  kerülnek, dátummal, indoklással és a döntéshozóval (`owner` vagy `agent`,
-  lásd `Plans/README.md`). A review-ban talált kihagyás nem kudarc:
-  rögzítsd.
+- A review során feltárt döntések a „Döntések” szakaszba kerülnek, dátummal,
+  indoklással és döntéshozóval (lásd `Plans/README.md`). A review-ban talált
+  kihagyás nem kudarc: rögzítsd.
 - A specmódosítások az agenten keresztül mennek, hogy a kapcsolódó fájlok
   (plan, requirements, validation, README) konzisztensek maradjanak.
-  Átnevezés vagy áthelyezés után – az owner IDE-s refaktorálása után is –
+  Átnevezés vagy áthelyezés után (az owner IDE-s refaktorálása után is)
   frissíts minden említést a specekben és a dokumentációban.
-
-## A specek részletessége
-
-Szerepeljenek: célok, célközönség, korlátok, sikerkritériumok, felhasználói
-folyamatok és a fontos technikai döntések (rögzített verziók, szigorúság,
-adatmodell). Maradjanak ki: változónevek, CSS-osztályok és a fájlok belső
-szerkezete.
 
 ## Döntések és következő lépések felugró ablakban
 
-Ha az ownernek kell döntenie vagy jóváhagynia valamit, az agent felugró
-ablakot ad (AskUserQuestion), nem a chatben kérdez. Ide tartozik a commit, a
-push, a merge, a takarítás (munkafa, próbamappa, ideiglenes fájl), a
-következő skill vagy lépés és minden nyitott kérdés, amit az agent nem
-dönthet el maga.
-
-- Az ablak előtt a chatben röviden ott van, amire a döntéshez szükség van:
-  eredmény, bizonyíték, feltételezések, kockázat. Az ablak csak a döntést
-  kéri, az átadást nem helyettesíti. A hosszabb magyarázat a chatbe kerül.
-- A javasolt opció az első, „(Javasolt)” jelöléssel. A leírása egyszerű
-  magyarsággal megmondja, mi történik, ha ezt választják, és mi függ tőle.
+- Az ablak előtt a chatben röviden ott van az eredmény, a bizonyíték, a
+  feltételezések és a kockázat; az ablak csak a döntést kéri.
 - Az egymástól független döntések egy ablakba kerülnek (legfeljebb négy
   kérdés). Ha egy lépés végén több, egymást nem kizáró teendő van (például
   commit, merge, egy próbamappa törlése, a következő skill), ezek egy
-  többválasztós kérdésbe (`multiSelect`) kerülnek, hogy az owner egyszerre
-  jelölhesse be őket. Az agent csak a bejelölt teendőket hajtja végre,
-  a felsorolt sorrendben.
-- A „Más” mezőbe írt válasz az owner utasítása, nem egy opció: el kell
-  olvasni, és aszerint kell eljárni.
-- Kivételek:
-  - A kulcsszavak (`#spec-ok`, `#spec-szerkesztes`, `#spec-zar`) nem
-    kattinthatók. A hook csak az owner begépelt üzenetét fogadja el, az
-    ablakban adott válasz nem jóváhagyás. Ilyenkor az agent a chat végén
-    pontosan megmondja, mit kell begépelni.
-  - Amit az agent maga eldönthet vagy kinézhet (globális szabály), arról
-    nem kérdez, ablakban sem.
-  - Overnight módban nincs ablak: az agent dönt, és naplózza a döntést.
+  többválasztós kérdésbe (`multiSelect`) kerülnek. Az agent csak a
+  bejelölt teendőket hajtja végre, a felsorolt sorrendben.
+- A kulcsszavak (`#spec-ok`, `#spec-szerkesztes`, `#spec-zar`) nem
+  kattinthatók: az ablakban adott válasz nem jóváhagyás. Az agent a chat
+  végén pontosan megmondja, mit kell begépelni.
 
 ## Viszony a globális szabályokhoz
 
-- A globális „~3 fájl fölött előbb terv” szabályt a feature spec teljesíti: a
-  `plan.md` a terv, a `#spec-ok` a jóváhagyás.
-- A globális „egy konkrét kérdést tegyél fel” szabály alól egy kivétel van: a
-  constitution- és a spec-interjú csoportosított kérdéseket használ.
-- A globális „angol dokumentáció” szabály helyett itt a fenti „Nyelv” szakasz
-  érvényes.
-- A globális git- és biztonsági szabályok továbbra is érvényesek. Minden lépés
-  végén javasolj commitot, és csak jóváhagyás után commitolj. Kivétel: a
-  `#spec-ok` egyben jóváhagyja, hogy az implementáció feladatcsoportonként
-  commitoljon (a csoport kódja, tesztjei és a hozzá tartozó specfrissítés
-  egy commitban), ha a csoport tesztjei, lintje és típusellenőrzése
-  sikeres. S és M fokozatnál nincs feladatcsoport: a teljes változás egy
-  commit, miután az ellenőrzései sikeresek. Az ellenőrzés és a commit egy
-  parancsban `&&`-vel kapcsolódik, soha `;`-vel. Soha ne pusholj és ne mergelj kérdezés nélkül.
-- Commit scope-ok: `docs(specs): ...` a constitutionhöz, `docs(plans): ...` a
-  feature specekhez, Conventional Commits a kódhoz.
+- A globális „~3 fájl fölött előbb terv” szabályt a feature spec teljesíti:
+  a `plan.md` a terv, a `#spec-ok` a jóváhagyás.
+- A `#spec-ok` jóváhagyja, hogy az implementáció feladatcsoportonként
+  commitoljon (a csoport kódja, tesztjei és specfrissítése egy commitban),
+  ha a csoport tesztjei, lintje és típusellenőrzése sikeres. S és M
+  fokozatnál a teljes változás egy commit, miután az ellenőrzései
+  sikeresek. Az ellenőrzés és a commit egy parancsban `&&`-vel kapcsolódik,
+  soha `;`-vel.

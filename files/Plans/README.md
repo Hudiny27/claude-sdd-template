@@ -1,8 +1,5 @@
 # Plans/: feature specek
 
-Minden roadmap-fázis (és minden kódot érintő újratervezési változtatás) saját
-feature specet kap, mielőtt bármilyen kód készülne:
-
 ```
 Plans/
 ├── YYYY-MM-DD-<slug>/     # aktív feature, <slug> = a branchnév utolsó része
@@ -15,34 +12,8 @@ Plans/
 └── done/                  # befejezett feature-ök, merge előtt ide kerülnek
 ```
 
-A fokozat a munka méretéhez igazodik: **S** (egy session, kis kockázat), **M**
-(1–3 session vagy egy kockázatos terület) egyetlen `spec.md`-t kap, **L**
-(nagy vagy nehezen visszafordítható) a három fájlt és a `validate.sh`-t. Egy M
-fokozatú spec mellé is kerülhet `validate.sh`, ha az „Ellenőrzés” szakasz több
-gépi ellenőrzést egy parancsra fűz. A
-jóváhagyás mindháromnál `#spec-ok`.
-
-Branch `feature/phase-2-agents` ↔ könyvtár `Plans/2026-10-05-phase-2-agents/`.
-Az SDD őr, a git pre-commit hook és a CI ellenőrzés is e névszabály alapján
-találja meg a specet.
-
-## Életciklus
-
-1. `/feature-spec`: branch + interjú + a három fájl és a `validate.sh`. Még
-   nincs kód.
-2. Owner review. A módosítások az agenten keresztül mennek, hogy a spec fájljai
-   konzisztensek maradjanak.
-3. Az owner a `#spec-ok` kulcsszóval jóváhagyja. Ettől kezdve ezen a branchen
-   engedélyezett a kódszerkesztés.
-4. Implementáció, feladatcsoportonként. Ha több subagent dolgozik
-   párhuzamosan ugyanabban a munkafában, mindegyik csak a saját fájljait
-   commitolja, név szerint (`git add <útvonalak>`, soha `git add -A`/`.`);
-   ez a subagentnek adott promptba is bekerül.
-   Látható kimenetnél az owner élő mintájának átadása felsorolja az agent
-   saját, látható viselkedést érintő döntéseit (például „a gomb tiltás
-   helyett aktív marad”), hogy az owner a mintán felülbírálhassa őket.
-5. `/validate-feature`: a `validation.md` minden ellenőrzése, roadmap
-   kipipálása, a könyvtár áthelyezése a `done/` alá, merge.
+Egy M fokozatú spec mellé is kerülhet `validate.sh`, ha az „Ellenőrzés”
+szakasz több gépi ellenőrzést egy parancsra fűz.
 
 ## spec.md (S és M fokozat)
 
@@ -62,7 +33,7 @@ szint: S | M
 - …
 
 ## Döntések
-- <döntés> — <miért> (döntött: owner | agent, ÉÉÉÉ-HH-NN)
+- <döntés>: <miért> (döntött: owner | agent, ÉÉÉÉ-HH-NN)
 
 ## Kész, ha
 - <ellenőrizhető állítás>
@@ -82,27 +53,24 @@ szint: S | M
 ```
 
 S fokozatnál elég a „Cél”, a „Kész, ha” és az „Ellenőrzés”; a többi szakasz
-elhagyható. Ha a munka menet közben nagyobb lesz, az agent szól, és a
-`spec.md` M-re vagy a három fájlos L-re bővül, és új `#spec-ok` kell: az őr
-a magasabb fokozatú specre nem fogadja el a régi jóváhagyást. Roadmapen
-kívüli S javítás branchneve `fix/<slug>`; ennek nincs kipipálandó fázisa.
+elhagyható.
 
 ## plan.md
 
 ```markdown
 # Terv: <feature>
 
-Roadmap: Fázis <n> — <cím>
+Roadmap: Fázis <n>: <cím>
 Branch: feature/<slug>
 
-## 1. csoport — <név>
+## 1. csoport: <név>
 1. <feladat>
 2. <feladat>
 
-## 2. csoport — <név>
+## 2. csoport: <név>
 3. <feladat>
 
-## N. csoport — Ellenőrzés
+## N. csoport: Ellenőrzés
 - A validation.md minden ellenőrzésének lefuttatása
 ```
 
@@ -118,7 +86,7 @@ Branch: feature/<slug>
 - <mit nem csinál szándékosan>
 
 ## Döntések
-- <döntés> — <miért> (YYYY-MM-DD, döntött: owner | agent)
+- <döntés>: <miért> (YYYY-MM-DD, döntött: owner | agent)
 
 ## Kontextus
 - <korlátok, kapcsolódó kód, érintettek megjegyzései>
@@ -127,28 +95,14 @@ Branch: feature/<slug>
 <!-- a kalibrálandó értékek mért eredménye, abban a csoportban, amelyik bevezeti őket -->
 ```
 
-Az agent által választott, valódi adattól függő számértékek (küszöbök,
-időkorlátok, sebesség) „kalibrálandó” jelölést kapnak a döntésükben; a
-`plan.md` abban a feladatcsoportban méri őket az élő mintákon, amelyik
-bevezeti őket. Ha a mért érték egy constitutionben rögzített számot
-változtat (például egy alapértelmezett korlátot), a constitution ugyanabban a
-csoportban frissül (a zár feloldása után), nem a lezáráskor. Az eredmény a
-`requirements.md` „Kalibrálás” szakaszába
-kerül, értékenként (vagy összetartozó értékcsoportonként) egy alszakaszban,
-mindig ugyanebben a rendben:
-
-```markdown
-### <érték(ek)> (<n>. csoport)
-- Minta: <min mért, milyen adaton, milyen beállítással>
-- Söprés: | <paraméter> | <eredmény 1> | <eredmény 2> | (a kipróbált értékek és amit mértek)
-- Választás: <érték> — <miért ez; mekkora a tartalék a határig>
-- Ellenőrzés: <melyik teszt vagy élő teszt őrzi>
-```
+Az agent által választott, valódi adattól függő számértékek „kalibrálandó”
+jelölést kapnak; a mérés és a „Kalibrálás” szakasz formátuma:
+`.claude/skills/feature-spec/calibration.md`.
 
 Minden döntésnél jelölni kell, ki hozta. `owner`: a spec-interjúból, a
 constitutionből vagy az owner kifejezett kéréséből származik. `agent`: az
-agent döntötte el (feltételezés, alapérték, implementációs választás), és a
-`#spec-ok` hagyja jóvá; a review során később hozott agent-döntésekre az
+agent döntötte el (feltételezés, alapérték, implementációs választás), és
+a `#spec-ok` hagyja jóvá; a review során később hozott agent-döntésekre az
 owner rákérdezhet. Soronként egy döntéshozó szerepel, a vegyes döntéseket
 szét kell bontani. Ha egy döntés felvált egy korábbit, ugyanabban a
 változtatásban a régi a végén `(felváltva YYYY-MM-DD, lásd …)` jelölést
@@ -160,7 +114,7 @@ kap; a régi nem törlődik.
 # Validáció: <feature>
 
 ## Automatikus ellenőrzések (az agent futtatja: `bash Plans/<dir>/validate.sh`)
-- [ ] `<parancs>` — <várt eredmény>
+- [ ] `<parancs>`: <várt eredmény>
 
 ## Kézi ellenőrzések (az owner futtatja)
 - [ ] <mit kell megnézni, hol>
@@ -174,147 +128,16 @@ kap; a régi nem törlődik.
 - A roadmap-fázis ki van pipálva.
 ```
 
+Ha a feature LLM által követett dokumentumot szállít (útmutató, prompt,
+skill), a `validation.md` friss subagent-próbát is tartalmaz:
+`.claude/skills/feature-spec/probe.md`.
+
 ## validate.sh
 
 A `validation.md` minden automatikus ellenőrzése egy bash scriptben, amelyet
-az agent a speccel együtt ír meg, és az owner bármikor újrafuttathat. A
-spec-mappában él, ezért nem kódnak számít, és nem kell hozzá `#spec-ok`.
-
-- A repó gyökeréből fut: `bash Plans/<dir>/validate.sh`.
-- Ellenőrzésenként egy sort ír: `PASS` vagy `FAIL`, az ellenőrzés neve és egy
-  rövid bizonyíték (kilépési kód, kulcssor).
-- Ha bármelyik ellenőrzés elbukik, nem nulla kóddal lép ki.
-- Egy „nincs X” állítás (nincs hibaüzenet, nincs kapcsolat, nincs kulcs a
-  naplóban) csak akkor bizonyít, ha egyszer egy valódi X-en elbukott: a
-  keresett mintának egyeznie kell azzal, amit a rendszer ténylegesen kiír.
-- Egy „tiltva” vagy „hibaállapot” teszt a felhasználónak megjelenő okot is
-  ellenőrzi (üzenet, súgó), nem csak azt, hogy a gomb tiltott: így nem megy
-  át, ha egy másik ok tiltja. A hibát olyan válasszal váltja ki, amelyet a
-  kliens nem próbál újra; különben a teszt a kliens újrapróbálását méri.
-- Egy „soha” állítás (egy elem soha nem tűnik el vagy duplázódik, egy gomb
-  a művelet után azonnal tiltott) tesztje közvetlenül a művelet után,
-  újrapróbálás nélkül mér, és utána a végállapotot is: a kivárásra épülő
-  állítás kivárja az átmeneti hibát, és átengedi.
-- Ha egy tesztkör elbukik, a bizonyíték az elbukott tesztek nevét is
-  tartalmazza (pytestnél a `-rf` kapcsoló `FAILED` sorai), hogy ne kelljen
-  a teljes kört újrafuttatni a hiba megkereséséhez. Egy csak az egyik
-  futásban elbukó teszt instabil; az okát meg kell keresni.
-- Az ideiglenes fájlokat egy saját ideiglenes könyvtárban tartja, és a végén
-  törli.
-- Az általa indított háttérfolyamatokat (szerver, kamu API) a végén leállítja,
-  hibás futás után is. A háttérfolyamatot a fő shellben indítja, soha nem
-  `$(...)`-ben: az alhéjban kapott folyamatazonosító elvész, és a folyamat
-  a script után is fut (eredet: 2026-10-23, egy épített felület
-  validate.sh-ja).
-- Az általa indított szerver szabad portot kap (például a Python `socket`
-  0-s portjával), soha nem rögzítettet: egy rögzített porton egy korábban
-  ott hagyott szerver válaszolhat a friss kód helyett.
-- Egy szervert vagy háttérfolyamatot a saját folyamatazonosítójával (PID)
-  állít le, soha `pkill -f <minta>`-val: a minta a leállító parancs saját
-  sorára is illik, és azt is leállítja.
-- Élő, fizetős vagy hálózatot igénylő ellenőrzést csak kapcsolóval futtat
-  (például `LIVE_TESTS=1`).
-- A saját mappáját `$(dirname "$0")`-val találja meg, és sehol nem írja be a
-  `Plans/<dir>` útvonalat, így a `Plans/done/` alá költözés után is fut.
-- Ha a `main` kódjával hasonlít, a másolatot a repóból exportálja (`git -C
-  "$ROOT" archive main`, soha nem egy ideiglenes mappából), és előbb
-  ellenőrzi, hogy nem üres; különben az összevetés csendben önmagával
-  egyezik.
-- A helyi, git által ignorált beállításokat (például az élő minták útvonalát,
-  titkot soha) a projekt által dokumentált fájlból olvassa. Az API-kulcsok a
-  környezetből vagy a `tech-stack.md`-ben megnevezett kulcstárból jönnek.
-- Az élő ellenőrzéseket egy kapcsolóval indítja: `bash Plans/<dir>/validate.sh
-  --live` maga tölti be a dokumentált beállításfájlt és állítja be az élő
-  kapcsolót, így nem kell kézzel exportálni semmit. Ha a projekt
-  tech-stackje memóriakorlátot ír elő a nehéz lépésekre, a script azokat a
-  korláttal futtatja.
-
-## Friss subagent-próba
-
-Ha a feature LLM által követett dokumentumot szállít (útmutató, prompt,
-skill), a `validation.md` friss subagent-próbát is tartalmaz. Az agent a
-validációkor futtatja, módonként (például interaktív, autonóm) egy-egy
-próbával, párhuzamosan:
-
-1. **Előkészítés körönként:** friss, eldobható projektmásolat a session
-   scratchpadjében. A generált dokumentumokat (például az írási útmutatót)
-   a másolaton újra kell generálni, hogy a legutóbbi javítások benne
-   legyenek. Minden körnek és próbának saját másolat jár. A másolat a
-   teljes projekt, mappa kihagyása nélkül (például a build kimenete is),
-   különben a próba hamis állapotot lát (például „hiányzó build”). Ha a
-   próba a másolat szándékos rontására épül (például egy kivett lépés vagy egy
-   rossz beállítás), a rontást és a várható mellékhatásait (például hogy a
-   javítás visszaállítja a jóváhagyott tartalmat) a futtatás előtt le kell
-   írni, hogy a próba erről szóló jelzése ne számítson hiánynak.
-   Ha a mintaprojekt egy régebbi verzió állapotában van (például régi
-   jóváhagyás vagy régi formátumú kimenet), a próbák előtt egyszer hozd
-   naprakészre egy alapmásolatban a scratchpadben, fizetős lépés nélkül,
-   és minden kör ebből másoljon; így a próba nem a régi állapotba akad
-   bele.
-   Az előkészítést egy script végzi, amelyet az agent a speccel együtt ír
-   meg a spec-mappába (`prepare-probe.sh`, a `validate.sh` mellé): az
-   alapmásolat naprakészre hozását egyszer, a körönkénti másolást és a
-   generált dokumentumok újragenerálását minden kör előtt, a másolat saját
-   útvonalával. Így egy kör sem indul régi útvonalú vagy elavult
-   útmutatóval. Ha a script csak a gitben követett fájlokat másolja (mert a
-   követetlenek valódi adatot tartalmazhatnak), az új fájlokat a próba előtt
-   indexbe kell tenni (`git add`, commit nélkül); különben a másolatból
-   hiányzik az útmutató és az eszköz.
-   A próba promptja megnevez egy scratch-mappát a repón kívül minden
-   fájlnak, amelyet a próba ír; a kör után a `git status` nem mutathat
-   általa hagyott fájlt.
-2. **Prompt:** az alábbi váz, a próba feladatával kitöltve. A próba
-   feladata a mintaprojekt valódi tartalmából készül (a spec írásakor egy
-   pillantás a mintára: mi van benne, milyen szegmensek, jelenetek): egy
-   olyan kérés, amely a mintán értelmes, és amelynek a sikere ellenőrizhető.
-   A `validation.md` nevezze meg a próbakörnyezet korlátait (például
-   belépéshez kötött oldal munkamenet-fájl nélkül, hálózat, hiányzó fájl),
-   és a sikerfeltétel ezekhez igazodjon: egy olyan lépés, amelyet a
-   dokumentum ebben a környezetben helyesen tilt, ne legyen sikerfeltétel.
-3. **Értékelés:** a próba sikeres, ha teljesíti a `validation.md`
-   sikerkritériumát. A „talált hiányok” közül csak a valódiak számítanak:
-   a próba felállításából adódó félreértés (például egy másolt projekt
-   útvonala) nem az.
-   Egy valódi hiány **lényeges**, ha miatta a próba elbukott, csak
-   kerülőúton (például szándékosan elrontott lépéssel) jutott tovább, vagy
-   olyat tippelt, ami rossz eredményt adott volna (hibás kimenet, kihagyott
-   szabály, adatvédelmi kockázat). A pontosítás, a tipp és a mérlegelési
-   kérdés („hány zoom elég?”) **apró**: javítható, de nem indít új kört.
-4. **Javítás és ismétlés:** a valódi hiányok javítása után új, friss
-   subagent és új másolat jön, amíg egy kör nem talál új lényeges hiányt
-   (legfeljebb 3 kör). Az utolsó kör apró hiányai ugyanabban a körben
-   javíthatók. Ha a 3. kör után is van lényeges hiány, az agent nem indít
-   új kört: megáll, és jelzi az ownernek (mi maradt, miért).
-5. **Rögzítés:** a körök eredménye (siker, a javított hiányok, a nyitva
-   maradt kérdések) a `requirements.md` „Döntések” szakaszába kerül, a
-   hatókörön kívüli ötletek a backlogba.
-
-```text
-You are testing written instructions for an AI writer. Work only from the
-documents named here; do not read the source code or tests.
-
-Documents you may read:
-- <the document(s) under test, with absolute paths>
-- <the inputs the task needs, e.g. a project's generated files>
-
-The project is a scratch copy: <absolute path>. <what is already there and
-must not change>.
-
-Situation: <mode, e.g. interactive at the review gate>. Do only this part:
-1. <the task, step by step>
-2. Then assume the owner answered: "<the owner's answer>". <what to do next>.
-
-Rules: run commands from <repo> with <command prefix>. Never run <paid or
-irreversible commands>. Write nothing outside <allowed folders>.
-<When the probe has fewer tools than the real run (for example no Glob or
-Grep), say so here, so it does not report the missing tool as a gap.>
-
-Report back (plain text), briefly:
-- <the result items the success criterion needs>;
-- every place where the documents were unclear, missing something,
-  contradicting each other, or where you had to guess, quoting the passage.
-  This list is the most important part; leave out what you found clear.
-```
+az agent a speccel együtt ír meg; a spec-mappában él, ezért nem kódnak
+számít, és nem kell hozzá `#spec-ok`. A szabályai:
+`.claude/skills/feature-spec/validate-sh.md`.
 
 ## Részletesség
 
