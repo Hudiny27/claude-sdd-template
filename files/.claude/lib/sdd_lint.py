@@ -36,6 +36,8 @@ Checks:
                from `parents[n]`.
   shell        `bash -n` and, when installed, `shellcheck` on spec-folder
                shell scripts.
+  backlog      every specs/backlog/*.md item has `Állapot: nyitott | ütemezve
+               | kész | elvetve` near the top.
   size         CLAUDE.md (or CLAUDE.sdd.md) at most 150 lines, SKILL.md at
                most 100, .claude/project.md at most 60.
   dangling     --final: backticked paths in the Markdown changed on this
@@ -83,6 +85,8 @@ PLACEHOLDER = re.compile(r"<[^!<>\s][^<>\n]* [^<>\n]*>")
 BACKTICK = re.compile(r"`([^`\s]+)`")
 NOT_A_PATH = re.compile(r"[<>*{}$…|?\[\]()'\"=,;:@~^]")
 DANGLING_SKIP = ("Plans/done/", "specs/backlog/")
+BACKLOG_STATES = ("nyitott", "ütemezve", "kész", "elvetve")
+BACKLOG_ITEM = re.compile(r"^specs/backlog/[^/]+\.md$")
 
 
 class Lint:
@@ -286,6 +290,12 @@ class Lint:
         else:
             print("sdd_lint: shellcheck is not installed; " + rel + " got only `bash -n`", file=sys.stderr)
 
+    def backlog(self, rel, text):
+        state, line = backlog_status(text)
+        if state is None:
+            self.add(rel, line, "backlog", "needs a status line near the top: `Állapot: "
+                     + " | ".join(BACKLOG_STATES) + "` (then free text), so /replan can list the open items")
+
     def size(self, rel):
         text = self.read(rel)
         if text is None:
@@ -369,6 +379,8 @@ class Lint:
             self.spec_folder(spec_dir, final)
         for rel in [r for r, _ in SIZE_LIMITS] + self.skill_files():
             self.size(rel)
+        for rel in backlog_files(self.root):
+            self.backlog(rel, self.read(rel) or "")
         if final:
             self.dangling(spec_dir)
 
@@ -408,6 +420,8 @@ class Lint:
                 self.spec_script(rel)
             elif not guard.is_free(rel):
                 self.paths(rel, self.read(rel) or "", in_spec=False)
+            if is_backlog_item(rel):
+                self.backlog(rel, self.read(rel) or "")
             if rel in dict(SIZE_LIMITS) or re.match(r"^\.claude/skills/[^/]+/SKILL\.md$", rel):
                 self.size(rel)
         for spec_dir in sorted(spec_dirs):
@@ -418,6 +432,48 @@ class Lint:
                     if text is not None:
                         self.calibration(spec_dir + "/" + name, text, False)
                 self.coverage(spec_dir)
+
+
+# -- backlog
+
+
+def is_backlog_item(rel):
+    return bool(BACKLOG_ITEM.match(rel)) and os.path.basename(rel) != "README.md"
+
+
+def backlog_files(root):
+    folder = os.path.join(root, "specs", "backlog")
+    try:
+        names = sorted(os.listdir(folder))
+    except OSError:
+        return []
+    return [r for r in ("specs/backlog/" + n for n in names) if is_backlog_item(r) and os.path.isfile(os.path.join(root, r))]
+
+
+def backlog_status(text):
+    """(state, line) of the first `Állapot:` line in the first 20 lines; state None if missing or not a known state."""
+    for i, ln in enumerate(text.splitlines()[:20], 1):
+        m = re.match(r"^Állapot:\s*(\S+?)(?=[:,.\s]|$)", ln)
+        if m:
+            word = m.group(1).lower()
+            return (word if word in BACKLOG_STATES else None), i
+    return None, 0
+
+
+def open_backlog(root):
+    """(path, title, has_status) of every backlog item that is open or has no valid status line."""
+    out = []
+    for rel in backlog_files(root):
+        try:
+            with open(os.path.join(root, rel), encoding="utf-8") as fh:
+                text = fh.read()
+        except (OSError, UnicodeDecodeError):
+            continue
+        state, _ = backlog_status(text)
+        if state in (None, "nyitott"):
+            title = next((ln[2:].strip() for ln in text.splitlines() if ln.startswith("# ")), os.path.basename(rel))
+            out.append((rel, title, state is not None))
+    return out
 
 
 # -- Markdown helpers

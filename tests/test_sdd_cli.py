@@ -213,3 +213,16 @@ def test_commit_only_when_the_check_passes_and_only_named_files(project):
     assert r.returncode == 0, r.stdout + r.stderr
     assert project.git("show", "--name-only", "--format=", "HEAD").split() == ["NOTES.md"]
     assert "?? OTHER.md" in project.git("status", "--porcelain")
+
+
+def test_preflight_lists_open_backlog_items(project):
+    project.write("specs/backlog/2026-11-01-open.md", "# Export gomb\n\nÁllapot: nyitott: a következő /replan dönt.\n")
+    project.write("specs/backlog/2026-11-02-planned.md", "# Planned\n\nÁllapot: ütemezve: Fázis 3\n")
+    project.write("specs/backlog/2026-11-03-nostatus.md", "# Régi ötlet\n")
+    project.git("add", "-A")  # an old item without a status line: past the new lint
+    project.git("-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "docs: backlog")
+    out = sdd(project, "preflight").stdout
+    assert "2 open backlog item(s)" in out
+    assert "specs/backlog/2026-11-01-open.md: Export gomb" in out
+    assert "specs/backlog/2026-11-03-nostatus.md: Régi ötlet (no Állapot line)" in out
+    assert "planned" not in out

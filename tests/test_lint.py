@@ -317,3 +317,25 @@ def test_risk_fields_required_for_m_and_l(repo):
 def test_s_spec_needs_no_risk_fields(repo):
     feature(repo, {"spec.md": "---\nszint: S\n---\n# x\n\n## Cél\nx\n\n## Kész, ha\n- x\n\n## Ellenőrzés\n- [ ] Owner: x\n\n## Kockázat és visszaút\n- revert\n"})
     assert lint(repo).returncode == 0
+
+
+# --- backlog ----------------------------------------------------------------
+
+def test_backlog_item_needs_a_status_line(repo):
+    repo.write("specs/backlog/2026-11-22-idea.md", "# Idea\n\nSome text.\n")
+    repo.write("specs/backlog/2026-11-22-done.md", "# Done\n\nÁllapot: kész: Plans/done/x (2026-11-22)\n")
+    repo.write("specs/backlog/2026-11-22-vague.md", "# Vague\n\nÁllapot: ötlet, még nincs a roadmapen.\n")
+    repo.write("specs/backlog/README.md", "# not an item\n")
+    out = lint(repo).stdout
+    assert "specs/backlog/2026-11-22-idea.md:0: [backlog]" in out
+    assert "specs/backlog/2026-11-22-vague.md:3: [backlog]" in out
+    assert "2026-11-22-done.md" not in out and "README.md" not in out
+
+
+def test_backlog_status_checked_on_commit(repo):
+    repo.write("specs/backlog/2026-11-22-idea.md", "# Idea\n")
+    repo.git("add", "specs/backlog/2026-11-22-idea.md")
+    assert "[backlog]" in lint(repo, "--staged").stdout
+    repo.write("specs/backlog/2026-11-22-idea.md", "# Idea\n\nÁllapot: nyitott: a következő /replan dönt.\n")
+    repo.git("add", "specs/backlog/2026-11-22-idea.md")
+    assert lint(repo, "--staged").returncode == 0
