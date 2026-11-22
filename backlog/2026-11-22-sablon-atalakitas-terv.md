@@ -112,3 +112,12 @@ Külön, a pii-pajzs saját SDD-folyamatában (`replanning/` branch, külön
 worktree, a futó feature-től függetlenül): `install.sh --update`, a projekt
 helyi szabályainak átköltöztetése a bővítési pontokra, a `validate.sh`-k
 lib-re állítása csak új specekben.
+
+## Döntések
+
+- 1. szakasz, friss subagent-próba (M fokozatú spec egy mintaprojekten, csak a karcsúsított sablonnal), két kör (döntött: agent, 2026-11-22):
+  - 1. kör: 3 lényeges hiány (M-nél a `plan.md`-re mutató implementációs utasítás; a `validate.sh` által hívott felület rögzítése ütközött a „hagyd ki a belső szerkezetet” szabállyal; a kód előtti offline futás nem tudta elérni a kódot igénylő ágakat), mind a három a régi sablonban is megvolt; javítva (`339add1`).
+  - 2. kör: nincs új lényeges hiány. A próba egy tételt lényegesnek jelölt (adatfeltöltés a szerverpróbához egy létrehozó végpont nélküli appban); ez a mintaapp tervezési kérdése, az agent `agent` döntésként rögzítette, ezért a mérce szerint apró. Az apró hiányok közül a M fokozatot félrevezetők javítva (`16a6879`).
+- Az `install.sh --update` nem írja felül a `.claude/settings.json`-t, csak a diffet mutatja, mert a projektek saját hookokat és engedélyeket fésülnek bele (döntött: agent, 2026-11-22).
+- A roadmap sorformátuma `- [ ] Fázis N: cím` (gondolatjel helyett kettőspont); az őr csak a `- [ ] ` előtagot olvassa (döntött: agent, 2026-11-22).
+- A 3. szakaszra vár: az őr státuszszövege még a régi review-célt írja („sablonba, helyben, törlés”), a drift-ellenőrzése nem látja az új segédfájlokat, és a `.githooks/pre-commit` docstringje csak a három fájlos L specet említi.
