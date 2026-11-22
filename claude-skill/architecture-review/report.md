@@ -3,9 +3,9 @@
 Adapted from Matt Pocock's `improve-codebase-architecture` report guide
 (MIT, see `LICENSE-mattpocock-skills.txt`).
 
-One self-contained HTML file, `lang="hu"`. The only scripts are Tailwind and
-Mermaid from a CDN, with pinned versions; everything else is static. No
-custom web font.
+One HTML file, `lang="hu"`. The only scripts are Tailwind and Mermaid from a
+CDN, with pinned versions (the Play CDN's console warning is expected; the
+diagrams need network); everything else is static. No custom web font.
 
 ```html
 <!doctype html>
@@ -29,8 +29,8 @@ custom web font.
 
 ## Top of the page
 
-Repo name, date, the scope (which folders, and why: the hot spots from
-`git log`), and a small legend: solid box = modul, dashed line = varrat,
+Repo name, date, the scope (which folders: named by the owner or found in
+`git log`, and its hot spots), and a small legend: solid box = modul, dashed line = varrat,
 red arrow = szivárgás (a detail leaking across a seam), thick dark box =
 mély modul. Then one line per term the cards use, with its plain meaning.
 Then straight to the candidates.
@@ -43,7 +43,8 @@ One `<article>` each; the diagram carries the weight, the prose is short.
 - Badges: strength (`Erős` emerald, `Érdemes megnézni` amber, `Spekulatív`
   slate) and the dependency category.
 - Files: a monospace list.
-- Before / after: two columns side by side, about 320 px tall.
+- Before / after: two columns side by side, each in a box of at least
+  320 px that scrolls instead of clipping a larger graph.
 - Probléma: one sentence. Megoldás: one sentence.
 - Nyereség: bullets of a few words in vocabulary terms ("lokalitás: a hiba
   egy helyen javul", "a felület szűkül, a wrapperek eltűnnek"); never
@@ -63,6 +64,11 @@ Vary them; not every card is a Mermaid graph.
 - **Mass diagram**: two rectangles per module, interface and implementation;
   shallow = almost equal heights, deep = short interface, tall
   implementation.
+
+## Probable bugs (if any)
+
+A separate section before the end: each with file:line evidence, marked
+„kódolvasásból, nem futtatva”, and the card it belongs to.
 
 ## End
 

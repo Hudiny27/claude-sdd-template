@@ -15,6 +15,11 @@ the owner-facing report; explain it in brackets the first time.
 | Adapter | adapter | A concrete thing that fills an interface at a seam (a role, not a size). |
 | Leverage | emelő | What callers get from depth: one implementation pays back across many call sites and tests. |
 | Locality | lokalitás | What maintainers get from depth: change, bugs and verification concentrate in one place. |
+| Deepening | mélyítés | A refactor that turns shallow modules into one deep module. |
+| Pass-through | átjáró | A module that only forwards calls; the deletion test removes it. |
+
+Folder and file names stay as they are (an `api/` folder is not a banned
+term).
 
 ## Principles
 
@@ -35,16 +40,22 @@ the owner-facing report; explain it in brackets the first time.
 
 ## Dependency categories (decide how the deepened module is tested)
 
-1. **In-process**: pure computation, in-memory state. Merge the modules and
-   test through the new interface; no adapter.
-2. **Local-substitutable**: a local stand-in exists (SQLite or PGLite for
-   Postgres, an in-memory filesystem). Test with the stand-in; the seam stays
-   internal.
-3. **Remote but owned**: your own service across a network. A port at the
+1. **In-process** (folyamaton belüli): pure computation, in-memory state,
+   also a third-party library that runs in the process deterministically
+   and fast. Merge the modules and test through the new interface; no
+   adapter.
+2. **Local-substitutable** (helyben helyettesíthető): a local stand-in
+   exists (SQLite or PGLite for Postgres, an in-memory filesystem, a small
+   stub for a heavy in-process model). Test with the stand-in; the seam
+   stays internal.
+3. **Remote but owned** (saját távoli): your own service across a network. A port at the
    seam; an HTTP (or queue) adapter in production, an in-memory adapter in
    tests.
-4. **True external**: a third party you do not control. Inject it as a port;
+4. **True external** (külső): a third party you do not control. Inject it as a port;
    tests use a mock adapter.
+
+A candidate can mix categories (an in-process core with a real two-adapter
+seam): name the category of the seam the deepening is about.
 
 ## Testing: replace, do not layer
 
