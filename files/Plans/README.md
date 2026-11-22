@@ -86,7 +86,7 @@ Branch: feature/<slug>
 - <mit nem csinál szándékosan>
 
 ## Döntések
-- <döntés>: <miért> (YYYY-MM-DD, döntött: owner | agent)
+- <döntés>: <miért> (döntött: owner | agent, ÉÉÉÉ-HH-NN)
 
 ## Kontextus
 - <korlátok, kapcsolódó kód, érintettek megjegyzései>
@@ -105,7 +105,7 @@ agent döntötte el (feltételezés, alapérték, implementációs választás),
 a `#spec-ok` hagyja jóvá; a review során később hozott agent-döntésekre az
 owner rákérdezhet. Soronként egy döntéshozó szerepel, a vegyes döntéseket
 szét kell bontani. Ha egy döntés felvált egy korábbit, ugyanabban a
-változtatásban a régi a végén `(felváltva YYYY-MM-DD, lásd …)` jelölést
+változtatásban a régi a végén `(felváltva ÉÉÉÉ-HH-NN, lásd …)` jelölést
 kap; a régi nem törlődik.
 
 ## validation.md
