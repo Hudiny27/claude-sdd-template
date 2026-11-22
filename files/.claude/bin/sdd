@@ -6,7 +6,8 @@ project; propose changes in the template's backlog/ instead.
 
   sdd preflight              clean start for /feature-spec and /replan: clean
                              working tree, an up-to-date main, the constitution,
-                             unmerged branches and open manual checks
+                             unmerged branches, open manual checks and open
+                             backlog items
   sdd new BRANCH --level S|M|L
                              preflight, then the branch and the dated spec
                              folder with the templates of Plans/README.md
@@ -121,6 +122,11 @@ def preflight(root):
         say("NOTE", str(manual) + " open manual check(s) in Plans/done/ (/replan asks the owner about them):")
         for rel, line, text in open_manual_lines(root):
             print("      " + rel + ":" + str(line) + ": " + text)
+    backlog = sdd_lint.open_backlog(root)
+    if backlog:
+        say("NOTE", str(len(backlog)) + " open backlog item(s) (/replan asks about each one first):")
+        for rel, title, has_status in backlog:
+            print("      " + rel + ": " + title + ("" if has_status else " (no Állapot line)"))
     return ok
 
 
