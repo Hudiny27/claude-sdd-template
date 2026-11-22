@@ -17,6 +17,8 @@ Usage (from the repository root or anywhere inside it):
 Checks:
   spec         no template placeholder left (`<what to write>`, `- …`);
                spec.md: `szint: S|M` and the sections its level needs;
+               level M and L: `ajtó:` and `hatósugár:` under "Kockázat és
+               visszaút";
                level L: plan.md task groups, the requirements.md and
                validation.md sections, a validate.sh; a `Branch:` line
                that matches the folder.
@@ -61,9 +63,13 @@ SPEC_SECTIONS = {
     "M": ("Cél", "Bele tartozik", "Nem tartozik bele", "Döntések", "Kész, ha", "Ellenőrzés", "Kockázat és visszaút"),
 }
 L_SECTIONS = {
-    "requirements.md": ("Hatókör", "Hatókörön kívül", "Döntések", "Kontextus"),
+    "requirements.md": ("Hatókör", "Hatókörön kívül", "Döntések", "Kontextus", "Kockázat és visszaút"),
     "validation.md": ("Automatikus ellenőrzések", "Kézi ellenőrzések", "Kész definíciója"),
 }
+RISK_FIELDS = (
+    ("ajtó", ("egyirányú", "kétirányú")),
+    ("hatósugár", ("kicsi", "közepes", "nagy")),
+)
 CALIBRATION_FIELDS = ("Minta", "Söprés", "Választás", "Ellenőrzés")
 DECIDED = re.compile(r"\(döntött: (owner|agent), \d{4}-\d{2}-\d{2}\)")
 SUPERSEDED = re.compile(r"\s*\(felváltva [^)]*\)\s*$")
@@ -146,6 +152,7 @@ class Lint:
         self.sections(light, text, SPEC_SECTIONS[level])
         if level == "M":
             self.branch_line(light, text, spec_dir)
+            self.risk(light, text)
         body = section_lines(text, "Ellenőrzés")
         if body is not None and not any(re.match(r"^\s*- \[[ xX]\] ", ln) for _, ln in body):
             self.add(light, heading_line(text, "Ellenőrzés"), "spec", "\"Ellenőrzés\" needs `- [ ] Agent: ...` / `- [ ] Owner: ...` lines")
@@ -162,6 +169,8 @@ class Lint:
                 self.add(rel, 0, "spec", "missing: a level L spec has plan.md, requirements.md, validation.md and validate.sh")
             else:
                 self.sections(rel, text, wanted)
+                if name == "requirements.md":
+                    self.risk(rel, text)
         if not self.exists(spec_dir + "/validate.sh"):
             self.add(spec_dir + "/validate.sh", 0, "spec", "missing: a level L spec has a validate.sh")
 
@@ -170,6 +179,16 @@ class Lint:
         for name in wanted:
             if not any(t == name or t.startswith(name + " ") for t in titles):
                 self.add(rel, 0, "spec", "missing section `## " + name + "`")
+
+    def risk(self, rel, text):
+        body = section_lines(text, "Kockázat és visszaút")
+        if body is None:
+            return  # the missing section is reported by sections()
+        line = heading_line(text, "Kockázat és visszaút")
+        for field, values in RISK_FIELDS:
+            pattern = r"^- " + field + r": (" + "|".join(values) + r")\b"
+            if not any(re.match(pattern, ln) for _, ln in body):
+                self.add(rel, line, "spec", "\"Kockázat és visszaút\" needs `- " + field + ": " + " | ".join(values) + ": <why>`")
 
     def branch_line(self, rel, text, spec_dir):
         m = re.search(r"^Branch:\s*`?([^\s`]+)`?\s*$", text, re.M)

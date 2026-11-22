@@ -38,6 +38,8 @@ Say hello.
 - [ ] Owner: open the page
 
 ## Kockázat és visszaút
+- ajtó: kétirányú: a revert undoes it
+- hatósugár: kicsi: one greeting page
 - revert the commit
 """
 
@@ -74,6 +76,10 @@ REQUIREMENTS = """# Követelmények: hello
 
 ## Kontextus
 - none
+
+## Kockázat és visszaút
+- ajtó: egyirányú: the greeting is mailed out
+- hatósugár: nagy: every user gets it
 
 ## Kalibrálás
 <!-- results -->
@@ -121,7 +127,7 @@ def test_m_spec_missing_sections_and_level(repo):
     feature(repo, {"spec.md": SPEC_M.replace("## Nem tartozik bele\n", "").replace("szint: M", "szint: X")})
     out = lint(repo).stdout
     assert "szint: S" in out
-    feature_text = SPEC_M.replace("## Kockázat és visszaút\n- revert the commit\n", "")
+    feature_text = SPEC_M.split("## Kockázat és visszaút")[0]
     repo.write(DIR + "/spec.md", feature_text)
     r = lint(repo)
     assert r.returncode == 1
@@ -290,3 +296,24 @@ def test_template_placeholders_left(repo):
     feature(repo, {"spec.md": SPEC_M.replace("Say hello.", "<1–3 mondat: mit akar az owner>").replace("- farewells", "- …"), "validate.sh": VALIDATE})
     out = lint(repo).stdout
     assert out.count("template placeholder left") == 2, out
+
+
+def test_risk_fields_required_for_m_and_l(repo):
+    text = SPEC_M.replace("- ajtó: kétirányú: a revert undoes it\n", "").replace("hatósugár: kicsi", "hatósugár: óriási")
+    feature(repo, {"spec.md": text, "validate.sh": VALIDATE})
+    out = lint(repo).stdout
+    assert "needs `- ajtó: egyirányú | kétirányú: <why>`" in out
+    assert "needs `- hatósugár: kicsi | közepes | nagy: <why>`" in out
+    repo.git("checkout", "-q", "main")
+    repo.git("checkout", "-q", "-b", "feature/phase-2-l")
+    folder = "Plans/2026-11-01-phase-2-l/"
+    for name, t in (("plan.md", PLAN.replace("phase-1-hello", "phase-2-l")), ("requirements.md", REQUIREMENTS.split("## Kockázat")[0]),
+                    ("validation.md", VALIDATION), ("validate.sh", VALIDATE)):
+        repo.write(folder + name, t)
+    out = lint(repo).stdout
+    assert "requirements.md:0: [spec] missing section `## Kockázat és visszaút`" in out
+
+
+def test_s_spec_needs_no_risk_fields(repo):
+    feature(repo, {"spec.md": "---\nszint: S\n---\n# x\n\n## Cél\nx\n\n## Kész, ha\n- x\n\n## Ellenőrzés\n- [ ] Owner: x\n\n## Kockázat és visszaút\n- revert\n"})
+    assert lint(repo).returncode == 0
