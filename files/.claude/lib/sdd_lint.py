@@ -11,8 +11,9 @@ Usage (from the repository root or anywhere inside it):
                                              (run by /validate-feature)
   python3 .claude/lib/sdd_lint.py --staged   the staged files (run by the
                                              git pre-commit hook)
-  --base REF   the branch the decisions are compared with (default: main;
-               on main itself: HEAD)
+  --base REF   the branch the decisions and changes are compared with, at
+               the point this branch left it (default: main; on main
+               itself: HEAD)
 
 Checks:
   spec         no template placeholder left (`<what to write>`, `- …`);
@@ -103,6 +104,10 @@ class Lint:
         branch = guard.branch_of(root)
         self.branch = branch
         self.base = base or ("HEAD" if not branch or branch in guard.MAIN_BRANCHES else "main")
+        # Compare with the branch point, not with where the base is now: a base
+        # that moved on would make its own changes look like this branch's.
+        point = self.git("merge-base", self.base, "HEAD") if self.base != "HEAD" else None
+        self.since = point.strip() if point and point.strip() else self.base
 
     # -- helpers
 
@@ -129,7 +134,7 @@ class Lint:
         return self.read(rel) is not None
 
     def base_text(self, rel):
-        return self.git("show", self.base + ":" + rel)
+        return self.git("show", self.since + ":" + rel)
 
     # -- checks
 
@@ -349,7 +354,7 @@ class Lint:
             self.add(rel, n, "size", str(n) + " lines, the limit is " + str(limit) + ": move step details to a reference file")
 
     def dangling(self, spec_dir):
-        changed = (self.git("diff", "--name-only", self.base) or "").splitlines()
+        changed = (self.git("diff", "--name-only", self.since) or "").splitlines()
         changed += (self.git("ls-files", "--others", "--exclude-standard") or "").splitlines()
         files = {f for f in changed if f.endswith(".md") and not f.startswith(DANGLING_SKIP) and os.path.basename(f) != "CHANGELOG.md"}
         if spec_dir:
@@ -361,7 +366,7 @@ class Lint:
                     target = self.missing_path(rel, token)
                     if target:
                         self.add(rel, i, "dangling", "`" + token + "` does not exist")
-        moved = (self.git("diff", "--name-status", "-M", self.base) or "").splitlines()
+        moved = (self.git("diff", "--name-status", "-M", self.since) or "").splitlines()
         gone = []
         for ln in moved:
             parts = ln.split("\t")
