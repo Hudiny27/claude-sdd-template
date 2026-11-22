@@ -77,10 +77,10 @@ cover the plan, `.claude/project.md`): they may make a choice a question.
    and the pass runs again after it. If a third such pass still finds a
    branch, ask the owner whether to go on. Then:
    - **Your own decisions:** every "döntött: agent" choice, in one popup of
-     multi-select questions of up to 4 decisions each ("Melyiket
-     módosítanád?", no recommended option; a lone decision gets "Rendben" /
-     "Módosítanám"); beyond 16, list the rest in the chat. A ticked one
-     becomes an owner question in one more round.
+     multi-select questions of up to 3 decisions each plus a last option
+     "Egyiket sem" ("Melyiket módosítanád?", no recommended option), so the
+     owner moves on with one click; beyond 12, list the rest in the chat. A
+     ticked decision becomes an owner question in one more round.
    - Show the decisions in a short list and confirm in one popup ("Ez így
      rendben?" / "Van még, amit tisztázni kell"), unless the caller
      (size-up, feature-spec) asks for its own approval right after. Do not
