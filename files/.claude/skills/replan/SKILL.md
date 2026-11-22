@@ -17,12 +17,17 @@ validation, so make time between features to adjust the plan.
 
 ## 2. Questions for the owner
 
-Use the AskUserQuestion tool, grouped:
+Use the AskUserQuestion tool, grouped, in this order:
 
-1. **Roadmap:** Is the next open phase still the right one? Should phases be
-   merged, split or reordered? Should backlog items be scheduled?
-2. **Constitution:** New stakeholder input, testing preferences, stack changes?
-3. **Workflow:** What repeated manually in the last feature and could become a
+1. **Backlog first:** every item `sdd preflight` listed as open, before any
+   talk of the next phase: in multi-select popups (up to 4 items per
+   question; the item's title and one line on its proposal), ask which to
+   schedule. For each item, update its `Állapot:` line (`ütemezve: Fázis
+   N`, `elvetve: <why>`, or `nyitott` with what is still undecided).
+2. **Roadmap:** Is the next open phase still the right one, given what was
+   scheduled? Should phases be merged, split or reordered?
+3. **Constitution:** New stakeholder input, testing preferences, stack changes?
+4. **Workflow:** What repeated manually in the last feature and could become a
    skill or a check (validation steps, changelog, release notes)? Prefer a
    mechanism (code, a check) to a sentence. If the session's SDD status has
    a `Template:` line, offer to update the template-owned files with

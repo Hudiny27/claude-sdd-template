@@ -91,9 +91,9 @@ wants to explore (multi-select), the recommended one first.
 - If the owner rejects a candidate for a reason a later review would need,
   offer a decision record in `docs/decisions/` (only if hard to reverse,
   surprising without context, and the result of a real trade-off).
-- The outcome goes to `specs/backlog/YYYY-MM-DD-kodszerkezet-<slug>.md`:
-  the candidate, the decisions, the open questions, a link to the report's
-  path. In an SDD project this is written on the `/replan` branch
+- The outcome goes to `specs/backlog/YYYY-MM-DD-kodszerkezet-<slug>.md`
+  (with `Állapot: nyitott` under the title): the candidate, the decisions,
+  the open questions, a link to the report's path. In an SDD project this is written on the `/replan` branch
   (`replanning/<topic>`); the roadmap decides when it is built, as a feature
   with its own spec. Never change code in this skill.
 - Close with one multi-select popup: commit the backlog file(s), `/replan`

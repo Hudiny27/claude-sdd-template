@@ -80,6 +80,17 @@ Témánként egy fájl: `backlog/YYYY-MM-DD-<topic>.md`, benne a kérdés, a
 megállapítások, a javaslat és a döntés. Backlog-elem csak újratervezésen
 keresztül kerülhet a roadmapre, a fájljára mutató hivatkozással.
 
+A cím alatt, az első 20 sorban egy állapotsor áll, egy rögzített szóval
+kezdve, utána szabad szöveggel:
+
+```markdown
+Állapot: nyitott | ütemezve | kész | elvetve: <részletek, például: Fázis 18; a 3. pont még nyitott>
+```
+
+`nyitott`, amíg bármelyik pontjáról nem született döntés. Az `sdd preflight`
+a nyitott és az állapotsor nélküli tételeket listázza, a `/replan` ezekkel
+kezd; a lint jelzi a hiányzó állapotsort.
+
 # A projekt közös nyelve és döntései (`docs/`)
 
 Két, nem zárolt fájl a constitution mellett. Egyiket sem kell előre megírni:
