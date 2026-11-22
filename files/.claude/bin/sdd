@@ -319,11 +319,24 @@ def batch_add(root, argv):
     write_spec(root, os.path.join(root, wt), "Plans/" + datetime.date.today().isoformat() + "-" + slug, branch, level, templates)
     row = "| %d | %s | %s | %s | %s | ? | ? | spec |" % (len(rows) + 1, branch, level, after or "-", wt)
     lines = text.rstrip("\n").split("\n")
-    lines.append(row)
+    lines.insert(table_end(lines), row)
     with open(os.path.join(root, rel), "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
     say("OK", "added row " + str(len(rows) + 1) + " to " + rel + " (fill in Becslés and Auth/biztonság)")
     return 0
+
+
+def table_end(lines):
+    """The index just after the last table line of the batch file's feature section."""
+    inside, end = False, None
+    for i, line in enumerate(lines):
+        if line.startswith("## "):
+            inside = line[3:].strip() == guard.BATCH_SECTION
+        elif inside and line.strip().startswith("|"):
+            end = i + 1
+    if end is None:
+        raise Fail("the batch file has no feature table under `## " + guard.BATCH_SECTION + "`")
+    return end
 
 
 def batch_status(root, argv):
