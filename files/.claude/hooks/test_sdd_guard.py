@@ -555,6 +555,13 @@ class BatchApproval(Repo):
         self.assertIsNone(self.approved_level("feature/a"))
         self.assertTrue(self.edit_in(a))
 
+    def test_batch_file_is_written_only_in_the_main_checkout(self):
+        a = self.member("a")
+        self.say("#spec-ok köteg ejjel")
+        self.assertTrue(self.edit_in(a, "Plans/kotegek/2026-11-22-ejjel.md"))
+        self.assertTrue(self.bash("echo x >> " + os.path.join(a, "Plans/kotegek/2026-11-22-ejjel.md")))
+        self.assertFalse(self.edit("Plans/kotegek/2026-11-22-ejjel.md"))
+
     def test_unknown_batch_approves_nothing(self):
         self.member("a")
         self.assertIn("no batch", self.say("#spec-ok köteg masik"))

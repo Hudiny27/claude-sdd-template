@@ -169,6 +169,11 @@ REASON_PKILL = (
     "that are not yours (another session's server, the editor). Stop a "
     "process by its PID: `kill <PID>`, or `stop_bg NAME` in validate.sh."
 )
+REASON_BATCH_WORKTREE = (
+    "SDD guard: a batch file (" + "Plans/kotegek/" + ") is the batch's state and lives in the main "
+    "checkout only; the copy in a feature worktree is an old snapshot. Edit it in the project "
+    "root instead (and commit it there, on main)."
+)
 REASON_SUBAGENT_KEYWORD = (
     "SDD guard: a line of this subagent prompt starts with an owner keyword "
     "(#spec-...). Keywords belong to the owner alone. Rephrase so the keyword "
@@ -453,6 +458,9 @@ def verdict(raw, cwd, proj, payload, kind="write"):
     if loc is None:
         return None
     root, rel = loc
+
+    if rel.startswith(BATCH_DIR + "/") and root != proj and kind != "git":
+        return REASON_BATCH_WORKTREE
 
     if kind in ("tree", "git"):
         if guarded_inside(path, root, git_only=kind == "git") and not unlocked(payload, proj):
