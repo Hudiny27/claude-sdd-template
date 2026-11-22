@@ -21,7 +21,8 @@ project; propose changes in the template's backlog/ instead.
   sdd batch add NAME BRANCH --level S|M|L [--after BRANCH]
                              a feature of the batch: its worktree under
                              .claude/worktrees/, its spec folder, its row
-  sdd batch status NAME      each feature: approval, commits, spec
+  sdd batch status [NAME]    each feature (of the newest batch without NAME):
+                             approval, commits, spec
   sdd commit -m MSG [-- FILE...]
                              stage the named files, run .claude/check.sh
                              (the project's lint, type and test command) and
@@ -339,10 +340,20 @@ def table_end(lines):
     return end
 
 
+def newest_batch(root):
+    try:
+        names = sorted(n for n in os.listdir(os.path.join(root, guard.BATCH_DIR)) if n.endswith(".md"))
+    except OSError:
+        names = []
+    if not names:
+        raise Fail("no batch yet; start one with `sdd batch new NAME`")
+    return guard.BATCH_DIR + "/" + names[-1]
+
+
 def batch_status(root, argv):
-    if len(argv) != 1:
-        raise Fail("usage: sdd batch status NAME")
-    rel = batch_file(root, argv[0])
+    if len(argv) > 1:
+        raise Fail("usage: sdd batch status [NAME]")
+    rel = batch_file(root, argv[0]) if argv else newest_batch(root)
     with open(os.path.join(root, rel), encoding="utf-8") as fh:
         rows = guard.batch_rows(fh.read())
     print(rel + ": " + str(len(rows)) + " feature(s)")

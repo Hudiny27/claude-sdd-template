@@ -272,3 +272,10 @@ def test_help_lists_the_commands_and_usage_errors_exit_2(project):
     assert "sdd batch add NAME BRANCH" in r.stdout and "sdd preflight" in r.stdout
     assert sdd(project, "batch", "add").returncode == 2
     assert sdd(project, "new", "feature/x").returncode == 2
+
+
+def test_batch_status_without_a_name_uses_the_newest_batch(project):
+    assert sdd(project, "batch", "status").returncode == 1  # no batch yet: a clear failure
+    sdd(project, "batch", "new", "ejjel")
+    out = sdd(project, "batch", "status").stdout
+    assert f"Plans/kotegek/{TODAY}-ejjel.md: 0 feature(s)" in out
