@@ -4,7 +4,7 @@ allapot: tervezet
 ---
 # Terv: kötegelt üzemmód
 
-Állapot: nyitott: a terv kész, az építésről az owner dönt.
+Állapot: kész: a négy szakasz elkészült (2026-11-23).
 
 Cél: az owner napi részvétele három rövid ablakba sűrűsödjön. Aktív ablak:
 több feature kikérdezése és specje, egy köteg-jóváhagyás. Építő ablak:
@@ -136,3 +136,6 @@ létre; az egyenkénti folyamat változatlan.
 - 3. szakasz, éjszakai próbafutás (a második próbakör mintaprojektje, három feature egy láncban, valódi subagentekkel, kb. 10 perc): mindhárom merge-kész, egy sem parkolt; ellenőrizve: a tesztek 17, 32, 42 zöld az ágakon, a specek archiválva, a munkafák tiszták; a review egy valódi hibát talált és javított (fájljog és szimbolikus link a mentésben) (döntött: agent, 2026-11-23).
 - 3. szakasz, a próba lényeges jegyzetei, mind javítva: a `--final` lint a `main` mostani állapotához mért, így egy közben továbblépett `main` hamis riasztást adott; a lint mostantól az elágazási ponthoz mér, a döntéssorok összevetése is (teszttel); éjjel szabad a `main`-t a feature-be mergelni (rebase nem); minden `sdd` parancs a fő checkout példányából fut, hogy egy éjszaka egy verzióval dolgozzon; a köteg-napló helye megnevezve, a reggeli jelentés abból dolgozik; a „sárga” állapotot egy kézi ellenőrzés önmagában nem okozza (döntött: agent, 2026-11-23).
 - 3. szakasz: a próbában az őr hookjai nem voltak bekötve (a subagent nem a próbaprojekt sessionjében futott), így az éjszakai őr-elutasítást a regressziós tesztek fedik, élő próba nem (döntött: agent, 2026-11-23).
+- 4. szakasz: a döntési ablak két parancsa az `sdd batch report` (feature-enként állapot, commitok, archivált spec, a köteg napja óta hozott agent-döntések, kézi ellenőrzések, napló; az agent ebből írja a jelentést) és az `sdd batch merge` (függőségi sorrendben `--no-ff`, megtagadja a függés nélküli ráépülőt, egyszer `check.sh` a `main`-en, csak zöldnél takarít worktree-t és branchet `-d`-vel; hibánál megáll, visszaállítást nem végez); a roadmap pipálása az Edit eszközzel marad, mert az őr a zárolt fájl scriptes írását nem engedi (döntött: agent, 2026-11-23).
+- 4. szakasz, ellenőrzés: az owner a mintaprojekten végigvitte a döntési ablakot: a 12 éjjeli döntésből egyiket sem bírálta felül, mindhárom feature-t mergelte; az `sdd batch merge` három merge-commitot tett a `main`-re, a `check.sh` zöld (42 teszt), a worktree-k és a branchek leszedve, a roadmap kipipálva, a lezáró commit átment a linten (döntött: owner, 2026-11-23).
+- 4. szakasz: a próbából két apró javítás: a mergelt feature az `sdd batch status`-ban „merged into main” sort kap (teszttel), és a reggeli ablak kimondja, hogy a meg nem erősített kézi ellenőrzés nyitva marad, a `/replan` rákérdez (döntött: agent, 2026-11-23).
