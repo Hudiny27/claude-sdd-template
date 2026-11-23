@@ -374,3 +374,11 @@ def test_batch_merge_merges_in_order_checks_and_cleans_up(project):
     assert not (project.path / ".claude/worktrees/a").exists()
     assert project.git("branch", "--list", "feature/a").strip() == ""
     assert batch.read_text(encoding="utf-8").count("| mergelve |") == 2
+
+
+def test_batch_status_after_merge_says_merged(project):
+    built_batch(project)
+    sdd(project, "batch", "merge", "ejjel", "feature/a", "feature/c")
+    out = sdd(project, "batch", "status").stdout
+    assert out.count("merged into main") == 2, out
+    assert "no spec" not in out

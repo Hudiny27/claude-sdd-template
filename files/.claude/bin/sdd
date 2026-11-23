@@ -373,6 +373,9 @@ def batch_status(root, argv):
     for r in rows:
         branch, wt = r.get("branch", ""), r.get("worktree", "")
         path = os.path.join(root, wt)
+        if r.get("állapot") == "mergelve":
+            print("  " + r.get("#", "?") + ". " + branch + " [mergelve] merged into main")
+            continue
         approved = guard.approved_level(root, branch) is not None
         base = r.get("függ") if r.get("függ") not in (None, "", "-") else "main"
         ahead = git(root, "rev-list", "--count", base + ".." + branch).stdout.strip() or "?"
