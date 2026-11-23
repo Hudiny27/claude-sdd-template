@@ -49,6 +49,8 @@ Then, in this order:
 - **Elvetés:** `sdd batch set … elvetve "<reason>"`;
   remove the worktree and the branch only if the owner ticked that too.
 - **Később:** nothing changes; the next report shows it again.
+- **Kézi ellenőrzések:** a merged feature's manual checks stay open (`[ ]`)
+  unless the owner says they are done; the next `/replan` asks about them.
 - **Push:** only if ticked; a denied push is a stop sign.
 
 Commit the batch file on `main` (`docs(plans): close batch <név>`).
