@@ -8,9 +8,7 @@ owner happens here, so the night needs nobody.
 - Run `.claude/bin/sdd preflight` in the main checkout; stop on a `FAIL`.
 - Offer the candidates in a multi-select popup: the open backlog items it
   lists, the next open phases of `specs/roadmap.md`, and features the owner
-  names. Leave
-  out (and say why) anything that touches authentication, permissions or
-  security.
+  names.
 - Pick a short batch name (lower case, hyphens) and run
   `.claude/bin/sdd batch new <név>`. Ask in one popup: the time box
   (`idokeret`, when the night must stop) and whether the owner wants an
@@ -51,7 +49,8 @@ For each feature, in the agreed order:
 3. Commit the spec in the worktree (`docs(plans): add spec for <feature>`);
    the guard refuses to approve an uncommitted spec.
 4. Fill its row: `Becslés` (hours for the build and the validation, as
-   `1,5 óra`) and `Auth/biztonság: nem`. An assumption an S spec needs
+   `1,5 óra`) and `Auth/biztonság`: `igen` when it touches authentication,
+   permissions or security, else `nem`. An assumption an S spec needs
    goes under a `## Döntések` section you add to it.
 
 ## 4. Estimate and approval

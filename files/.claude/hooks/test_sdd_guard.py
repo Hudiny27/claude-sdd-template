@@ -542,10 +542,17 @@ class BatchApproval(Repo):
         self.assertFalse(self.edit_in(inside))
         self.assertIsNone(self.approved_level("feature/x"))
 
-    def test_auth_member_is_refused(self):
+    def test_auth_member_is_approved_with_a_mandatory_review(self):
         self.member("login", auth="igen")
         out = self.say("#spec-ok köteg ejjel")
-        self.assertIn("auth", out)
+        self.assertIn("feature/login", out)
+        self.assertIn("deep review is mandatory", out)
+        self.assertIsNotNone(self.approved_level("feature/login"))
+
+    def test_undeclared_auth_member_is_refused(self):
+        self.member("login", auth="?")
+        out = self.say("#spec-ok köteg ejjel")
+        self.assertIn("Auth/biztonság", out)
         self.assertIsNone(self.approved_level("feature/login"))
 
     def test_uncommitted_spec_is_refused(self):

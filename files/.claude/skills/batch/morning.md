@@ -14,8 +14,8 @@ artifact page with the same content. Plain Hungarian (the `plain` rules):
 1. **Egy mondatban:** how many features are merge-ready, parked, unfinished.
 2. **Feature-enként** (in the batch order): a status (zöld: merge-kész;
    sárga: merge-kész, but a night decision changed behaviour or scope, or a
-   check was flaky or skipped; a manual check alone does not make it
-   yellow; piros: parkolva), the evidence (the checks with their result line, a screenshot
+   check was flaky or skipped, or it is an auth or security feature; a
+   manual check alone does not make it yellow; piros: parkolva), the evidence (the checks with their result line, a screenshot
    or command output for a visible change), and what it depends on.
 3. **Éjjeli döntések:** the `agent` decision lines added during the night,
    per feature.
