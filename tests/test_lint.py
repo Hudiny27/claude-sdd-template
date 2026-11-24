@@ -368,12 +368,12 @@ def test_good_batch_file_passes(repo):
 def test_bad_batch_file(repo):
     bad = BATCH.replace("artifact: nem", "artifact: talán").replace(
         "| 1 | feature/a | M | - | .claude/worktrees/a | 1 óra | nem | spec |",
-        "| 1 | feature/a | X | feature/zz | ../outside | 1 óra | igen | kész |",
+        "| 1 | feature/a | X | feature/zz | ../outside | 1 óra | ? | kész |",
     )
     repo.write("Plans/kotegek/2026-11-22-ejjel.md", bad)
     repo.git("add", "Plans/kotegek/2026-11-22-ejjel.md")
     out = lint(repo, "--staged").stdout
-    for part in ("artifact", "Fokozat", "feature/zz", ".claude/worktrees/", "auth", "Állapot"):
+    for part in ("artifact", "Fokozat", "feature/zz", ".claude/worktrees/", "Auth/biztonság", "Állapot"):
         assert part in out, part
 
 
@@ -400,3 +400,9 @@ def test_final_lint_measures_from_the_branch_point_not_from_a_moved_main(repo):
     repo.git("checkout", "-q", "feature/phase-1-hello")
     r = lint(repo, "--final")
     assert "docs/notes.md" not in r.stdout, r.stdout
+
+
+def test_batch_file_accepts_an_auth_feature(repo):
+    repo.write("Plans/kotegek/2026-11-22-ejjel.md", BATCH.replace("| 1 óra | nem | spec |", "| 1 óra | igen | spec |"))
+    repo.git("add", "Plans/kotegek/2026-11-22-ejjel.md")
+    assert lint(repo, "--staged").returncode == 0

@@ -966,8 +966,9 @@ def approve_batch(payload, proj, name):
         branch = row.get("branch", "").strip("`")
         wt = row.get("worktree", "").strip("`")
         path = normalise(wt, root) if wt else ""
-        if row.get("auth/biztonság", "").lower() != "nem":
-            refused.append(branch + ": an auth or security feature is never part of a batch")
+        auth = row.get("auth/biztonság", "").lower()
+        if auth not in ("igen", "nem"):
+            refused.append(branch + ": its Auth/biztonság cell must say igen or nem")
         elif not path or not inside(path, proj):
             refused.append(branch + ": its worktree " + (wt or "(none)") + " is outside the project; use .claude/worktrees/")
         elif not os.path.isdir(path) or branch_of(path) != branch:
@@ -985,7 +986,8 @@ def approve_batch(payload, proj, name):
                 "branch: " + branch + "\nspec: " + spec + "\nlevel: " + spec_level(path, spec)
                 + "\nbatch: " + rel + "\napproved: " + datetime.now().isoformat(timespec="seconds") + "\n",
             )
-            done.append(branch + " (" + spec + ", level " + spec_level(path, spec) + ")")
+            done.append(branch + " (" + spec + ", level " + spec_level(path, spec)
+                        + ("; auth or security: its deep review is mandatory" if auth == "igen" else "") + ")")
     print("SDD: the owner approved the batch " + rel + ": " + (", ".join(done) or "nothing") + ".")
     if refused:
         print("SDD: not approved: " + "; ".join(refused) + ".")

@@ -20,8 +20,11 @@ merge decision); they are grouped in time so the owner takes part in three
 short windows instead of all day. The one-by-one flow (`/feature-spec`,
 `/validate-feature`) stays available.
 
-Never in a batch: an auth or security feature (it goes the one-by-one way,
-stopping after each group). Nothing reaches `main` or the remote at night.
+An auth or security feature may be in a batch: its deep review is
+mandatory and it is always yellow in the morning. A step that acts outside
+the branch and cannot be undone (a migration on a real or shared database,
+a deploy, real mail, deleting real data) never runs at night: it parks.
+Nothing reaches `main` or the remote at night.
 
 ## Which window
 

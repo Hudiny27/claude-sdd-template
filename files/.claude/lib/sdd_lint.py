@@ -40,8 +40,8 @@ Checks:
   backlog      every specs/backlog/*.md item has `Állapot: nyitott | ütemezve
                | kész | elvetve` near the top.
   batch        a staged Plans/kotegek/*.md: front matter, the feature table,
-               worktrees under .claude/worktrees/, no auth or security
-               feature, filled estimates, known states.
+               worktrees under .claude/worktrees/, a declared
+               Auth/biztonság (igen | nem), filled estimates, known states.
   size         CLAUDE.md (or CLAUDE.sdd.md) at most 150 lines, SKILL.md at
                most 100, .claude/project.md at most 60.
   dangling     --final: backticked paths in the Markdown changed on this
@@ -335,8 +335,8 @@ class Lint:
                 self.add(rel, 0, "batch", who + "depends on " + r["függ"] + ", which is not in the batch")
             if not r["worktree"].startswith(".claude/worktrees/"):
                 self.add(rel, 0, "batch", who + "the worktree must be under .claude/worktrees/ (the guard sees only the project)")
-            if r["auth/biztonság"] != "nem":
-                self.add(rel, 0, "batch", who + "Auth/biztonság must be `nem`: an auth or security feature is never part of a batch")
+            if r["auth/biztonság"] not in ("igen", "nem"):
+                self.add(rel, 0, "batch", who + "Auth/biztonság is `igen` or `nem` (an auth or security feature gets a mandatory deep review)")
             if r["becslés"] in ("", "?"):
                 self.add(rel, 0, "batch", who + "fill in Becslés (the time estimate)")
             if r["állapot"] not in BATCH_STATES:

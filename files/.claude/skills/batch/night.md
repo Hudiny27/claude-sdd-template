@@ -29,7 +29,8 @@ adds what a batch needs.
    worktree (the plan: `plan.md` for L, `spec.md` for S and M), committing
    with `.claude/bin/sdd commit`.
 2. Validate it as the `validate-feature` skill says, steps 1–4, with no
-   popup: run its `validate.sh` if the spec has one (else the commands of
+   popup (with `Auth/biztonság: igen` the deep review always runs): run its
+   `validate.sh` if the spec has one (else the commands of
    its "Ellenőrzés" section) and `python3 .claude/lib/sdd_lint.py --final`,
    compare the code with the spec, and run the deep review when the spec's
    `ajtó` and `hatósugár` call for it. Fix real findings; record every

@@ -193,7 +193,8 @@ artifact: igen | nem
 - `Függ`: annak a feature-nek a branche, amelyre ez valóban épül (a kódját
   vagy az adatát használja), vagy `-`. A közös fájl nem függés.
 - `Becslés`: az építés és a validálás ideje, például `1,5 óra`.
-- `Auth/biztonság`: `nem`; auth- vagy biztonsági feature nem lehet kötegben.
+- `Auth/biztonság`: `igen`, ha hitelesítést, jogosultságot vagy biztonságot
+  érint (ekkor a mély review kötelező, és reggel sárga), különben `nem`.
 - `Állapot`: spec | jóváhagyva | épül | merge-kész | parkolva | mergelve |
   javítás | elvetve.
 
