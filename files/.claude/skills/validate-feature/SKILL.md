@@ -46,8 +46,8 @@ The level of the review: does it work, and does it match the spec.
 ## 4. Deep review (non-trivial features)
 
 Sized by `ajtó` and `hatósugár` under "Kockázat és visszaút": egyirányú or
-nagy: run it by default (the owner may skip it); kétirányú and kicsi, or
-level S: skip it; otherwise offer it. Spawn 2–3
+nagy, or any security or auth code: run it (only the owner may skip it);
+kétirányú and kicsi, or level S: skip it; otherwise offer it. Spawn 2–3
 parallel subagents over the whole change, each with one focus: correctness
 and edge cases; conformance to `requirements.md` and `specs/tech-stack.md`;
 tests, security and error handling. Each also gets `docs/kodolasi-szabalyok.md`

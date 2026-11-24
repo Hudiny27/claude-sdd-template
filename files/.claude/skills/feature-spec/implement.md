@@ -1,8 +1,8 @@
 # Implementation details
 
-Read before the first task group. The gates (one group per commit, one
-group at a time for security, auth, data and migrations) are in
-`CLAUDE.md`.
+Read before the first task group. The gates (one group per commit, a stop
+only before a step that acts outside the branch and cannot be undone) are
+in `CLAUDE.md`.
 
 - Parallel subagents in one worktree each commit only their own files, by
   name; say so in each subagent's prompt.

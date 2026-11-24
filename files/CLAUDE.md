@@ -95,11 +95,11 @@ meg, bővítsd a specet, és kérj új `#spec-ok`-ot; az őr addig tilt.
 
 **Implementáció:** csak `#spec-ok` után. L-nél a `plan.md`-t kövesd
 feladatcsoportonként, S-nél és M-nél a `spec.md`-t; kezdés előtt olvasd el a
-`.claude/skills/feature-spec/implement.md`-t. Biztonság, auth, adat és
-migrációk esetén (L): egyszerre egy csoport, utána állj meg. Adatnál és
-migrációnál az owner a `#spec-ok`-kor vagy utána egy üzenetben előre
-engedélyezheti, hogy a többi csoport megállás nélkül készüljön;
-biztonságnál és authnál nem. Ne menj túl a hatókörön (`requirements.md`,
+`.claude/skills/feature-spec/implement.md`-t. A csoportok megállás nélkül
+követik egymást; megállás és kérdés csak a branchen kívül ható, vissza nem
+vonható lépés előtt (migráció valódi vagy közös adatbázison, deploy, éles
+levél, valódi adat törlése, kereten felüli fizetős hívás). Biztonsági és auth
+kódnál a mély review kötelező. Ne menj túl a hatókörön (`requirements.md`,
 S/M-nél a `spec.md` „Bele tartozik” része). Ha valami
 hiányzik vagy kétértelmű, állj meg és kérdezz. Soha ne dönts csendben. A
 következő csoport kódjához csak az előző csoport commitja után nyúlj. Így
